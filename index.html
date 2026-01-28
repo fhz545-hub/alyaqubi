@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b7e88"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <title>متابعة المواظبة والسلوك</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Excel/CSV import -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --moe:#0b7e88; --ink:#0e1416; --muted:#5c6b70; --bg:#f6fafb; --card:#ffffff;
+      --line:#e3eef0; --good:#22c55e; --bad:#ef4444; --warn:#f59e0b; --info:#3b82f6;
+      --r:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Arial}
+    a{color:inherit}
+    button,input,select,textarea{font-family:inherit}
+    .app{max-width:1100px;margin:0 auto;min-height:100vh;padding-bottom:78px}
+    .topbar{
+      position:sticky;top:0;z-index:10;background:rgba(246,250,251,.92);
+      backdrop-filter:saturate(160%) blur(8px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar .row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--moe),#2aa6b1);
+      display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900
+    }
+    .title{display:flex;flex-direction:column;line-height:1.1}
+    .title b{font-size:14.5px}
+    .title span{font-size:12px;color:var(--muted)}
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);
+      border-radius:999px;background:#fff;font-size:12.5px;color:var(--muted)
+    }
+    .offline{color:var(--bad);font-weight:700}
+    .content{padding:14px}
+    .grid{display:grid;gap:12px}
+    @media (min-width: 860px){ .grid.cols2{grid-template-columns:1.2fr .8fr} }
+    .card{
+      background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+      box-shadow:0 8px 22px rgba(12,38,45,.06);
+    }
+    .card .hd{padding:12px 12px 8px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .card .hd b{font-size:14px}
+    .card .bd{padding:12px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .spacer{flex:1}
+    .btn{
+      border:1px solid var(--line);background:#fff;color:var(--ink);
+      padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px;
+    }
+    .btn.primary{background:var(--moe);border-color:var(--moe);color:#fff}
+    .btn.ghost{background:transparent}
+    .btn.small{padding:7px 10px;border-radius:10px;font-size:12px}
+    .btn.good{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35)}
+    .btn.bad{background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.35)}
+    .btn.warn{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.35)}
+    .btn.info{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.35)}
+    .input, select, textarea{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:13px;
+      outline:none;
+    }
+    textarea{min-height:92px;resize:vertical}
+    .table{width:100%;border-collapse:separate;border-spacing:0}
+    .table th,.table td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13px}
+    .table th{font-size:12px;color:var(--muted);text-align:right}
+    .tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#fff}
+    .tag.good{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.10)}
+    .tag.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
+    .tag.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12)}
+    .tag.info{border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.10)}
+    .muted{color:var(--muted)}
+    .nav{
+      position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);
+      padding:10px 8px;
+    }
+    .nav .wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+    .nav button{
+      border:1px solid var(--line);background:#fff;border-radius:14px;padding:10px 8px;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;font-size:11.5px;color:var(--muted)
+    }
+    .nav button.active{border-color:rgba(11,126,136,.35);background:rgba(11,126,136,.08);color:var(--ink)}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    @media (max-width:680px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+    .kpi{padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .kpi b{display:block;font-size:18px}
+    .kpi span{font-size:12px;color:var(--muted)}
+    .modal{
+      position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;justify-content:center;z-index:50;
+      padding:12px;
+    }
+    .modal.open{display:flex}
+    .sheet{
+      width:100%;max-width:760px;background:#fff;border-radius:20px;border:1px solid var(--line);
+      box-shadow:0 20px 60px rgba(0,0,0,.18);overflow:hidden;
+    }
+    .sheet .hd{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .sheet .bd{padding:12px 14px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width:680px){ .two{grid-template-columns:1fr} }
+    .hint{font-size:12px;color:var(--muted);line-height:1.7}
+    .printOnly{display:none}
+    @media print{
+      .topbar,.nav,.noPrint{display:none !important}
+      .app{padding-bottom:0}
+      .printOnly{display:block}
+      .card{box-shadow:none}
+      body{background:#fff}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="row">
+        <div class="brand">
+          <div class="logo">م</div>
+          <div class="title">
+            <b id="schoolName">متابعة المواظبة والسلوك</b>
+            <span id="subTitle" class="muted">تطبيق جوّال (PWA) — حفظ محلي على الجهاز</span>
+          </div>
+        </div>
+        <div class="row">
+          <span class="pill"><span id="todayTxt"></span> • <span id="netTxt"></span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- صفحات -->
+      <section id="view-dashboard" class="view"></section>
+      <section id="view-students" class="view" style="display:none"></section>
+      <section id="view-attendance" class="view" style="display:none"></section>
+      <section id="view-behavior" class="view" style="display:none"></section>
+      <section id="view-settings" class="view" style="display:none"></section>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="nav noPrint">
+      <div class="wrap">
+        <button data-nav="dashboard" class="active">🏠<div>الملخص</div></button>
+        <button data-nav="students">👥<div>الطلاب</div></button>
+        <button data-nav="attendance">🕘<div>مواظبة</div></button>
+        <button data-nav="behavior">⚠️<div>سلوك</div></button>
+        <button data-nav="settings">⚙️<div>الإعدادات</div></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- مودال: إضافة/تعديل طالب -->
+  <div class="modal" id="modalStudent">
+    <div class="sheet">
+      <div class="hd">
+        <b id="modalStudentTitle">إضافة طالب</b>
+        <button class="btn small" data-close="modalStudent">إغلاق</button>
+      </div>
+      <div class="bd">
+        <div class="two">
+          <div>
+            <label class="muted">اسم الطالب</label>
+            <input class="input" id="st_name" placeholder="مثال: أحمد محمد ..." />
+          </div>
+          <div>
+            <label class="muted">رقم الهوية/السجل</label>
+            <input class="input" id="st_nid" placeholder="اختياري" />
+          </div>
+          <div>
+            <label class="muted">الصف</label>
+            <input class="input" id="st_grade" placeholder="مثال: ثالث ثانوي" />
+          </div>
+          <div>
+            <label class="muted">الشعبة/الفصل</label>
+            <input class="input" id="st_section" placeholder="مثال: 3/2" />
+          </div>
+          <div>
+            <label class="muted">جوال ولي الأمر</label>
+            <input class="input" id="st_guardian" placeholder="05xxxxxxxx" />
+          </div>
+          <div>
+            <label class="muted">ملاحظات</label>
+            <input class="input" id="st_note" placeholder="اختياري" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="btnSaveStudent">حفظ</button>
+          <button class="btn" id="btnDeleteStudent" style="display:none">حذف</button>
+          <span class="spacer"></span>
+          <span class="hint">* يفضّل توثيق البيانات بما يخدم المتابعة التربوية مع مراعاة سرية المعلومات.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- مودال: رصد سلوك -->
+  <div class="modal" id="modalBehavior">
+    <div class="sheet">
+      <div class="hd">
+        <b>رصد سلوك/مخالفة</b>
+        <button class="btn small" data-close="modalBehavior">إغلاق</button>
+      </div>
+      <div class="bd">
+        <div class="two">
+          <div>
+            <label class="muted">الطالب</label>
+            <select class="input" id="bh_student"></select>
+          </div>
+          <div>
+            <label class="muted">التاريخ والوقت</label>
+            <input class="input" id="bh_dt" type="datetime-local"/>
+          </div>
+          <div>
+            <label class="muted">التصنيف</label>
+            <select class="input" id="bh_cat">
+              <option value="سلوك داخل الصف">سلوك داخل الصف</option>
+              <option value="سلوك داخل المدرسة">سلوك داخل المدرسة</option>
+              <option value="مواظبة/انضباط">مواظبة/انضباط</option>
+              <option value="اتلاف/ممتلكات">اتلاف/ممتلكات</option>
+              <option value="استخدام الجوال">استخدام الجوال</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div>
+            <label class="muted">نوع المخالفة</label>
+            <input class="input" id="bh_type" placeholder="مثال: مشاجرة / ألفاظ غير لائقة ..." />
+          </div>
+          <div>
+            <label class="muted">الدرجة</label>
+            <select class="input" id="bh_level">
+              <option value="بسيطة">بسيطة</option>
+              <option value="متوسطة">متوسطة</option>
+              <option value="عالية">عالية</option>
+            </select>
+          </div>
+          <div>
+            <label class="muted">الإجراء المتخذ</label>
+            <input class="input" id="bh_action" placeholder="تنبيه/تعهد/استدعاء ولي أمر..." />
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <label class="muted">وصف مختصر (موضوعي)</label>
+          <textarea class="input" id="bh_desc" placeholder="اكتب الواقعة باختصار وبموضوعية..."></textarea>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="btnSaveBehavior">حفظ الرصد</button>
+          <span class="spacer"></span>
+          <span class="hint">* يفضّل أن يكون الرصد وفق تنظيمات السلوك المدرسي وبصياغة تربوية وموضوعية.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
