@@ -1,1227 +1,851 @@
-/* متابعة الطلاب — PWA (IndexedDB) */
-(() => {
-  "use strict";
+/* =====================  متابعة الطلاب — وضع خصوصية (بدون عرض أسماء بالقوائم)  ===================== */
 
-  // ---------- Helpers ----------
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
-  const hasArabic = (s) => /[\u0600-\u06FF]/.test(String(s||""));
-  const nowLocalInput = () => {
-    const d = new Date();
-    const pad = (n) => String(n).padStart(2,"0");
-    const yyyy = d.getFullYear();
-    const mm = pad(d.getMonth()+1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const mi = pad(d.getMinutes());
-    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-  };
-  const safeUUID = () => (crypto?.randomUUID ? crypto.randomUUID() : ("id-" + Math.random().toString(16).slice(2) + Date.now().toString(16)));
-  const fmtDT = (iso) => {
-    try{
-      const d = new Date(iso);
-      return d.toLocaleString("ar-SA", { dateStyle:"medium", timeStyle:"short" });
-    }catch(e){ return iso || ""; }
-  };
-  const dl = (filename, blob) => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  };
+const STORE = {
+  students: "alyaqubi_students_v2",
+  logs: "alyaqubi_logs_v2",
+  settings: "alyaqubi_settings_v2",
+  pin: "alyaqubi_pin_v2",
+  taxonomy: "alyaqubi_taxonomy_v2",
+};
 
-  const normalizeMobile = (raw, countryCode="966") => {
-    let s = String(raw||"").trim();
-    if (!s) return "";
-    s = s.replace(/[\s\-()]/g, "");
-    // remove leading + 
-    if (s.startsWith("+")) s = s.slice(1);
-    // convert 05xxxxxxxx to 9665xxxxxxxx
-    if (s.startsWith("05")) s = countryCode + s.slice(1);
-    // convert 5xxxxxxxx to 9665xxxxxxxx
-    if (/^5\d{8}$/.test(s)) s = countryCode + s;
-    // already starts with 966 and has 12 digits
-    if (s.startsWith(countryCode)) return s;
-    // fallback: return as-is digits only
-    return s.replace(/\D/g,"");
-  };
+const $ = (id) => document.getElementById(id);
 
-  const channelLink = (channel, mobileE164, message) => {
-    const m = mobileE164 || "";
-    const text = encodeURIComponent(message || "");
-    if (!m) return "";
-    if (channel === "whatsapp") return `https://wa.me/${m}?text=${text}`;
-    if (channel === "sms") {
-      // iOS uses &body=, Android often uses ?body=
-      return `sms:${m}?&body=${text}`;
-    }
-    if (channel === "call") return `tel:${m}`;
-    return "";
-  };
+// عناصر
+const el = {
+  // nav/views
+  tabs: Array.from(document.querySelectorAll(".tab")),
+  views: Array.from(document.querySelectorAll(".view")),
 
-  // ---------- Behavior taxonomy (prefilled, editable from Settings) ----------
-  const DEFAULT_TAXONOMY = {
-    degrees: {
-      "1": { points: 1, actions: "تنبيه تربوي + توثيق + إشعار ولي الأمر عند التكرار/الحاجة." },
-      "2": { points: 2, actions: "تحويل للإدارة + إشعار ولي الأمر هاتفياً + خصم درجتين + تعهد/خطة تعديل + متابعة." },
-      "3": { points: 3, actions: "دعوة ولي الأمر + خطة تعديل + خصم 3 درجات + إنذار كتابي عند التكرار + لجنة التوجيه + متابعة." },
-      "4": { points: 10, actions: "إحالة عاجلة للجنة التوجيه + خصم 10 درجات + إشعار ولي الأمر + إجراءات نظامية حسب الواقعة." },
-      "5": { points: 15, actions: "إجراءات عاجلة + خصم 15 درجة + محاضر + جهات مختصة حسب الواقعة + متابعة." }
-    },
-    violations: {
-      "1": [
-        "التأخر الصباحي",
-        "عدم حضور الاصطفاف الصباحي (مع التواجد داخل المدرسة)",
-        "التأخر عن الاصطفاف الصباحي / العبث بالممتلكات البسيطة"
-      ],
-      "2": [
-        "عدم حضور الحصة الدراسية/الهروب",
-        "الدخول أو الخروج من الفصل دون استئذان",
-        "دخول فصل آخر دون استئذان",
-        "إثارة الفوضى داخل الفصل/المدرسة/وسائل النقل"
-      ],
-      "3": [
-        "عدم التقيد بالزي المدرسي",
-        "الشجار أو الاشتراك في مضاربة جماعية",
-        "الإشارة بحركات مخلة بالآداب",
-        "التلفظ بألفاظ سلبية/تهديد/سخرية",
-        "إلحاق الضرر المتعمد بممتلكات الطلبة",
-        "العبث بتجهيزات المدرسة أو ممتلكاتها",
-        "حيازة/تداول مواد إعلامية ممنوعة (مقروءة/مسموعة/مرئية)",
-        "إهمال الكتب الدراسية/الإضرار بها"
-      ],
-      "4": [
-        "إصابة أحد الطلبة بالضرب (يد/أداة) بما يسبب إصابة",
-        "سرقة شيء من ممتلكات الطلبة أو المدرسة",
-        "التصوير أو التسجيل الصوتي للطلبة",
-        "إتلاف/إلحاق ضرر متعمد بتجهيزات المدرسة أو ممتلكاتها"
-      ],
-      "5": [
-        "الإساءة أو الاستخفاف بالدين/شعائر الإسلام",
-        "الإساءة للدولة أو رموزها",
-        "بث/ترويج أفكار متطرفة/تكفيرية/إلحادية",
-        "الإساءة إلى الأديان السماوية أو إثارة العنصرية/الفتن القبلية/الطائفية",
-        "تزوير/استخدام/استفادة من وثائق أو أختام رسمية بطريقة غير مشروعة",
-        "الجرائم المعلوماتية بكافة أنواعها",
-        "ابتزاز الطلبة",
-        "التنمر بجميع أنواعه وأشكاله"
-      ]
-    }
-  };
+  // top actions
+  btnImport: $("btnImport"),
+  btnBackup: $("btnBackup"),
 
-  // ---------- IndexedDB mini wrapper ----------
-  const DB_NAME = "student-followup-db";
-  const DB_VER = 1;
-  let dbp = null;
+  // search
+  studentSearch: $("studentSearch"),
+  btnSearch: $("btnSearch"),
+  searchStatus: $("searchStatus"),
+  matchList: $("matchList"),
+  studentCard: $("studentCard"),
+  studentMeta: $("studentMeta"),
+  maskedName: $("maskedName"),
+  stClassView: $("stClassView"),
+  stIdMasked: $("stIdMasked"),
+  stParentMasked: $("stParentMasked"),
+  btnClear: $("btnClear"),
+  btnOpenAttendance: $("btnOpenAttendance"),
+  btnOpenBehavior: $("btnOpenBehavior"),
 
-  function openDB() {
-    if (dbp) return dbp;
-    dbp = new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, DB_VER);
-      req.onupgradeneeded = () => {
-        const db = req.result;
-        const mk = (name, opts, idx=[]) => {
-          if (!db.objectStoreNames.contains(name)) {
-            const store = db.createObjectStore(name, opts);
-            idx.forEach(([key, path, unique=false]) => store.createIndex(key, path, { unique }));
-          }
-        };
-        mk("students", { keyPath:"id" }, [["by_name","name"],["by_idNumber","idNumber"]]);
-        mk("events", { keyPath:"id" }, [["by_student","studentId"],["by_type","type"],["by_when","when"]]);
-        mk("messages", { keyPath:"id" }, [["by_student","studentId"],["by_when","when"],["by_channel","channel"]]);
-        mk("settings", { keyPath:"key" });
-        mk("taxonomy", { keyPath:"key" });
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    return dbp;
-  }
+  // dialogs
+  dlgAttendance: $("dlgAttendance"),
+  attStudentLine: $("attStudentLine"),
+  attStatus: $("attStatus"),
+  attWhen: $("attWhen"),
+  attExcused: $("attExcused"),
+  attNote: $("attNote"),
+  attMsg: $("attMsg"),
+  btnAttSend: $("btnAttSend"),
+  btnAttSave: $("btnAttSave"),
+  attStudentId: $("attStudentId"),
 
-  async function tx(storeName, mode="readonly") {
-    const db = await openDB();
-    return db.transaction(storeName, mode).objectStore(storeName);
-  }
+  dlgBehavior: $("dlgBehavior"),
+  behStudentLine: $("behStudentLine"),
+  behDegree: $("behDegree"),
+  behViolation: $("behViolation"),
+  behWhen: $("behWhen"),
+  behNote: $("behNote"),
+  behMsg: $("behMsg"),
+  behPointsPill: $("behPointsPill"),
+  behActionsLine: $("behActionsLine"),
+  btnBehSend: $("btnBehSend"),
+  btnBehSave: $("btnBehSave"),
+  behStudentId: $("behStudentId"),
 
-  async function getSetting(key, fallback=null) {
-    const store = await tx("settings");
-    return new Promise((res) => {
-      const r = store.get(key);
-      r.onsuccess = () => res(r.result?.value ?? fallback);
-      r.onerror = () => res(fallback);
-    });
-  }
-  async function setSetting(key, value) {
-    const store = await tx("settings","readwrite");
-    return new Promise((res,rej) => {
-      const r = store.put({key, value});
-      r.onsuccess = () => res(true);
-      r.onerror = () => rej(r.error);
-    });
-  }
+  dlgBackup: $("dlgBackup"),
+  btnDoBackup: $("btnDoBackup"),
+  restoreFile: $("restoreFile"),
 
-  async function getTaxonomy() {
-    const store = await tx("taxonomy");
-    return new Promise((res) => {
-      const r = store.get("taxonomy");
-      r.onsuccess = () => res(r.result?.value ?? DEFAULT_TAXONOMY);
-      r.onerror = () => res(DEFAULT_TAXONOMY);
-    });
-  }
-  async function setTaxonomy(obj) {
-    const store = await tx("taxonomy","readwrite");
-    return new Promise((res,rej) => {
-      const r = store.put({key:"taxonomy", value: obj});
-      r.onsuccess = () => res(true);
-      r.onerror = () => rej(r.error);
-    });
-  }
+  dlgTaxonomy: $("dlgTaxonomy"),
+  taxJson: $("taxJson"),
+  btnOpenTaxonomy: $("btnOpenTaxonomy"),
+  btnSaveTax: $("btnSaveTax"),
 
-  async function upsertStudent(st) {
-    const store = await tx("students","readwrite");
-    return new Promise((res,rej) => {
-      const r = store.put(st);
-      r.onsuccess = () => res(true);
-      r.onerror = () => rej(r.error);
-    });
-  }
-  async function deleteStudent(id) {
-    const store = await tx("students","readwrite");
-    return new Promise((res,rej) => {
-      const r = store.delete(id);
-      r.onsuccess = () => res(true);
-      r.onerror = () => rej(r.error);
-    });
-  }
-  async function listStudents() {
-    const store = await tx("students");
-    return new Promise((res) => {
-      const out=[];
-      const r = store.openCursor();
-      r.onsuccess = () => {
-        const cur = r.result;
-        if (!cur) return res(out);
-        out.push(cur.value);
-        cur.continue();
-      };
-      r.onerror = () => res(out);
-    });
-  }
-  async function getStudent(id) {
-    const store = await tx("students");
-    return new Promise((res) => {
-      const r = store.get(id);
-      r.onsuccess = () => res(r.result || null);
-      r.onerror = () => res(null);
-    });
-  }
+  // inputs
+  importFile: $("importFile"),
 
-  async function addEvent(ev) {
-    const store = await tx("events","readwrite");
-    return new Promise((res,rej) => {
-      const r = store.put(ev);
-      r.onsuccess = () => res(true);
-      r.onerror = () => rej(r.error);
-    });
-  }
+  // log
+  viewLog: $("viewLog"),
+  logFilter: $("logFilter"),
+  btnExportXlsx: $("btnExportXlsx"),
+  btnClearLog: $("btnClearLog"),
+  logList: $("logList"),
 
-  async function addMessage(msg) {
-    const store = await tx("messages","readwrite");
-    return new Promise((res,rej) => {
-      const r = store.put(msg);
-      r.onsuccess = () => res(true);
-      r.onerror = () => rej(r.error);
-    });
-  }
+  // settings
+  setSchoolName: $("setSchoolName"),
+  setPrincipalName: $("setPrincipalName"),
+  setCountryCode: $("setCountryCode"),
+  setDefaultChannel: $("setDefaultChannel"),
+  setPin: $("setPin"),
+  btnSavePin: $("btnSavePin"),
+  btnClearPin: $("btnClearPin"),
+  btnResetAll: $("btnResetAll"),
 
-  async function listLog(filter="all", limit=200) {
-    const db = await openDB();
-    const out = [];
-    // events + messages merged (basic)
-    const evs = await new Promise((res) => {
-      const store = db.transaction("events","readonly").objectStore("events");
-      const r = store.index("by_when").openCursor(null, "prev");
-      const arr=[];
-      r.onsuccess = () => {
-        const cur = r.result;
-        if (!cur || arr.length>=limit) return res(arr);
-        arr.push(cur.value);
-        cur.continue();
-      };
-      r.onerror = () => res(arr);
-    });
-    const msgs = await new Promise((res) => {
-      const store = db.transaction("messages","readonly").objectStore("messages");
-      const r = store.index("by_when").openCursor(null, "prev");
-      const arr=[];
-      r.onsuccess = () => {
-        const cur = r.result;
-        if (!cur || arr.length>=limit) return res(arr);
-        arr.push(cur.value);
-        cur.continue();
-      };
-      r.onerror = () => res(arr);
-    });
+  // lock
+  lockScreen: $("lockScreen"),
+  pinInput: $("pinInput"),
+  btnUnlock: $("btnUnlock"),
+  pinErr: $("pinErr"),
+};
 
-    const merged = [
-      ...evs.map(e => ({kind:"event", ...e})),
-      ...msgs.map(m => ({kind:"message", ...m}))
-    ].sort((a,b)=> String(b.when).localeCompare(String(a.when)));
+// حالة
+let state = {
+  selectedId: null,
+  selected: null,
+  lastMatches: [],
+};
 
-    for (const item of merged) {
-      if (filter === "all") out.push(item);
-      else if (filter === "attendance" && item.kind==="event" && item.type==="attendance") out.push(item);
-      else if (filter === "behavior" && item.kind==="event" && item.type==="behavior") out.push(item);
-      else if (filter === "message" && item.kind==="message") out.push(item);
-      if (out.length >= limit) break;
-    }
-    return out;
-  }
+/* ===================== أدوات عامة ===================== */
+function readLS(key, fallback){
+  try{
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  }catch(e){ return fallback; }
+}
+function writeLS(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
 
-  async function exportAll() {
-    const db = await openDB();
-    const dump = {};
-    for (const name of ["students","events","messages","settings","taxonomy"]) {
-      dump[name] = await new Promise((res) => {
-        const store = db.transaction(name,"readonly").objectStore(name);
-        const r = store.openCursor();
-        const arr=[];
-        r.onsuccess = () => {
-          const cur = r.result;
-          if (!cur) return res(arr);
-          arr.push(cur.value);
-          cur.continue();
-        };
-        r.onerror = () => res(arr);
-      });
-    }
-    dump._exportedAt = new Date().toISOString();
-    dump._app = "student-followup-pwa";
-    return dump;
-  }
+function nowLocalInputValue(){
+  const d = new Date();
+  const pad = (n)=> String(n).padStart(2,"0");
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth()+1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mi = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+}
 
-  async function importAll(dump) {
-    const db = await openDB();
-    const stores = ["students","events","messages","settings","taxonomy"];
-    const tx = db.transaction(stores, "readwrite");
-    await Promise.all(stores.map((name) => new Promise((res) => {
-      const store = tx.objectStore(name);
-      store.clear();
-      const arr = Array.isArray(dump[name]) ? dump[name] : [];
-      for (const row of arr) store.put(row);
-      res(true);
-    })));
-    return new Promise((res,rej) => {
-      tx.oncomplete = () => res(true);
-      tx.onerror = () => rej(tx.error);
-      tx.onabort = () => rej(tx.error);
-    });
-  }
+function normalizeArabic(s){
+  return String(s||"")
+    .trim()
+    .replace(/\s+/g," ")
+    .replace(/[إأآا]/g,"ا")
+    .replace(/ى/g,"ي")
+    .replace(/ة/g,"ه")
+    .replace(/[^\u0600-\u06FF0-9\s]/g,"")
+    .toLowerCase();
+}
 
-  async function resetAll() {
-    const db = await openDB();
-    const tx = db.transaction(["students","events","messages","settings","taxonomy"], "readwrite");
-    for (const name of ["students","events","messages","settings","taxonomy"]) tx.objectStore(name).clear();
-    return new Promise((res) => { tx.oncomplete = () => res(true); tx.onerror = () => res(false); });
-  }
+function digitsOnly(s){
+  return String(s||"").replace(/\D/g,"");
+}
 
-  // ---------- Messaging templates ----------
-  function makeAttendanceMessage(st, status, whenISO, excused, note, settings) {
-    const school = settings.schoolName || "المدرسة";
-    const dateStr = fmtDT(whenISO);
-    const parent = st.parentName ? `ولي أمر الطالب ${st.name} (${st.parentName})` : `ولي أمر الطالب ${st.name}`;
-    const cls = st.className ? ` (${st.className})` : "";
-    const base = `السلام عليكم ورحمة الله وبركاته
-${parent}
-نفيدكم بأنه تم رصد حالة الطالب ${st.name}${cls} بـ: ${statusLabel(status)} بتاريخ ${dateStr}.`;
-    const ex = (excused==="yes") ? "بعذر" : "بدون عذر";
-    const more = status==="present" ? "" : `\nالحالة: ${ex}${note ? `\nملاحظة: ${note}` : ""}`;
-    const closing = `\n\nنأمل المتابعة والتعاون لضمان الانضباط.\n${school}`;
-    return base + more + closing;
-  }
+function maskName(name){
+  const t = String(name||"").trim();
+  if(!t) return "••••";
+  if(t.length <= 2) return t[0] + "•";
+  const first = t[0];
+  const last = t[t.length-1];
+  return first + "•".repeat(Math.min(6, Math.max(3, t.length-2))) + last;
+}
 
-  function makeBehaviorMessage(st, degree, violation, whenISO, note, settings, taxonomy) {
-    const school = settings.schoolName || "المدرسة";
-    const dateStr = fmtDT(whenISO);
-    const parent = st.parentName ? `ولي أمر الطالب ${st.name} (${st.parentName})` : `ولي أمر الطالب ${st.name}`;
-    const points = taxonomy.degrees?.[String(degree)]?.points ?? 0;
-    const actions = taxonomy.degrees?.[String(degree)]?.actions ?? "";
-    const cls = st.className ? ` (${st.className})` : "";
-    const base = `السلام عليكم ورحمة الله وبركاته
-${parent}
-نفيدكم بأنه تم رصد حالة الطالب ${st.name}${cls} بـ: ${statusLabel(status)} بتاريخ ${dateStr}.`;
-    const body = `\nالتصنيف: درجة (${degree}) — ${violation}\nالخصم المقترح من السلوك: ${points} درجة/درجات.`;
-    const extra = note ? `\nتفاصيل: ${note}` : "";
-    const act = actions ? `\n\nالإجراءات التربوية المقترحة: ${actions}` : "";
-    const closing = `\n\nنأمل تعاونكم ودعمكم لتعديل السلوك وتعزيز الانضباط.\n${school}`;
-    return base + body + extra + act + closing;
-  }
+function maskPhone(p){
+  const d = digitsOnly(p);
+  if(!d) return "—";
+  const last4 = d.slice(-4);
+  return "****" + last4;
+}
+function maskId(n){
+  const d = digitsOnly(n);
+  if(!d) return "—";
+  const last4 = d.slice(-4);
+  return "****" + last4;
+}
 
-  const statusLabel = (s) => ({
-    present:"حضور",
-    absent:"غياب",
-    late:"تأخر",
-    early:"خروج مبكر"
-  }[s] || s);
+function uid(){
+  return "st_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
 
-  // ---------- UI state ----------
-  let students = [];
-  let settings = {
+/* ===================== البيانات ===================== */
+function getStudents(){ return readLS(STORE.students, []); }
+function setStudents(list){ writeLS(STORE.students, list); }
+
+function getLogs(){ return readLS(STORE.logs, []); }
+function setLogs(list){ writeLS(STORE.logs, list); }
+
+function getSettings(){
+  return readLS(STORE.settings, {
     schoolName: "",
     principalName: "",
     countryCode: "966",
-    defaultChannel: "whatsapp"
-  };
-  let taxonomy = DEFAULT_TAXONOMY;
+    defaultChannel: "whatsapp",
+  });
+}
+function setSettings(s){ writeLS(STORE.settings, s); }
 
-  // ---------- Views ----------
-  function setView(viewId) {
-    $$(".view").forEach(v => v.classList.remove("active"));
-    $(`#${viewId}`).classList.add("active");
-    $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === viewId));
+function getTaxonomy(){
+  return readLS(STORE.taxonomy, defaultTaxonomy());
+}
+function setTaxonomy(t){ writeLS(STORE.taxonomy, t); }
+
+async function seedIfEmpty(){
+  const list = getStudents();
+  if(list.length) return;
+  try{
+    const res = await fetch("students-seed.json", {cache:"no-store"});
+    if(!res.ok) return;
+    const seed = await res.json();
+    if(Array.isArray(seed) && seed.length){
+      const normalized = seed.map(x => ({
+        id: x.id || uid(),
+        name: String(x.name||"").trim(),
+        idNumber: String(x.idNumber||"").trim(),
+        class: String(x.class||"").trim(),
+        notes: String(x.notes||"").trim(),
+        parentName: String(x.parentName||"").trim(),
+        parentMobile: String(x.parentMobile||"").trim(),
+      })).filter(s=>s.name || s.idNumber);
+      setStudents(normalized);
+    }
+  }catch(e){}
+}
+
+/* ===================== القفل ===================== */
+function pinGet(){ return localStorage.getItem(STORE.pin) || ""; }
+function pinSet(v){ localStorage.setItem(STORE.pin, v || ""); }
+
+function applyLockIfNeeded(){
+  const p = pinGet();
+  if(!p){
+    el.lockScreen.classList.add("hidden");
+    el.lockScreen.setAttribute("aria-hidden","true");
+    return;
   }
+  el.lockScreen.classList.remove("hidden");
+  el.lockScreen.setAttribute("aria-hidden","false");
+  el.pinInput.value = "";
+  el.pinErr.classList.add("hidden");
+}
+function tryUnlock(){
+  const p = pinGet();
+  const entered = (el.pinInput.value||"").trim();
+  if(entered && entered === p){
+    el.lockScreen.classList.add("hidden");
+    el.lockScreen.setAttribute("aria-hidden","true");
+    el.pinErr.classList.add("hidden");
+  }else{
+    el.pinErr.classList.remove("hidden");
+  }
+}
 
-  function studentCard(st) {
-    const parentOk = st.parentMobile ? "ok" : "warn";
-    const parentTxt = st.parentMobile ? "جوال ولي الأمر: جاهز" : "جوال ولي الأمر: غير مُسجل";
-    const idTxt = st.idNumber ? `هوية/إقامة: ${st.idNumber}` : (st.studentRecord ? `سجل: ${st.studentRecord}` : "—");
-    const cls = st.className ? ` • ${st.className}` : (st.classCode ? ` • رمز صف ${st.classCode}` : "");
-    const first = String(st.name||"").trim().charAt(0) || "👤";
-    return `
-      <div class="card">
-        <div class="studentRow">
-          <div class="studentLeft">
-            <div class="avatar" aria-hidden="true">${escapeHTML(first)}</div>
-            <div class="studentInfo">
-              <div class="studentName">${escapeHTML(st.name || "")}</div>
-              <div class="studentMeta">${escapeHTML(idTxt)}${escapeHTML(cls)}</div>
-              <div class="row" style="margin-top:10px">
-                <span class="pill ${parentOk}">${parentTxt}</span>
-              </div>
-            </div>
-          </div>
+/* ===================== التنقل ===================== */
+function openView(viewId){
+  el.views.forEach(v => v.classList.toggle("active", v.id === viewId));
+  el.tabs.forEach(t => t.classList.toggle("active", t.dataset.view === viewId));
+}
 
-          <div class="studentActions">
-            <button class="btn" data-act="present" data-id="${st.id}">حضور</button>
-            <button class="btn" data-act="absent" data-id="${st.id}">غياب</button>
-            <button class="btn" data-act="late" data-id="${st.id}">تأخر</button>
-            <button class="btn" data-act="behavior" data-id="${st.id}">سلوك</button>
-            <button class="btn ghost" data-act="edit" data-id="${st.id}">تعديل</button>
-          </div>
+/* ===================== البحث (بدون أسماء) ===================== */
+function searchStudents(queryRaw){
+  const q = String(queryRaw||"").trim();
+  if(!q) return [];
+  const list = getStudents();
+
+  const qDigits = digitsOnly(q);
+  const qNorm = normalizeArabic(q);
+
+  return list.filter(s=>{
+    const nameNorm = normalizeArabic(s.name);
+    const idDigits = digitsOnly(s.idNumber);
+    // البحث: رقم أو جزء من الاسم
+    if(qDigits && idDigits.includes(qDigits)) return true;
+    if(qNorm && nameNorm.includes(qNorm)) return true;
+    return false;
+  });
+}
+
+function renderMatches(matches){
+  state.lastMatches = matches;
+
+  el.matchList.innerHTML = "";
+  el.matchList.classList.toggle("hidden", matches.length <= 1);
+
+  if(matches.length > 1){
+    // عرض بدون أسماء: الصف + آخر4
+    matches.slice(0, 20).forEach(s=>{
+      const item = document.createElement("div");
+      item.className = "matchItem";
+      const cls = (s.class || "—");
+      const id4 = maskId(s.idNumber);
+      item.innerHTML = `
+        <div>
+          <div style="font-weight:900">طالب</div>
+          <div class="muted small">${cls} • ${id4}</div>
         </div>
-      </div>`;
-  }
-
-  function renderStudentsList() {
-    const q = String($("#studentSearch").value || "").trim();
-    const cf = $("#classFilter") ? String($("#classFilter").value || "all") : "all";
-
-    const list = students.filter(s => {
-      const hay = `${s.name||""} ${s.idNumber||""} ${s.studentNo||""}`.toLowerCase();
-      const okSearch = !q || hay.includes(q.toLowerCase());
-      const okClass = (cf === "all") || String(s.className||"") === cf;
-      return okSearch && okClass;
+        <div class="tag">اختيار</div>
+      `;
+      item.addEventListener("click", ()=> selectStudentById(s.id));
+      el.matchList.appendChild(item);
     });
 
-    $("#studentsList").innerHTML = list.length
-      ? list.map(studentCard).join("")
-      : `<div class="card"><div class="muted">لا توجد نتائج.</div></div>`;
-
-    if ($("#countLine")) {
-      const total = students.length;
-      const shown = list.length;
-      $("#countLine").textContent = `إجمالي الطلاب: ${total} — المعروض: ${shown}`;
+    if(matches.length > 20){
+      const more = document.createElement("div");
+      more.className = "muted small";
+      more.style.marginTop = "6px";
+      more.textContent = `يوجد ${matches.length} نتيجة. ضيّق البحث لنتائج أقل.`;
+      el.matchList.appendChild(more);
     }
   }
+}
 
-  async function renderLog() {
-    const filter = $("#logFilter").value;
-    const items = await listLog(filter, 250);
-    const byId = new Map(students.map(s => [s.id, s]));
-    const html = items.map((it) => {
-      if (it.kind === "event") {
-        const st = byId.get(it.studentId);
-        const title = it.type === "attendance" ? `متابعة: ${statusLabel(it.status)}` : `سلوك: درجة ${it.degree}`;
-        const sub = it.type === "attendance"
-          ? `${it.excused==="yes"?"بعذر":"بدون عذر"}${it.note?` • ${escapeHTML(it.note)}`:""}`
-          : `${escapeHTML(it.violation||"")}${it.note?` • ${escapeHTML(it.note)}`:""}`;
-        return `
-          <div class="card">
-            <div class="cardTitle">${escapeHTML(title)} — ${escapeHTML(st?.name || "طالب")}</div>
-            <div class="muted small">${fmtDT(it.when)} • ${sub}</div>
-          </div>`;
-      } else {
-        const st = byId.get(it.studentId);
-        return `
-          <div class="card">
-            <div class="cardTitle">رسالة (${escapeHTML(it.channel)}) — ${escapeHTML(st?.name || "طالب")}</div>
-            <div class="muted small">${fmtDT(it.when)} • إلى: ${escapeHTML(it.to||"")}</div>
-            <div style="margin-top:8px; white-space:pre-wrap">${escapeHTML(it.text||"")}</div>
-          </div>`;
-      }
-    }).join("");
-    $("#logList").innerHTML = html || `<div class="card"><div class="muted">لا يوجد سجل بعد.</div></div>`;
+function selectStudentById(id){
+  const s = getStudents().find(x=>x.id === id);
+  state.selectedId = id;
+  state.selected = s || null;
+
+  if(!s){
+    el.studentCard.classList.add("hidden");
+    el.searchStatus.textContent = "لم يتم العثور على السجل.";
+    return;
   }
 
-  // ---------- Dialogs ----------
-  function openDlg(dlg) { dlg.showModal(); }
-  function closeDlg(dlg) { try { dlg.close(); } catch(e){} }
+  // عرض مقنّع فقط
+  el.studentMeta.textContent = "تم اختيار سجل مطابق (عرض مقنّع)";
+  el.maskedName.textContent = maskName(s.name);
+  el.stClassView.textContent = s.class || "—";
+  el.stIdMasked.textContent = maskId(s.idNumber);
+  el.stParentMasked.textContent = maskPhone(s.parentMobile);
 
-  function fillStudentDlg(st) {
-    $("#dlgStudentTitle").textContent = st?.id ? "تعديل بيانات الطالب" : "إضافة طالب";
-    $("#stInternalId").value = st?.id || "";
-    $("#stName").value = st?.name || "";
-    $("#stIdNumber").value = st?.idNumber || "";
-    $("#stClass").value = st?.className || "";
-    $("#stNotes").value = st?.notes || "";
-    $("#stParentName").value = st?.parentName || "";
-    $("#stParentMobile").value = st?.parentMobile || "";
-    $("#btnDeleteStudent").style.display = st?.id ? "inline-flex" : "none";
+  el.studentCard.classList.remove("hidden");
+  el.matchList.classList.add("hidden");
+
+  el.searchStatus.textContent = "✅ تم العثور على سجل. يمكنك الآن تسجيل مواظبة أو سلوك.";
+}
+
+function clearSelection(){
+  state.selectedId = null;
+  state.selected = null;
+  el.studentCard.classList.add("hidden");
+  el.matchList.classList.add("hidden");
+  el.searchStatus.textContent = "تم إخفاء البيانات.";
+}
+
+/* ===================== سجل + تصدير ===================== */
+function addLog(entry){
+  const logs = getLogs();
+  logs.unshift(entry);
+  setLogs(logs);
+  renderLogs();
+}
+
+function renderLogs(){
+  const logs = getLogs();
+  const filter = el.logFilter.value || "all";
+  const shown = logs.filter(l => filter === "all" ? true : l.type === filter);
+
+  el.logList.innerHTML = "";
+  if(!shown.length){
+    el.logList.innerHTML = `<div class="muted" style="padding:10px">لا يوجد سجل.</div>`;
+    return;
   }
 
-  async function openAttendanceDlg(studentId, forcedStatus=null) {
-    const st = await getStudent(studentId);
-    if (!st) return;
-    $("#attStudentLine").textContent = `الطالب: ${st.name}`;
-    $("#attStudentId").value = st.id;
-    $("#attStatus").value = forcedStatus || "present";
-    $("#attWhen").value = nowLocalInput();
-    $("#attExcused").value = "no";
-    $("#attNote").value = "";
-    $("#attMsg").value = makeAttendanceMessage(st, $("#attStatus").value, $("#attWhen").value, $("#attExcused").value, "", settings);
-    openDlg($("#dlgAttendance"));
+  shown.slice(0, 200).forEach(l=>{
+    const card = document.createElement("div");
+    card.className = "logCard";
+
+    const pillClass = l.type === "behavior" ? "bad" : "ok";
+    const label = l.type === "attendance" ? "مواظبة" : (l.type === "behavior" ? "سلوك" : "رسالة");
+    const when = new Date(l.when).toLocaleString("ar-SA");
+
+    // لا أسماء هنا: فقط مقنّع
+    card.innerHTML = `
+      <div class="logTop">
+        <span class="pill ${pillClass}">${label}</span>
+        <span class="muted small">${when}</span>
+      </div>
+      <div style="margin-top:8px;font-weight:900">${l.studentTag || "طالب"}</div>
+      <div class="muted" style="margin-top:6px;white-space:pre-wrap">${l.note || ""}</div>
+    `;
+    el.logList.appendChild(card);
+  });
+}
+
+function exportLogsXlsx(){
+  if(!window.XLSX){
+    alert("مكتبة Excel لم تُحمَّل بعد.");
+    return;
   }
+  const logs = getLogs();
+  const rows = logs.map(l=>({
+    النوع: l.type,
+    الطالب_مقنع: l.studentTag || "",
+    التاريخ: new Date(l.when).toLocaleString("ar-SA"),
+    ملاحظة: l.note || "",
+  }));
 
-  async function openBehaviorDlg(studentId) {
-    const st = await getStudent(studentId);
-    if (!st) return;
-    $("#behStudentLine").textContent = `الطالب: ${st.name}`;
-    $("#behStudentId").value = st.id;
-    $("#behDegree").value = "1";
-    $("#behWhen").value = nowLocalInput();
-    $("#behNote").value = "";
-    await refreshViolationOptions();
-    refreshBehaviorMeta();
-    $("#behMsg").value = makeBehaviorMessage(st, $("#behDegree").value, $("#behViolation").value, $("#behWhen").value, "", settings, taxonomy);
-    openDlg($("#dlgBehavior"));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "السجل");
+  XLSX.writeFile(wb, "سجل-متابعة-مقنع.xlsx");
+}
+
+/* ===================== تصنيف المخالفات ===================== */
+function defaultTaxonomy(){
+  return {
+    "1": [
+      { v: "التأخر عن الحصة", points: 1, actions: "تنبيه شفهي + إشعار ولي الأمر" },
+      { v: "عدم إحضار الأدوات", points: 1, actions: "تنبيه + متابعة" },
+    ],
+    "2": [
+      { v: "إثارة الشغب", points: 2, actions: "إنذار + إشعار ولي الأمر" },
+      { v: "تلفظ غير لائق", points: 2, actions: "معالجة تربوية + إشعار" },
+    ],
+    "3": [
+      { v: "اعتداء لفظي", points: 3, actions: "إحالة للمرشد + إشعار" },
+    ],
+    "4": [
+      { v: "اعتداء بدني", points: 4, actions: "تطبيق الإجراءات النظامية" },
+    ],
+    "5": [
+      { v: "سلوك جسيم", points: 5, actions: "تطبيق الإجراءات النظامية" },
+    ]
+  };
+}
+
+function rebuildBehaviorViolations(){
+  const tax = getTaxonomy();
+  const deg = el.behDegree.value || "1";
+  const list = Array.isArray(tax[deg]) ? tax[deg] : [];
+
+  el.behViolation.innerHTML = "";
+  list.forEach((x, idx)=>{
+    const opt = document.createElement("option");
+    opt.value = String(idx);
+    opt.textContent = x.v;
+    el.behViolation.appendChild(opt);
+  });
+
+  updateBehaviorMeta();
+}
+
+function updateBehaviorMeta(){
+  const tax = getTaxonomy();
+  const deg = el.behDegree.value || "1";
+  const list = Array.isArray(tax[deg]) ? tax[deg] : [];
+  const idx = parseInt(el.behViolation.value || "0", 10);
+  const item = list[idx] || {points:0, actions:"—", v:"—"};
+
+  el.behPointsPill.textContent = `خصم: ${item.points||0}`;
+  el.behActionsLine.textContent = `إجراءات مقترحة: ${item.actions||"—"}`;
+
+  // رسالة بدون اسم الطالب
+  const s = state.selected || null;
+  const school = getSettings().schoolName || "المدرسة";
+  const v = item.v || "مخالفة سلوكية";
+  const when = el.behWhen.value ? new Date(el.behWhen.value).toLocaleString("ar-SA") : new Date().toLocaleString("ar-SA");
+
+  el.behMsg.value =
+`نأمل الإحاطة بأن (ابنكم) تم تسجيل: ${v}.
+التاريخ/الوقت: ${when}
+المدرسة: ${school}
+يرجى التعاون والمتابعة.`;
+}
+
+/* ===================== مواظبة/سلوك ===================== */
+function openAttendance(){
+  if(!state.selected) return;
+  el.attStudentId.value = state.selected.id;
+  el.attWhen.value = nowLocalInputValue();
+  el.attStatus.value = "present";
+  el.attExcused.value = "no";
+  el.attNote.value = "";
+
+  const school = getSettings().schoolName || "المدرسة";
+  el.attStudentLine.textContent = `سجل مقنّع: ${state.selected.class || "—"} • ${maskId(state.selected.idNumber)}`;
+  el.attMsg.value =
+`نحيطكم علمًا بأن (ابنكم) تم تسجيل حالة مواظبة اليوم.
+المدرسة: ${school}
+شاكرين تعاونكم.`;
+
+  el.dlgAttendance.showModal();
+}
+
+function openBehavior(){
+  if(!state.selected) return;
+  el.behStudentId.value = state.selected.id;
+  el.behWhen.value = nowLocalInputValue();
+  el.behDegree.value = "1";
+  rebuildBehaviorViolations();
+  el.behNote.value = "";
+
+  el.behStudentLine.textContent = `سجل مقنّع: ${state.selected.class || "—"} • ${maskId(state.selected.idNumber)}`;
+
+  el.dlgBehavior.showModal();
+}
+
+function saveAttendance(send=false){
+  const s = state.selected;
+  if(!s) return;
+
+  const when = el.attWhen.value ? new Date(el.attWhen.value).toISOString() : new Date().toISOString();
+  const status = el.attStatus.value;
+  const excused = el.attExcused.value;
+  const note = (el.attNote.value||"").trim();
+
+  const tag = `${s.class || "—"} • ${maskId(s.idNumber)}`;
+
+  addLog({
+    id: "log_" + Date.now(),
+    type: "attendance",
+    when,
+    studentId: s.id,
+    studentTag: tag,
+    note: `الحالة: ${status} • ${excused === "yes" ? "بعذر" : "بدون عذر"}${note ? "\nملاحظة: " + note : ""}`,
+  });
+
+  if(send) sendMessageToParent(s, el.attMsg.value);
+
+  el.dlgAttendance.close();
+}
+
+function saveBehavior(send=false){
+  const s = state.selected;
+  if(!s) return;
+
+  const when = el.behWhen.value ? new Date(el.behWhen.value).toISOString() : new Date().toISOString();
+  const deg = el.behDegree.value;
+  const note = (el.behNote.value||"").trim();
+
+  const tax = getTaxonomy();
+  const list = Array.isArray(tax[deg]) ? tax[deg] : [];
+  const idx = parseInt(el.behViolation.value || "0", 10);
+  const item = list[idx] || {v:"—", points:0, actions:"—"};
+
+  const tag = `${s.class || "—"} • ${maskId(s.idNumber)}`;
+
+  addLog({
+    id: "log_" + Date.now(),
+    type: "behavior",
+    when,
+    studentId: s.id,
+    studentTag: tag,
+    note: `الدرجة: ${deg}\nالمخالفة: ${item.v}\nإجراءات: ${item.actions}${note ? "\nتفاصيل: " + note : ""}`,
+  });
+
+  if(send) sendMessageToParent(s, el.behMsg.value);
+
+  el.dlgBehavior.close();
+}
+
+function sendMessageToParent(student, msg){
+  const settings = getSettings();
+  const mobile = digitsOnly(student.parentMobile);
+  if(!mobile){
+    alert("لا يوجد رقم ولي أمر لهذا السجل.");
+    return;
   }
+  const cc = digitsOnly(settings.countryCode || "966");
+  const full = mobile.startsWith("0") ? mobile.slice(1) : mobile;
+  const phone = cc + full;
 
-  function refreshBehaviorMeta() {
-    const degree = String($("#behDegree").value);
-    const points = taxonomy.degrees?.[degree]?.points ?? 0;
-    const actions = taxonomy.degrees?.[degree]?.actions ?? "";
-    $("#behPointsPill").textContent = `خصم: ${points}`;
-    $("#behActionsLine").textContent = actions ? `الإجراءات: ${actions}` : "";
+  const text = encodeURIComponent(String(msg||"").trim());
+
+  // الافتراضي: واتساب
+  const channel = settings.defaultChannel || "whatsapp";
+  if(channel === "whatsapp"){
+    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+    addLog({
+      id: "log_" + Date.now(),
+      type: "message",
+      when: new Date().toISOString(),
+      studentId: student.id,
+      studentTag: `${student.class || "—"} • ${maskId(student.idNumber)}`,
+      note: `تم فتح واتساب لإرسال رسالة.\nالنص:\n${String(msg||"").trim()}`,
+    });
+  }else if(channel === "sms"){
+    window.location.href = `sms:${phone}?&body=${text}`;
+  }else{
+    window.location.href = `tel:${phone}`;
   }
+}
 
-  async function refreshViolationOptions() {
-    taxonomy = await getTaxonomy();
-    const degree = String($("#behDegree").value);
-    const list = taxonomy.violations?.[degree] || [];
-    const sel = $("#behViolation");
-    sel.innerHTML = list.map(v => `<option value="${escapeAttr(v)}">${escapeHTML(v)}</option>`).join("") || `<option value="مخالفة غير مصنفة">مخالفة غير مصنفة</option>`;
+/* ===================== الاستيراد Excel ===================== */
+function openImport(){ el.importFile.click(); }
+
+async function importFromExcel(file){
+  if(!window.XLSX){
+    alert("مكتبة Excel لم تُحمَّل بعد.");
+    return;
   }
+  const data = await file.arrayBuffer();
+  const wb = XLSX.read(data, {type:"array"});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {defval:""});
 
-  // ---------- Import students (Noor Excel) ----------
-  async function importNoorExcel(file) {
-    if (!window.XLSX) throw new Error("لم يتم تحميل مكتبة Excel بعد. تأكد من الاتصال بالإنترنت مرة واحدة.");
-    const buf = await file.arrayBuffer();
-    const wb = XLSX.read(buf, { type:"array" });
-    let added = 0;
-    const seen = new Set();
-
-    for (const sheetName of wb.SheetNames) {
-      const ws = wb.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:false, defval:"" });
-      if (!rows || !rows.length) continue;
-
-      // find header row containing "اسم الطالب" or "Student's Name"
-      let h = -1;
-      for (let i=0;i<Math.min(rows.length, 60);i++){
-        const row = rows[i].map(x => String(x||""));
-        if (row.some(c => c.includes("اسم الطالب") || c.includes("Student's Name"))) { h = i; break; }
-      }
-      if (h < 0) continue;
-
-      const h1 = rows[h] || [];
-      const h2 = rows[h+1] || [];
-      const labels = [];
-      const width = Math.max(h1.length, h2.length);
-      for (let c=0;c<width;c++){
-        const a = String(h1[c]||"").trim();
-        const b = String(h2[c]||"").trim();
-        labels[c] = `${a} ${b}`.trim();
-      }
-
-      const findCol = (pred) => {
-        for (let c=0;c<labels.length;c++){
-          const t = labels[c];
-          if (pred(t)) return c;
-        }
-        return -1;
-      };
-
-      const colName = findCol(t => t.includes("اسم الطالب") || t.includes("Student's Name"));
-      const colIdNum = findCol(t => t.includes("رقمها") || /\bID\b/i.test(t) || t.includes("هوية") || t.includes("الإقامة"));
-      const colIdType = findCol(t => t.includes("نوعها"));
-      const colDob = findCol(t => t.includes("تاريخ الميلاد") || t.includes("Date of birth"));
-      const colNat = findCol(t => t.includes("الجنسية") || t.includes("Nationality"));
-
-      for (let r=h+2; r<rows.length; r++){
-        const row = rows[r];
-        const name = String(row[colName]||"").trim();
-        if (!name) continue;
-        if (!hasArabic(name)) continue; // skip duplicate English rows
-        const idNumber = String((colIdNum>=0?row[colIdNum]:"")||"").trim();
-        const key = (idNumber || name).toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-
-        const st = {
-          id: safeUUID(),
-          name,
-          idNumber,
-          idType: String((colIdType>=0?row[colIdType]:"")||"").trim(),
-          dob: String((colDob>=0?row[colDob]:"")||"").trim(),
-          nationality: String((colNat>=0?row[colNat]:"")||"").trim(),
-          className: "",
-          studentNo: "",
-          parentName: "",
-          parentMobile: "",
-          notes: "",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        // Upsert by idNumber if exists: try match existing
-        if (idNumber) {
-          const existing = students.find(s => s.idNumber && s.idNumber === idNumber);
-          if (existing) st.id = existing.id;
-        }
-        await upsertStudent(st);
-        added++;
-      }
+  // محاولة فهم الأعمدة (اسم/هوية/صف/ولي/جوال)
+  const mapKey = (obj, keys)=>{
+    for(const k of keys){
+      const found = Object.keys(obj).find(x => normalizeArabic(x) === normalizeArabic(k));
+      if(found) return found;
     }
-    await loadStudents();
-    return added;
-  }
+    return null;
+  };
 
+  const out = [];
+  for(const r of rows){
+    const kName = mapKey(r, ["اسم الطالب","الطالب","الاسم"]);
+    const kId = mapKey(r, ["رقم الهوية","رقم الإقامة","الهوية/الإقامة","الهوية"]);
+    const kClass = mapKey(r, ["الصف","الصف/الشعبة","الشعبة"]);
+    const kPName = mapKey(r, ["اسم ولي الأمر","ولي الأمر"]);
+    const kPMob = mapKey(r, ["جوال ولي الأمر","رقم الجوال","جوال"]);
 
-  // ---------- Import parents (Excel of parent mobiles) ----------
-  async function importParentsExcel(file) {
-    if (!window.XLSX) throw new Error("لم يتم تحميل مكتبة Excel بعد. تأكد من الاتصال بالإنترنت مرة واحدة.");
-    const buf = await file.arrayBuffer();
-    const wb = XLSX.read(buf, { type:"array" });
-
-    const normalizeHeader = (s) => String(s||"").trim().replace(/\s+/g," ");
-    const headerRowIndex = (rows) => {
-      for (let i=0;i<Math.min(rows.length, 40);i++){
-        const row = rows[i].map(x => normalizeHeader(x));
-        if (row.some(c => c.includes("جوال") || c.toLowerCase().includes("mobile") || c.includes("ولي الأمر") || c.includes("رقم الهوية") || c.includes("الإقامة"))) {
-          return i;
-        }
-      }
-      return 0;
+    const s = {
+      id: uid(),
+      name: String(kName ? r[kName] : "").trim(),
+      idNumber: String(kId ? r[kId] : "").trim(),
+      class: String(kClass ? r[kClass] : "").trim(),
+      notes: "",
+      parentName: String(kPName ? r[kPName] : "").trim(),
+      parentMobile: String(kPMob ? r[kPMob] : "").trim(),
     };
 
-    const byId = new Map(students.filter(s => s.idNumber).map(s => [String(s.idNumber).trim(), s]));
+    if(s.name || s.idNumber) out.push(s);
+  }
 
-    let updated = 0;
-    for (const sheetName of wb.SheetNames) {
-      const ws = wb.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:false, defval:"" });
-      if (!rows || !rows.length) continue;
+  if(!out.length){
+    alert("لم يتم التعرف على الأعمدة. تأكد من وجود (اسم الطالب/رقم الهوية/الصف).");
+    return;
+  }
 
-      const h = headerRowIndex(rows);
-      const headers = (rows[h] || []).map(x => normalizeHeader(x));
-
-      const findColH = (pred) => {
-        for (let c=0;c<headers.length;c++){
-          const t = headers[c];
-          if (pred(t)) return c;
-        }
-        return -1;
-      };
-
-      const colId = findColH(t => t.includes("رقم الهوية") || t.includes("رقم الإقامة") || t.includes("الهوية") || t.includes("الإقامة") || /\bID\b/i.test(t));
-      const colName = findColH(t => t.includes("اسم الطالب") || /student/i.test(t) || t.includes("الطالب"));
-      const colPName = findColH(t => t.includes("اسم ولي") || t.includes("ولي الأمر") || /parent/i.test(t));
-      const colPMobile = findColH(t => t.includes("جوال") || t.toLowerCase().includes("mobile") || t.includes("الهاتف"));
-
-      if (colId < 0 || colPMobile < 0) continue;
-
-      for (let r=h+1; r<rows.length; r++){
-        const row = rows[r];
-        const idNumber = String(row[colId]||"").trim();
-        const pmobile = String(row[colPMobile]||"").trim();
-        if (!idNumber || !pmobile) continue;
-
-        const st = byId.get(idNumber);
-        if (!st) continue;
-
-        const next = { ...st };
-        if (colName >= 0) {
-          const nm = String(row[colName]||"").trim();
-          if (nm) next.name = nm;
-        }
-        if (colPName >= 0) {
-          const pn = String(row[colPName]||"").trim();
-          if (pn) next.parentName = pn;
-        }
-        next.parentMobile = pmobile;
-        next.updatedAt = new Date().toISOString();
-
-        await upsertStudent(next);
-        byId.set(idNumber, next);
-        updated++;
-      }
+  // دمج: إذا نفس الهوية موجودة استبدل
+  const existing = getStudents();
+  const byId = new Map(existing.map(x => [digitsOnly(x.idNumber), x]));
+  out.forEach(n=>{
+    const key = digitsOnly(n.idNumber);
+    if(key && byId.has(key)){
+      const old = byId.get(key);
+      Object.assign(old, n, {id: old.id}); // احتفظ بالمعرف
+    }else{
+      existing.push(n);
     }
+  });
 
-    await loadStudents();
-    return updated;
+  setStudents(existing);
+  el.searchStatus.textContent = `✅ تم استيراد/تحديث ${out.length} سجل.`;
+}
+
+/* ===================== نسخ احتياطي/استعادة ===================== */
+function openBackup(){
+  el.dlgBackup.showModal();
+}
+function doBackup(){
+  const payload = {
+    v: 2,
+    when: new Date().toISOString(),
+    students: getStudents(),
+    logs: getLogs(),
+    settings: getSettings(),
+    taxonomy: getTaxonomy(),
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "backup-alyqubi-privacy.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+async function doRestore(file){
+  const text = await file.text();
+  const data = JSON.parse(text);
+
+  if(data && data.students) setStudents(data.students);
+  if(data && data.logs) setLogs(data.logs);
+  if(data && data.settings) setSettings(data.settings);
+  if(data && data.taxonomy) setTaxonomy(data.taxonomy);
+
+  el.dlgBackup.close();
+  renderLogs();
+  el.searchStatus.textContent = "✅ تمت الاستعادة بنجاح.";
+}
+
+/* ===================== إعدادات ===================== */
+function loadSettingsUI(){
+  const s = getSettings();
+  el.setSchoolName.value = s.schoolName || "";
+  el.setPrincipalName.value = s.principalName || "";
+  el.setCountryCode.value = s.countryCode || "966";
+  el.setDefaultChannel.value = s.defaultChannel || "whatsapp";
+}
+
+function saveSettingsFromUI(){
+  const s = getSettings();
+  s.schoolName = el.setSchoolName.value.trim();
+  s.principalName = el.setPrincipalName.value.trim();
+  s.countryCode = digitsOnly(el.setCountryCode.value.trim()) || "966";
+  s.defaultChannel = el.setDefaultChannel.value;
+  setSettings(s);
+}
+
+function openTaxonomy(){
+  const tax = getTaxonomy();
+  el.taxJson.value = JSON.stringify(tax, null, 2);
+  el.dlgTaxonomy.showModal();
+}
+function saveTaxonomy(){
+  try{
+    const obj = JSON.parse(el.taxJson.value);
+    setTaxonomy(obj);
+    el.dlgTaxonomy.close();
+    rebuildBehaviorViolations();
+  }catch(e){
+    alert("JSON غير صالح.");
+  }
+}
+
+function resetAll(){
+  if(!confirm("تأكيد حذف جميع البيانات من هذا الجهاز؟")) return;
+  localStorage.removeItem(STORE.students);
+  localStorage.removeItem(STORE.logs);
+  localStorage.removeItem(STORE.settings);
+  localStorage.removeItem(STORE.taxonomy);
+  state.selected = null;
+  state.selectedId = null;
+  el.studentCard.classList.add("hidden");
+  el.matchList.classList.add("hidden");
+  el.searchStatus.textContent = "تمت إعادة الضبط.";
+  renderLogs();
+  loadSettingsUI();
+}
+
+/* ===================== أحداث ===================== */
+function wireEvents(){
+  // nav
+  el.tabs.forEach(t=>{
+    t.addEventListener("click", ()=>{
+      openView(t.dataset.view);
+      if(t.dataset.view === "viewLog") renderLogs();
+      if(t.dataset.view === "viewSettings") loadSettingsUI();
+    });
+  });
+
+  // lock
+  el.btnUnlock.addEventListener("click", tryUnlock);
+  el.pinInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") tryUnlock(); });
+
+  // search
+  el.btnSearch.addEventListener("click", ()=> runSearch());
+  el.studentSearch.addEventListener("keydown", (e)=>{ if(e.key==="Enter") runSearch(); });
+
+  el.btnClear.addEventListener("click", clearSelection);
+
+  // actions
+  el.btnOpenAttendance.addEventListener("click", openAttendance);
+  el.btnOpenBehavior.addEventListener("click", openBehavior);
+
+  // attendance save/send
+  el.btnAttSave.addEventListener("click", (e)=>{ e.preventDefault(); saveAttendance(false); });
+  el.btnAttSend.addEventListener("click", (e)=>{ e.preventDefault(); saveAttendance(true); });
+
+  // behavior
+  el.behDegree.addEventListener("change", rebuildBehaviorViolations);
+  el.behViolation.addEventListener("change", updateBehaviorMeta);
+  el.behWhen.addEventListener("change", updateBehaviorMeta);
+
+  el.btnBehSave.addEventListener("click", (e)=>{ e.preventDefault(); saveBehavior(false); });
+  el.btnBehSend.addEventListener("click", (e)=>{ e.preventDefault(); saveBehavior(true); });
+
+  // import
+  el.btnImport.addEventListener("click", openImport);
+  el.importFile.addEventListener("change", async ()=>{
+    const f = el.importFile.files && el.importFile.files[0];
+    el.importFile.value = "";
+    if(!f) return;
+    try{ await importFromExcel(f); }catch(e){ alert("فشل الاستيراد."); }
+  });
+
+  // backup
+  el.btnBackup.addEventListener("click", openBackup);
+  el.btnDoBackup.addEventListener("click", (e)=>{ e.preventDefault(); doBackup(); });
+  el.restoreFile.addEventListener("change", async ()=>{
+    const f = el.restoreFile.files && el.restoreFile.files[0];
+    el.restoreFile.value = "";
+    if(!f) return;
+    try{ await doRestore(f); }catch(e){ alert("فشل الاستعادة."); }
+  });
+
+  // log
+  el.logFilter.addEventListener("change", renderLogs);
+  el.btnExportXlsx.addEventListener("click", exportLogsXlsx);
+  el.btnClearLog.addEventListener("click", ()=>{
+    if(!confirm("مسح السجل بالكامل؟")) return;
+    setLogs([]);
+    renderLogs();
+  });
+
+  // settings auto-save
+  [el.setSchoolName, el.setPrincipalName, el.setCountryCode, el.setDefaultChannel].forEach(inp=>{
+    inp.addEventListener("input", saveSettingsFromUI);
+    inp.addEventListener("change", saveSettingsFromUI);
+  });
+
+  // pin
+  el.btnSavePin.addEventListener("click", ()=>{
+    const p = (el.setPin.value||"").trim();
+    if(p && p.length < 4) { alert("الرمز لا يقل عن 4 أرقام."); return; }
+    if(p){ pinSet(p); el.setPin.value = ""; alert("تم حفظ الرمز."); applyLockIfNeeded(); }
+    else { alert("أدخل رمزًا."); }
+  });
+  el.btnClearPin.addEventListener("click", ()=>{
+    pinSet("");
+    alert("تمت إزالة القفل.");
+    applyLockIfNeeded();
+  });
+
+  // taxonomy
+  el.btnOpenTaxonomy.addEventListener("click", openTaxonomy);
+  el.btnSaveTax.addEventListener("click", (e)=>{ e.preventDefault(); saveTaxonomy(); });
+
+  // reset
+  el.btnResetAll.addEventListener("click", resetAll);
+}
+
+function runSearch(){
+  const q = el.studentSearch.value.trim();
+  if(!q){
+    el.searchStatus.textContent = "اكتب كلمة بحث أولاً.";
+    el.matchList.classList.add("hidden");
+    el.studentCard.classList.add("hidden");
+    return;
   }
 
-  // ---------- Export Excel ----------
-  async function exportLogToXlsx() {
-    if (!window.XLSX) throw new Error("لم يتم تحميل مكتبة Excel بعد.");
-    const items = await listLog("all", 500);
-    const byId = new Map(students.map(s => [s.id, s]));
-    const rows = items.map(it => {
-      const st = byId.get(it.studentId);
-      if (it.kind === "event") {
-        return {
-          النوع: it.type === "attendance" ? "حضور/مواظبة" : "سلوك",
-          الطالب: st?.name || "",
-          التاريخ: fmtDT(it.when),
-          الحالة: it.type === "attendance" ? statusLabel(it.status) : `درجة ${it.degree}`,
-          المخالفة: it.violation || "",
-          بعذر: it.excused || "",
-          ملاحظة: it.note || ""
-        };
-      } else {
-        return {
-          النوع: "رسالة",
-          الطالب: st?.name || "",
-          التاريخ: fmtDT(it.when),
-          الحالة: it.channel || "",
-          المخالفة: "",
-          بعذر: "",
-          ملاحظة: it.text || ""
-        };
-      }
-    });
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "السجل");
-    const out = XLSX.write(wb, { bookType:"xlsx", type:"array" });
-    dl(`سجل-المتابعة-${new Date().toISOString().slice(0,10)}.xlsx`, new Blob([out], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  const matches = searchStudents(q);
+
+  if(matches.length === 0){
+    el.searchStatus.textContent = "لا توجد نتائج. جرّب كتابة الاسم بشكل أدق أو رقم الهوية/الإقامة.";
+    el.matchList.classList.add("hidden");
+    el.studentCard.classList.add("hidden");
+    return;
   }
 
-  // ---------- Security (PIN) ----------
-  async function sha256(text) {
-    const enc = new TextEncoder().encode(text);
-    const hash = await crypto.subtle.digest("SHA-256", enc);
-    return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,"0")).join("");
+  if(matches.length === 1){
+    el.searchStatus.textContent = "تم العثور على نتيجة واحدة.";
+    renderMatches(matches);
+    selectStudentById(matches[0].id);
+    return;
   }
 
-  async function checkPINFlow() {
-    const pinHash = await getSetting("pinHash", "");
-    if (!pinHash) return;
+  // متعددة: بدون أسماء
+  el.searchStatus.textContent = `تم العثور على ${matches.length} نتائج (بدون أسماء). اختر السجل الصحيح.`;
+  el.studentCard.classList.add("hidden");
+  renderMatches(matches);
+}
 
-    const lock = $("#lockScreen");
-    lock.classList.remove("hidden");
-    lock.setAttribute("aria-hidden","false");
-
-    $("#pinInput").value = "";
-    $("#pinErr").classList.add("hidden");
-
-    const tryUnlock = async () => {
-      const v = String($("#pinInput").value||"").trim();
-      const h = await sha256(v);
-      if (h === pinHash) {
-        lock.classList.add("hidden");
-        lock.setAttribute("aria-hidden","true");
-      } else {
-        $("#pinErr").classList.remove("hidden");
-      }
-    };
-
-    $("#btnUnlock").onclick = tryUnlock;
-    $("#pinInput").onkeydown = (e) => { if (e.key==="Enter") { e.preventDefault(); tryUnlock(); } };
-  }
-
-  // ---------- Escape ----------
-  function escapeHTML(s){
-    return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-  function escapeAttr(s){ return escapeHTML(s).replace(/"/g,"&quot;"); }
-
-  // ---------- Load / Init ----------
-  async function loadSettings() {
-    settings.schoolName = await getSetting("schoolName", "");
-    settings.principalName = await getSetting("principalName", "");
-    settings.countryCode = await getSetting("countryCode", "966");
-    settings.defaultChannel = await getSetting("defaultChannel", "whatsapp");
-    $("#setSchoolName").value = settings.schoolName;
-    $("#setPrincipalName").value = settings.principalName;
-    $("#setCountryCode").value = settings.countryCode;
-    $("#setDefaultChannel").value = settings.defaultChannel;
-  }
-
-  async function loadStudents() {
-    students = await listStudents();
-    students.sort((a,b)=> String(a.name||"").localeCompare(String(b.name||""), "ar"));
-
-    // تحديث قائمة الصفوف/الأقسام
-    const sel = $("#classFilter");
-    if (sel) {
-      const prev = String(sel.value || "all");
-      const uniq = [...new Set(students.map(s => String(s.className||"").trim()).filter(Boolean))];
-      uniq.sort((a,b)=> a.localeCompare(b, "ar"));
-      sel.innerHTML = `<option value="all">كل الصفوف</option>` + uniq.map(v => `<option value="${escapeAttr(v)}">${escapeHTML(v)}</option>`).join("");
-      sel.value = uniq.includes(prev) ? prev : "all";
-    }
-
-
-  // ---------- Quick stats (dashboard) ----------
-  async function updateStats() {
-    try{
-      if (!$("#statTotal")) return;
-      const total = students.length;
-      const ready = students.filter(s => String(s.parentMobile||"").trim().length >= 9).length;
-
-      $("#statTotal").textContent = String(total);
-      $("#statParentsReady").textContent = String(ready);
-
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      const startISO = today.toISOString();
-
-      let absent = 0;
-      let behavior = 0;
-
-      const db = await openDB();
-      await new Promise((res) => {
-        const store = db.transaction("events","readonly").objectStore("events");
-        const idx = store.index("by_when");
-        const req = idx.openCursor(null, "prev");
-        req.onsuccess = () => {
-          const cur = req.result;
-          if (!cur) return res();
-          const ev = cur.value;
-          const when = String(ev.when || "");
-          if (when < startISO) return res(); // stop (older than today)
-          if (ev.type === "attendance" && ev.status === "absent") absent++;
-          if (ev.type === "behavior") behavior++;
-          cur.continue();
-        };
-        req.onerror = () => res();
-      });
-
-      $("#statAbsentToday").textContent = String(absent);
-      $("#statBehaviorToday").textContent = String(behavior);
-    }catch(e){
-      // ignore stats failures
-    }
-  }
-
-
-    renderStudentsList();
-    await updateStats();
-  }
-
-  function bindTabs() {
-    $$(".tab").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        setView(btn.dataset.view);
-        if (btn.dataset.view === "viewLog") await renderLog();
-      });
-    });
-  }
-
-  function bindButtons() {
-    $("#btnAddStudent").addEventListener("click", () => {
-      fillStudentDlg(null);
-      openDlg($("#dlgStudent"));
-    });
-
-    $("#studentsList").addEventListener("click", async (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      const id = btn.dataset.id;
-      const act = btn.dataset.act;
-      if (!id || !act) return;
-
-      if (act === "edit") {
-        const st = await getStudent(id);
-        fillStudentDlg(st);
-        openDlg($("#dlgStudent"));
-        return;
-      }
-      if (act === "behavior") { await openBehaviorDlg(id); return; }
-      if (["present","absent","late","early"].includes(act)) { await openAttendanceDlg(id, act); return; }
-    });
-
-    $("#studentSearch").addEventListener("input", renderStudentsList);
-    if ($("#classFilter")) $("#classFilter").addEventListener("change", renderStudentsList);
-
-    // Save student
-    $("#btnSaveStudent").addEventListener("click", async (e) => {
-      e.preventDefault();
-      const id = $("#stInternalId").value || safeUUID();
-      const st = {
-        id,
-        name: $("#stName").value.trim(),
-        idNumber: $("#stIdNumber").value.trim(),
-        className: $("#stClass").value.trim(),
-        notes: $("#stNotes").value.trim(),
-        parentName: $("#stParentName").value.trim(),
-        parentMobile: $("#stParentMobile").value.trim(),
-        updatedAt: new Date().toISOString(),
-        createdAt: (await getStudent(id))?.createdAt || new Date().toISOString()
-      };
-      if (!st.name) return;
-      await upsertStudent(st);
-      closeDlg($("#dlgStudent"));
-      await loadStudents();
-    });
-
-    // Delete student
-    $("#btnDeleteStudent").addEventListener("click", async (e) => {
-      e.preventDefault();
-      const id = $("#stInternalId").value;
-      if (!id) return;
-      if (!confirm("تأكيد حذف الطالب من قاعدة البيانات المحلية؟")) return;
-      await deleteStudent(id);
-      closeDlg($("#dlgStudent"));
-      await loadStudents();
-    });
-
-    // Attendance change re-generate message
-    ["attStatus","attWhen","attExcused","attNote"].forEach(id => {
-      $(`#${id}`).addEventListener("input", async () => {
-        const st = await getStudent($("#attStudentId").value);
-        if (!st) return;
-        $("#attMsg").value = makeAttendanceMessage(st, $("#attStatus").value, $("#attWhen").value, $("#attExcused").value, $("#attNote").value, settings);
-      });
-    });
-
-    // Behavior change re-generate
-    $("#behDegree").addEventListener("change", async () => {
-      await refreshViolationOptions();
-      refreshBehaviorMeta();
-      const st = await getStudent($("#behStudentId").value);
-      if (!st) return;
-      $("#behMsg").value = makeBehaviorMessage(st, $("#behDegree").value, $("#behViolation").value, $("#behWhen").value, $("#behNote").value, settings, taxonomy);
-    });
-    ["behViolation","behWhen","behNote"].forEach(id => {
-      $(`#${id}`).addEventListener("input", async () => {
-        refreshBehaviorMeta();
-        const st = await getStudent($("#behStudentId").value);
-        if (!st) return;
-        $("#behMsg").value = makeBehaviorMessage(st, $("#behDegree").value, $("#behViolation").value, $("#behWhen").value, $("#behNote").value, settings, taxonomy);
-      });
-    });
-
-    // Save/Send attendance
-    $("#btnAttSave").addEventListener("click", async (e) => {
-      e.preventDefault();
-      await saveAttendance(false);
-    });
-    $("#btnAttSend").addEventListener("click", async (e) => {
-      e.preventDefault();
-      await saveAttendance(true);
-    });
-
-    async function saveAttendance(doSend) {
-      const studentId = $("#attStudentId").value;
-      const st = await getStudent(studentId);
-      if (!st) return;
-      const ev = {
-        id: safeUUID(),
-        kind:"event",
-        type:"attendance",
-        studentId,
-        status: $("#attStatus").value,
-        when: $("#attWhen").value || new Date().toISOString(),
-        excused: $("#attExcused").value,
-        note: $("#attNote").value.trim(),
-        createdAt: new Date().toISOString()
-      };
-      await addEvent(ev);
-
-      const msgText = $("#attMsg").value.trim();
-      if (msgText) {
-        const to = normalizeMobile(st.parentMobile, settings.countryCode);
-        const channel = settings.defaultChannel;
-        const msg = {
-          id: safeUUID(),
-          kind:"message",
-          studentId,
-          eventId: ev.id,
-          channel,
-          to,
-          text: msgText,
-          when: new Date().toISOString()
-        };
-        await addMessage(msg);
-        if (doSend && to) {
-          const link = channelLink(channel, to, msgText);
-          if (link) window.open(link, "_blank");
-        }
-      }
-      closeDlg($("#dlgAttendance"));
-      await renderLog();
-      await updateStats();
-    }
-
-    // Save/Send behavior
-    $("#btnBehSave").addEventListener("click", async (e) => {
-      e.preventDefault();
-      await saveBehavior(false);
-    });
-    $("#btnBehSend").addEventListener("click", async (e) => {
-      e.preventDefault();
-      await saveBehavior(true);
-    });
-
-    async function saveBehavior(doSend) {
-      const studentId = $("#behStudentId").value;
-      const st = await getStudent(studentId);
-      if (!st) return;
-
-      taxonomy = await getTaxonomy();
-      const degree = String($("#behDegree").value);
-      const points = taxonomy.degrees?.[degree]?.points ?? 0;
-
-      const ev = {
-        id: safeUUID(),
-        kind:"event",
-        type:"behavior",
-        studentId,
-        degree,
-        points,
-        violation: $("#behViolation").value,
-        when: $("#behWhen").value || new Date().toISOString(),
-        note: $("#behNote").value.trim(),
-        createdAt: new Date().toISOString()
-      };
-      await addEvent(ev);
-
-      const msgText = $("#behMsg").value.trim();
-      if (msgText) {
-        const to = normalizeMobile(st.parentMobile, settings.countryCode);
-        const channel = settings.defaultChannel;
-        const msg = {
-          id: safeUUID(),
-          kind:"message",
-          studentId,
-          eventId: ev.id,
-          channel,
-          to,
-          text: msgText,
-          when: new Date().toISOString()
-        };
-        await addMessage(msg);
-        if (doSend && to) {
-          const link = channelLink(channel, to, msgText);
-          if (link) window.open(link, "_blank");
-        }
-      }
-
-      closeDlg($("#dlgBehavior"));
-      await renderLog();
-      await updateStats();
-    }
-
-    // Settings save
-    ["setSchoolName","setPrincipalName","setCountryCode","setDefaultChannel"].forEach(id => {
-      $(`#${id}`).addEventListener("change", async () => {
-        settings.schoolName = $("#setSchoolName").value.trim();
-        settings.principalName = $("#setPrincipalName").value.trim();
-        settings.countryCode = $("#setCountryCode").value.trim() || "966";
-        settings.defaultChannel = $("#setDefaultChannel").value;
-        await setSetting("schoolName", settings.schoolName);
-        await setSetting("principalName", settings.principalName);
-        await setSetting("countryCode", settings.countryCode);
-        await setSetting("defaultChannel", settings.defaultChannel);
-      });
-    });
-
-    // PIN
-    $("#btnSavePin").addEventListener("click", async () => {
-      const v = String($("#setPin").value||"").trim();
-      if (v.length < 4) return alert("الرمز يجب ألا يقل عن 4 أرقام.");
-      const h = await sha256(v);
-      await setSetting("pinHash", h);
-      $("#setPin").value = "";
-      alert("تم حفظ الرمز.");
-    });
-    $("#btnClearPin").addEventListener("click", async () => {
-      if (!confirm("إزالة القفل؟")) return;
-      await setSetting("pinHash", "");
-      alert("تمت الإزالة.");
-    });
-
-    // Taxonomy editor
-    $("#btnOpenTaxonomy").addEventListener("click", async () => {
-      taxonomy = await getTaxonomy();
-      $("#taxJson").value = JSON.stringify(taxonomy, null, 2);
-      openDlg($("#dlgTaxonomy"));
-    });
-    $("#btnSaveTax").addEventListener("click", async (e) => {
-      e.preventDefault();
-      try{
-        const obj = JSON.parse($("#taxJson").value);
-        await setTaxonomy(obj);
-        taxonomy = obj;
-        closeDlg($("#dlgTaxonomy"));
-        alert("تم حفظ التصنيف.");
-      }catch(err){
-        alert("ملف JSON غير صالح.");
-      }
-    });
-
-    // Backup modal
-    $("#btnBackup").addEventListener("click", () => openDlg($("#dlgBackup")));
-    $("#btnDoBackup").addEventListener("click", async (e) => {
-      e.preventDefault();
-      const dump = await exportAll();
-      const blob = new Blob([JSON.stringify(dump, null, 2)], {type:"application/json"});
-      dl(`student-followup-backup-${new Date().toISOString().slice(0,10)}.json`, blob);
-    });
-    $("#restoreFile").addEventListener("change", async (e) => {
-      const f = e.target.files?.[0];
-      if (!f) return;
-      try{
-        const txt = await f.text();
-        const dump = JSON.parse(txt);
-        await importAll(dump);
-        await loadSettings();
-        await loadStudents();
-        closeDlg($("#dlgBackup"));
-        alert("تمت الاستعادة.");
-      }catch(err){
-        alert("تعذر الاستعادة: ملف غير صالح.");
-      } finally {
-        e.target.value = "";
-      }
-    });
-
-    // Import students
-    $("#btnImport").addEventListener("click", () => $("#importFile").click());
-    $("#importFile").addEventListener("change", async (e) => {
-      const f = e.target.files?.[0];
-      if (!f) return;
-      try{
-        const n = await importNoorExcel(f);
-        alert(`تم استيراد/تحديث ${n} طالب.`);
-      }catch(err){
-        console.error(err);
-        alert(String(err?.message || err));
-      } finally {
-        e.target.value = "";
-      }
-    });
-
-    // Import parents (mobiles)
-    $("#btnImportParents").addEventListener("click", () => $("#parentImportFile").click());
-    $("#parentImportFile").addEventListener("change", async (e) => {
-      const f = e.target.files?.[0];
-      if (!f) return;
-      try{
-        const n = await importParentsExcel(f);
-        alert(`تم تحديث بيانات أولياء الأمور لـ ${n} طالب.`);
-      }catch(err){
-        console.error(err);
-        alert(String(err?.message || err));
-      } finally {
-        e.target.value = "";
-      }
-    });
-
-
-    // Reset
-    $("#btnResetDemo").addEventListener("click", async () => {
-      if (!confirm("سيتم حذف جميع البيانات من هذا الجهاز. متابعة؟")) return;
-      await resetAll();
-      settings = { schoolName:"", principalName:"", countryCode:"966", defaultChannel:"whatsapp" };
-      await loadSettings();
-      await loadStudents();
-      alert("تمت إعادة الضبط.");
-    });
-
-    // Log filter
-    $("#logFilter").addEventListener("change", renderLog);
-    $("#btnExportXlsx").addEventListener("click", async () => {
-      try{ await exportLogToXlsx(); } catch(err){ alert(String(err?.message||err)); }
-    });
-  }
-
-  async function seedIfEmpty() {
-    const list = await listStudents();
-    if (list.length) return;
-
-    // محاولة تحميل قائمة الطلاب المرفقة (Seed)
-    try{
-      const res = await fetch("./students-seed.json", { cache:"no-store" });
-      if (res.ok) {
-        const seed = await res.json();
-        if (Array.isArray(seed) && seed.length) {
-          for (const s of seed) {
-            const st = {
-              id: safeUUID(),
-              name: String(s.name||"").trim(),
-              idNumber: String(s.idNumber||"").trim(),
-              idType: String(s.idType||"").trim(),
-              studentNo: String(s.studentNo||"").trim(),
-              studentRecord: String(s.studentRecord||"").trim(),
-              dob: String(s.dob||"").trim(),
-              nationality: String(s.nationality||"").trim(),
-              enrollStatus: String(s.enrollStatus||"").trim(),
-              className: String(s.className||"").trim(),
-              parentName: String(s.parentName||"").trim(),
-              parentMobile: String(s.parentMobile||"").trim(),
-              notes: "",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            };
-            if (st.name) await upsertStudent(st);
-          }
-          return;
-        }
-      }
-    }catch(e){ /* ignore */ }
-
-    // احتياطي: بيانات تجريبية
-    const demo = [
-      { id:safeUUID(), name:"طالب تجريبي 1", idNumber:"", className:"", notes:"", parentName:"", parentMobile:"", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
-      { id:safeUUID(), name:"طالب تجريبي 2", idNumber:"", className:"", notes:"", parentName:"", parentMobile:"", createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() }
-    ];
-    for (const st of demo) await upsertStudent(st);
-  }
-
-  async function init() {
-    // Register service worker
-    if ("serviceWorker" in navigator) {
-      try{ await navigator.serviceWorker.register("./sw.js"); }catch(e){}
-    }
-
-    await openDB();
-    await seedIfEmpty();
-    await loadSettings();
-    taxonomy = await getTaxonomy();
-    await loadStudents();
-    bindTabs();
-    bindButtons();
-
-    // default view
-    setView("viewStudents");
-
-    // PIN lock
-    await checkPINFlow();
-  }
-
-  window.addEventListener("DOMContentLoaded", init);
+/* ===================== تشغيل ===================== */
+(async function init(){
+  wireEvents();
+  await seedIfEmpty();
+  loadSettingsUI();
+  rebuildBehaviorViolations();
+  renderLogs();
+  applyLockIfNeeded();
+  openView("viewSearch");
 })();

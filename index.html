@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b7e88"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-  <title>متابعة الطلاب</title>
+  <title>متابعة الطلاب — خصوصية</title>
 
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png" sizes="192x192">
@@ -24,6 +24,7 @@
 </head>
 
 <body>
+  <!-- قفل اختياري -->
   <div id="lockScreen" class="lock hidden" aria-hidden="true">
     <div class="lockCard">
       <div class="lockTitle">🔒 قفل التطبيق</div>
@@ -39,58 +40,102 @@
       <div class="logo">🎓</div>
       <div class="titles">
         <div class="title">متابعة الطلاب</div>
-        <div class="subtitle" id="subtitle">جاهز للاستخدام على الجوال (PWA) — بيانات محلية آمنة</div>
+        <div class="subtitle">وضع خصوصية: لا تُعرض أسماء الطلاب في القوائم</div>
       </div>
     </div>
+
     <div class="actions">
-      <button class="btn ghost" id="btnImport">تحديث/استيراد بيانات</button>
+      <button class="btn ghost" id="btnImport">استيراد/تحديث بيانات</button>
       <button class="btn ghost" id="btnBackup">نسخ احتياطي</button>
     </div>
   </header>
 
   <main class="main">
-    <section id="viewStudents" class="view active" aria-label="الطلاب">
+    <!-- شاشة البحث (بدون قائمة طلاب إطلاقًا) -->
+    <section id="viewSearch" class="view active" aria-label="البحث">
       <div class="panel">
-        <div class="row">
-          <input id="studentSearch" class="input" type="search" autocomplete="off" spellcheck="false" placeholder="ابحث بالاسم أو رقم الهوية/الإقامة...">
-          <select id="classFilter" class="input" style="max-width:260px">
-            <option value="all">كل الصفوف</option>
-          </select>
-          <button id="btnAddStudent" class="btn">إضافة طالب</button>
-          <button id="btnImportParents" class="btn ghost">استيراد أولياء الأمور</button>
-        </div>
-        <div id="countLine" class="muted small" style="margin-top:8px"></div>
+        <div class="searchHero">
+          <div class="heroTitle">بحث سريع وآمن</div>
+          <div class="muted">اكتب اسم الطالب أو رقم الهوية/الإقامة — لن تظهر أسماء في النتائج.</div>
 
-        <div class="stats" aria-label="إحصاءات سريعة">
-          <div class="statCard"><div class="statLabel">إجمالي الطلاب</div><div class="statValue" id="statTotal">0</div></div>
-          <div class="statCard"><div class="statLabel">جوال ولي الأمر</div><div class="statValue" id="statParentsReady">0</div></div>
-          <div class="statCard"><div class="statLabel">غياب اليوم</div><div class="statValue" id="statAbsentToday">0</div></div>
-          <div class="statCard"><div class="statLabel">سلوك اليوم</div><div class="statValue" id="statBehaviorToday">0</div></div>
-        </div>
+          <div class="searchRow">
+            <input id="studentSearch" class="input inputBig" placeholder="اكتب الاسم أو رقم الهوية/الإقامة ثم Enter…">
+            <button id="btnSearch" class="btn primary">بحث</button>
+          </div>
 
-        <div class="hint">
-          تنبيه: تُحفظ البيانات محليًا على جهازك. وللاعتداد الرسمي يتم توثيق ما يلزم في نظام نور وفق الأنظمة.
+          <div class="hint small">
+            • إذا ظهرت عدة نتائج، ستظهر بدون أسماء (الصف + آخر 4 أرقام) لاختيار السجل الصحيح.
+          </div>
         </div>
       </div>
 
-      <div id="studentsList" class="cards" aria-live="polite"></div>
+      <!-- حالة البحث -->
+      <div class="panel" style="margin-top:12px">
+        <div id="searchStatus" class="muted"></div>
+
+        <!-- قائمة نتائج متعددة (بدون أسماء) -->
+        <div id="matchList" class="matchList hidden" aria-live="polite"></div>
+
+        <!-- بطاقة الطالب المختار (بيانات مقنّعة) -->
+        <div id="studentCard" class="studentCard hidden" aria-live="polite">
+          <div class="cardTop">
+            <div>
+              <div class="cardTitle">البيانات</div>
+              <div class="cardSub muted small" id="studentMeta"></div>
+            </div>
+            <button class="btn ghost" id="btnClear">إخفاء</button>
+          </div>
+
+          <div class="gridInfo">
+            <div class="infoBox">
+              <div class="infoLabel">الاسم</div>
+              <div class="infoValue" id="maskedName">••••</div>
+            </div>
+            <div class="infoBox">
+              <div class="infoLabel">الصف/الشعبة</div>
+              <div class="infoValue" id="stClassView">—</div>
+            </div>
+            <div class="infoBox">
+              <div class="infoLabel">الهوية/الإقامة</div>
+              <div class="infoValue" id="stIdMasked">****</div>
+            </div>
+            <div class="infoBox">
+              <div class="infoLabel">جوال ولي الأمر</div>
+              <div class="infoValue" id="stParentMasked">****</div>
+            </div>
+          </div>
+
+          <div class="actionBar">
+            <button id="btnOpenAttendance" class="btn primary wide">مواظبة / حضور</button>
+            <button id="btnOpenBehavior" class="btn wide">سلوك</button>
+          </div>
+
+          <div class="muted small" style="margin-top:10px">
+            ملاحظة: لإجراءات التقويم الرسمية يُوثَّق في نظام نور وفق اللوائح، وهذه الأداة للمتابعة الداخلية.
+          </div>
+        </div>
+      </div>
     </section>
 
+    <!-- السجل -->
     <section id="viewLog" class="view" aria-label="السجل">
       <div class="panel">
         <div class="row">
           <select id="logFilter" class="input">
             <option value="all">الكل</option>
-            <option value="attendance">الحضور</option>
+            <option value="attendance">المواظبة</option>
             <option value="behavior">السلوك</option>
             <option value="message">الرسائل</option>
           </select>
           <button id="btnExportXlsx" class="btn">تصدير Excel</button>
+          <button id="btnClearLog" class="btn danger">مسح السجل</button>
         </div>
+        <div class="hint small">السجل لا يعرض أسماء؛ يتم حفظه بصيغة مقنّعة.</div>
       </div>
       <div id="logList" class="cards"></div>
     </section>
 
+    <!-- الإعدادات -->
     <section id="viewSettings" class="view" aria-label="الإعدادات">
       <div class="panel">
         <div class="grid2">
@@ -127,12 +172,12 @@
               <button id="btnSavePin" class="btn">حفظ</button>
               <button id="btnClearPin" class="btn danger">إزالة</button>
             </div>
-            <div class="muted small">ملاحظة: القفل محلي، وليس بديلاً عن سياسات أمن المعلومات.</div>
+            <div class="muted small">القفل محلي على الجهاز.</div>
           </div>
 
           <div class="card">
             <div class="cardTitle">إدارة تصنيف المخالفات</div>
-            <div class="muted">يمكن تعديل قوائم المخالفات وإجراءاتها حسب دليل قواعد السلوك والمواظبة.</div>
+            <div class="muted">يمكن تعديل قوائم المخالفات وإجراءاتها حسب الدليل المعتمد.</div>
             <button id="btnOpenTaxonomy" class="btn">فتح</button>
           </div>
         </div>
@@ -140,7 +185,7 @@
         <div class="divider"></div>
 
         <div class="row">
-          <button id="btnResetDemo" class="btn danger">إعادة ضبط البيانات (محليًا)</button>
+          <button id="btnResetAll" class="btn danger">إعادة ضبط البيانات (محليًا)</button>
           <div class="muted small">سيحذف جميع البيانات من هذا الجهاز فقط.</div>
         </div>
       </div>
@@ -148,65 +193,16 @@
   </main>
 
   <nav class="bottomNav" aria-label="التنقل">
-    <button class="tab active" data-view="viewStudents">الطلاب</button>
+    <button class="tab active" data-view="viewSearch">بحث</button>
     <button class="tab" data-view="viewLog">السجل</button>
     <button class="tab" data-view="viewSettings">الإعدادات</button>
   </nav>
 
-  <!-- Modals -->
-  <dialog id="dlgStudent" class="dlg">
-    <form method="dialog" class="dlgBody">
-      <div class="dlgHeader">
-        <div class="dlgTitle" id="dlgStudentTitle">بيانات الطالب</div>
-        <button class="iconBtn" value="cancel" aria-label="إغلاق">✕</button>
-      </div>
-
-      <div class="grid2">
-        <div>
-          <label class="label">اسم الطالب</label>
-          <input id="stName" class="input" required>
-        </div>
-        <div>
-          <label class="label">رقم الهوية/الإقامة</label>
-          <input id="stIdNumber" class="input" inputmode="numeric">
-        </div>
-        <div>
-          <label class="label">الصف/الشعبة (اختياري)</label>
-          <input id="stClass" class="input" placeholder="مثال: ثالث ث/3">
-        </div>
-        <div>
-          <label class="label">ملاحظات</label>
-          <input id="stNotes" class="input" placeholder="...">
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="grid2">
-        <div>
-          <label class="label">اسم ولي الأمر (اختياري)</label>
-          <input id="stParentName" class="input" placeholder="...">
-        </div>
-        <div>
-          <label class="label">جوال ولي الأمر (للواتساب/SMS)</label>
-          <input id="stParentMobile" class="input" inputmode="tel" placeholder="05xxxxxxxx">
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="row">
-        <button id="btnSaveStudent" class="btn primary" value="default">حفظ</button>
-        <button id="btnDeleteStudent" class="btn danger" value="cancel">حذف</button>
-      </div>
-      <input id="stInternalId" type="hidden">
-    </form>
-  </dialog>
-
+  <!-- ===== النوافذ ===== -->
   <dialog id="dlgAttendance" class="dlg">
     <form method="dialog" class="dlgBody">
       <div class="dlgHeader">
-        <div class="dlgTitle">تسجيل متابعة (حضور/غياب/تأخر)</div>
+        <div class="dlgTitle">مواظبة / حضور / غياب</div>
         <button class="iconBtn" value="cancel" aria-label="إغلاق">✕</button>
       </div>
 
@@ -242,7 +238,7 @@
       <div class="divider"></div>
 
       <div class="card">
-        <div class="cardTitle">نص الرسالة المقترح (قابل للتعديل)</div>
+        <div class="cardTitle">نص رسالة لولي الأمر (بدون اسم الطالب)</div>
         <textarea id="attMsg" class="textarea" rows="5"></textarea>
         <div class="row">
           <button id="btnAttSend" class="btn primary" value="default">إرسال</button>
@@ -257,7 +253,7 @@
   <dialog id="dlgBehavior" class="dlg">
     <form method="dialog" class="dlgBody">
       <div class="dlgHeader">
-        <div class="dlgTitle">تسجيل مخالفة سلوكية</div>
+        <div class="dlgTitle">سلوك</div>
         <button class="iconBtn" value="cancel" aria-label="إغلاق">✕</button>
       </div>
 
@@ -298,7 +294,7 @@
       <div class="divider"></div>
 
       <div class="card">
-        <div class="cardTitle">نص الرسالة المقترح (قابل للتعديل)</div>
+        <div class="cardTitle">نص رسالة لولي الأمر (بدون اسم الطالب)</div>
         <textarea id="behMsg" class="textarea" rows="6"></textarea>
         <div class="row">
           <button id="btnBehSend" class="btn primary" value="default">إرسال</button>
@@ -313,16 +309,11 @@
   <dialog id="dlgTaxonomy" class="dlg">
     <form method="dialog" class="dlgBody">
       <div class="dlgHeader">
-        <div class="dlgTitle">تصنيف المخالفات والإجراءات</div>
+        <div class="dlgTitle">تصنيف المخالفات</div>
         <button class="iconBtn" value="cancel" aria-label="إغلاق">✕</button>
       </div>
-
-      <div class="muted">
-        يمكنك تعديل القائمة هنا. احرص على مطابقة النص والإجراءات مع الدليل المعتمد في المدرسة.
-      </div>
-
+      <div class="muted">عدّل القائمة وفق الدليل المعتمد.</div>
       <textarea id="taxJson" class="textarea" rows="14" spellcheck="false"></textarea>
-
       <div class="row">
         <button id="btnSaveTax" class="btn primary" value="default">حفظ</button>
         <button class="btn" value="cancel">إلغاء</button>
@@ -343,14 +334,13 @@
         <input id="restoreFile" type="file" accept="application/json" class="hidden">
       </div>
 
-      <div class="muted small">
-        النسخ الاحتياطي يساعدك في نقل البيانات بين الأجهزة أو حفظها في مكان آمن.
-      </div>
+      <div class="muted small">النسخ الاحتياطي لنقل البيانات بين الأجهزة.</div>
     </form>
   </dialog>
 
+  <!-- مدخلات ملفات -->
   <input id="importFile" type="file" accept=".xlsx,.xls" class="hidden">
-  <input id="parentImportFile" type="file" accept=".xlsx,.xls" class="hidden">
-    <!-- republish -->
+
+  <!-- republish -->
 </body>
 </html>
