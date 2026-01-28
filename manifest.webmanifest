@@ -1,7 +1,7 @@
 {
   "name": "متابعة المواظبة والسلوك",
-  "short_name": "مواظبة/سلوك",
-  "start_url": "./index.html",
+  "short_name": "المواظبة",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f6fafb",
   "theme_color": "#0b7e88",
