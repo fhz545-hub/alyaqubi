@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b7e88"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <title>رصد - أوفلاين</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css"/>
+
+  <!-- خط عربي -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- ✅ (اختياري) دعم Excel Offline عبر SheetJS محلي
+       ضع الملف في: vendor/xlsx.full.min.js
+       (إن لم يوجد سيعمل الاستيراد CSV فقط) -->
+  <script>
+    (function(){
+      const s = document.createElement("script");
+      s.src = "vendor/xlsx.full.min.js";
+      s.defer = true;
+      s.onerror = ()=>console.warn("SheetJS غير موجود: سيتم تفعيل CSV فقط.");
+      document.head.appendChild(s);
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="app">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">رصد</div>
+        <div class="brandText">
+          <div class="title">متابعة الطلاب</div>
+          <div class="sub" id="schoolName">—</div>
+        </div>
+      </div>
+
+      <div class="topActions">
+        <button class="btn ghost" id="btnInstall" hidden>تثبيت</button>
+        <button class="btn ghost" id="btnBackup">نسخ احتياطي</button>
+        <button class="btn ghost" id="btnRestore">استعادة</button>
+        <button class="btn danger" id="btnLogout" hidden>تسجيل خروج</button>
+      </div>
+    </header>
+
+    <!-- Layout -->
+    <div class="layout">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar" hidden>
+        <button class="navItem" data-view="dashboard">
+          <span class="icon">🏠</span><span>الرئيسية</span>
+        </button>
+        <button class="navItem" data-view="students">
+          <span class="icon">👥</span><span>الطلاب</span>
+        </button>
+        <button class="navItem" data-view="attendance">
+          <span class="icon">🕘</span><span>المواظبة</span>
+        </button>
+        <button class="navItem" data-view="behavior">
+          <span class="icon">🛡️</span><span>السلوك</span>
+        </button>
+        <button class="navItem" data-view="sms">
+          <span class="icon">✉️</span><span>الرسائل SMS</span>
+        </button>
+        <button class="navItem" data-view="reports">
+          <span class="icon">📊</span><span>التقارير</span>
+        </button>
+        <button class="navItem" data-view="users">
+          <span class="icon">🧑‍💼</span><span>إدارة الموظفين</span>
+        </button>
+        <button class="navItem" data-view="settings">
+          <span class="icon">⚙️</span><span>الإعدادات والقواعد</span>
+        </button>
+
+        <div class="sidebarFooter">
+          <div class="pill" id="currentUserPill">—</div>
+          <div class="hint">أوفلاين • بيانات محلية</div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <!-- Login -->
+        <section class="card" id="view-login">
+          <h2>تسجيل الدخول</h2>
+          <p class="muted">الدخول مخصص لموظفي المدرسة المصرح لهم.</p>
+
+          <div class="grid2">
+            <div>
+              <label>اسم المستخدم</label>
+              <input id="loginUser" type="text" placeholder="مثال: admin">
+            </div>
+            <div>
+              <label>كلمة المرور</label>
+              <input id="loginPass" type="password" placeholder="••••••••">
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" id="btnLogin">دخول</button>
+            <span class="muted">افتراضيًا: admin / admin123</span>
+          </div>
+
+          <hr/>
+          <div class="grid2">
+            <div>
+              <label>اسم المدرسة (اختياري)</label>
+              <input id="schoolInput" type="text" placeholder="ثانوية ...">
+            </div>
+            <div class="row" style="align-items:flex-end;">
+              <button class="btn" id="btnSaveSchool">حفظ</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Dashboard -->
+        <section class="card" id="view-dashboard" hidden>
+          <h2>لوحة المتابعة</h2>
+          <div class="stats">
+            <div class="stat">
+              <div class="k" id="stStudents">0</div>
+              <div class="t">عدد الطلاب</div>
+            </div>
+            <div class="stat">
+              <div class="k" id="stAttToday">0</div>
+              <div class="t">رصد مواظبة اليوم</div>
+            </div>
+            <div class="stat">
+              <div class="k" id="stBehToday">0</div>
+              <div class="t">رصد سلوك اليوم</div>
+            </div>
+            <div class="stat">
+              <div class="k" id="stSmsQueue">0</div>
+              <div class="t">طابور SMS</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" data-jump="students">بحث طالب</button>
+            <button class="btn" data-jump="attendance">إضافة مواظبة</button>
+            <button class="btn" data-jump="behavior">إضافة سلوك</button>
+            <button class="btn" data-jump="reports">تقرير أسبوعي</button>
+          </div>
+
+          <hr/>
+          <h3>آخر العمليات</h3>
+          <div class="tableWrap">
+            <table class="table" id="auditTable">
+              <thead>
+                <tr>
+                  <th>الوقت</th>
+                  <th>المستخدم</th>
+                  <th>الإجراء</th>
+                  <th>التفاصيل</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Students -->
+        <section class="card" id="view-students" hidden>
+          <div class="row between">
+            <h2>الطلاب</h2>
+            <div class="row">
+              <button class="btn" id="btnImport">استيراد (CSV/Excel)</button>
+              <button class="btn" id="btnAddStudent">إضافة طالب</button>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div>
+              <label>بحث بالاسم/الهوية</label>
+              <input id="studentSearch" placeholder="اكتب اسم الطالب أو رقم الهوية...">
+            </div>
+            <div>
+              <label>فلترة (صف/شعبة)</label>
+              <input id="studentFilter" placeholder="مثال: ثالث / 3-1">
+            </div>
+          </div>
+
+          <div class="tableWrap">
+            <table class="table" id="studentsTable">
+              <thead>
+                <tr>
+                  <th>الهوية</th>
+                  <th>الاسم</th>
+                  <th>الصف</th>
+                  <th>الشعبة</th>
+                  <th>جوال ولي الأمر</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <hr/>
+          <section class="card soft" id="studentCard" hidden>
+            <div class="row between">
+              <div>
+                <h3 id="scName">—</h3>
+                <div class="muted" id="scMeta">—</div>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnScAttendance">مواظبة</button>
+                <button class="btn" id="btnScBehavior">سلوك</button>
+                <button class="btn" id="btnScSms">SMS</button>
+              </div>
+            </div>
+
+            <div class="tabs">
+              <button class="tab active" data-tab="tab-att">سجل المواظبة</button>
+              <button class="tab" data-tab="tab-beh">سجل السلوك</button>
+              <button class="tab" data-tab="tab-notes">ملاحظات</button>
+            </div>
+
+            <div id="tab-att" class="tabPane">
+              <div class="tableWrap">
+                <table class="table" id="scAttTable">
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th><th>النوع</th><th>تفاصيل</th><th>إجراء مقترح</th><th>اعتماد</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="tab-beh" class="tabPane" hidden>
+              <div class="tableWrap">
+                <table class="table" id="scBehTable">
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th><th>البند</th><th>الشدة</th><th>الإجراءات</th><th>اعتماد</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="tab-notes" class="tabPane" hidden>
+              <label>ملاحظات داخلية (محلية)</label>
+              <textarea id="scNotes" rows="4" placeholder="ملاحظات مرشد/وكيل..."></textarea>
+              <div class="row">
+                <button class="btn primary" id="btnSaveNotes">حفظ</button>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- Attendance -->
+        <section class="card" id="view-attendance" hidden>
+          <div class="row between">
+            <h2>المواظبة (غياب/تأخر)</h2>
+            <button class="btn" id="btnAttQuickToday">تاريخ اليوم</button>
+          </div>
+
+          <div class="grid3">
+            <div>
+              <label>الطالب (هوية)</label>
+              <input id="attStudentId" placeholder="رقم الهوية...">
+            </div>
+            <div>
+              <label>التاريخ</label>
+              <input id="attDate" type="date">
+            </div>
+            <div>
+              <label>النوع</label>
+              <select id="attType"></select>
+            </div>
+          </div>
+
+          <div class="grid3">
+            <div>
+              <label>الحصة/الفترة (اختياري)</label>
+              <input id="attPeriod" placeholder="1 أو 2 ...">
+            </div>
+            <div>
+              <label>دقائق التأخر (إن وجد)</label>
+              <input id="attMinutes" type="number" min="0" placeholder="0">
+            </div>
+            <div>
+              <label>سبب مختصر</label>
+              <input id="attReason" placeholder="سبب مختصر...">
+            </div>
+          </div>
+
+          <div class="card soft">
+            <div class="row between">
+              <div>
+                <div class="muted">الإجراء التربوي المقترح (حسب القواعد)</div>
+                <div class="big" id="attSuggested">—</div>
+              </div>
+              <div class="row">
+                <label class="chk">
+                  <input type="checkbox" id="attNeedsApproval">
+                  يتطلب اعتماد
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="btnSaveAttendance">حفظ</button>
+              <button class="btn" id="btnAttToSms">تجهيز رسالة SMS</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Behavior -->
+        <section class="card" id="view-behavior" hidden>
+          <div class="row between">
+            <h2>السلوك</h2>
+            <button class="btn" id="btnBehQuickToday">تاريخ اليوم</button>
+          </div>
+
+          <div class="grid3">
+            <div>
+              <label>الطالب (هوية)</label>
+              <input id="behStudentId" placeholder="رقم الهوية...">
+            </div>
+            <div>
+              <label>التاريخ</label>
+              <input id="behDate" type="date">
+            </div>
+            <div>
+              <label>البند/التصنيف</label>
+              <select id="behCode"></select>
+            </div>
+          </div>
+
+          <div class="grid3">
+            <div>
+              <label>الشدة</label>
+              <select id="behSeverity">
+                <option value="low">منخفضة</option>
+                <option value="medium">متوسطة</option>
+                <option value="high">عالية</option>
+              </select>
+            </div>
+            <div>
+              <label>وصف مختصر</label>
+              <input id="behDesc" placeholder="وصف مختصر...">
+            </div>
+            <div>
+              <label>إرفاق (اختياري)</label>
+              <input id="behAttach" type="file" accept="image/*,application/pdf">
+            </div>
+          </div>
+
+          <div class="card soft">
+            <div class="muted">الإجراءات المقترحة (حسب القواعد)</div>
+            <div class="big" id="behSuggested">—</div>
+
+            <div class="row">
+              <label class="chk">
+                <input type="checkbox" id="behNeedsApproval">
+                يتطلب اعتماد
+              </label>
+              <button class="btn primary" id="btnSaveBehavior">حفظ</button>
+              <button class="btn" id="btnBehToSms">تجهيز رسالة SMS</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SMS -->
+        <section class="card" id="view-sms" hidden>
+          <div class="row between">
+            <h2>الرسائل SMS</h2>
+            <button class="btn" id="btnSmsFlush">محاولة إرسال الطابور</button>
+          </div>
+
+          <div class="grid3">
+            <div>
+              <label>هوية الطالب (لجلب ولي الأمر)</label>
+              <input id="smsStudentId" placeholder="رقم الهوية...">
+            </div>
+            <div>
+              <label>رقم الجوال</label>
+              <input id="smsTo" placeholder="05xxxxxxxx">
+            </div>
+            <div>
+              <label>نوع القالب</label>
+              <select id="smsTemplate">
+                <option value="late">تأخر</option>
+                <option value="absent">غياب</option>
+                <option value="behavior">سلوك</option>
+                <option value="custom">مخصص</option>
+              </select>
+            </div>
+          </div>
+
+          <label>نص الرسالة</label>
+          <textarea id="smsBody" rows="4"></textarea>
+
+          <div class="row">
+            <button class="btn" id="btnSmsFill">تعبئة من القالب</button>
+            <button class="btn primary" id="btnSmsQueue">إضافة للطابور</button>
+            <button class="btn" id="btnSmsSendNow">إرسال الآن (إن توفر الربط)</button>
+          </div>
+
+          <hr/>
+          <h3>طابور الإرسال</h3>
+          <div class="tableWrap">
+            <table class="table" id="smsTable">
+              <thead>
+                <tr>
+                  <th>الوقت</th><th>إلى</th><th>الرسالة</th><th>الحالة</th><th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Reports -->
+        <section class="card" id="view-reports" hidden>
+          <div class="row between">
+            <h2>التقارير</h2>
+            <button class="btn" id="btnExportCsv">تصدير CSV</button>
+          </div>
+
+          <div class="grid3">
+            <div>
+              <label>من</label>
+              <input id="repFrom" type="date">
+            </div>
+            <div>
+              <label>إلى</label>
+              <input id="repTo" type="date">
+            </div>
+            <div>
+              <label>فلترة (صف/شعبة)</label>
+              <input id="repFilter" placeholder="مثال: ثاني / 2-3">
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" id="btnRunReport">عرض التقرير</button>
+          </div>
+
+          <div class="tableWrap">
+            <table class="table" id="repTable">
+              <thead>
+                <tr>
+                  <th>التاريخ</th><th>الطالب</th><th>النوع</th><th>التفاصيل</th><th>المستخدم</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Users -->
+        <section class="card" id="view-users" hidden>
+          <div class="row between">
+            <h2>إدارة الموظفين</h2>
+            <button class="btn primary" id="btnAddUser">إضافة موظف</button>
+          </div>
+
+          <div class="tableWrap">
+            <table class="table" id="usersTable">
+              <thead>
+                <tr>
+                  <th>المعرف</th><th>الاسم</th><th>الدور</th><th>نشط</th><th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <hr/>
+          <div class="card soft">
+            <h3>تنبيه</h3>
+            <p class="muted">
+              يفضل تغيير كلمة مرور admin فورًا من داخل صفحة الإعدادات.
+            </p>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section class="card" id="view-settings" hidden>
+          <h2>الإعدادات والقواعد</h2>
+
+          <div class="grid2">
+            <div>
+              <label>اسم المدرسة</label>
+              <input id="setSchoolName" placeholder="ثانوية ...">
+              <div class="row"><button class="btn" id="btnSetSchool">حفظ</button></div>
+            </div>
+
+            <div>
+              <label>ربط SMS (خادم وسيط)</label>
+              <input id="setSmsEndpoint" placeholder="مثال: http://localhost:3000/sms/send">
+              <div class="row"><button class="btn" id="btnSetSms">حفظ</button></div>
+              <p class="muted">لأسباب أمنية: الإرسال يتم عبر خادم وسيط وليس مباشرة من المتصفح.</p>
+            </div>
+          </div>
+
+          <hr/>
+
+          <h3>القواعد (Rules Engine)</h3>
+          <p class="muted">
+            عدّل القواعد هنا لتطابق إجراءات وقواعد السلوك والمواظبة المعتمدة لديكم.
+          </p>
+          <textarea id="rulesEditor" rows="14" class="mono"></textarea>
+          <div class="row">
+            <button class="btn primary" id="btnSaveRules">حفظ القواعد</button>
+            <button class="btn" id="btnResetRules">استعادة الافتراضي</button>
+          </div>
+
+          <hr/>
+          <h3>تغيير كلمة المرور</h3>
+          <div class="grid3">
+            <div>
+              <label>كلمة المرور الحالية</label>
+              <input id="pwOld" type="password">
+            </div>
+            <div>
+              <label>الجديدة</label>
+              <input id="pwNew" type="password">
+            </div>
+            <div>
+              <label>تأكيد الجديدة</label>
+              <input id="pwNew2" type="password">
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="btnChangePw">حفظ</button>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Dialogs -->
+    <input id="filePick" type="file" hidden accept=".csv,.xlsx,.xls"/>
+    <input id="restorePick" type="file" hidden accept="application/json"/>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
