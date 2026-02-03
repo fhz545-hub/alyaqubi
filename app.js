@@ -1121,9 +1121,9 @@ async function importSampleCSV(){
   const res = await fetch("./assets/StudentGuidance_clean.csv");
   const text = await res.text();
   const rows = parseCSV(text);
-  const mapped = rowsToStudents(rows);
-  await upsertStudents(mapped);
-  toast(`تم استيراد ${mapped.length} طالب من ملف الإرشاد (المرفق).`);
+  const { students, ignored } = rowsToStudents(rows);
+  await upsertStudents(students);
+  toast(`تم الاستيراد: ${students.length} طالب (متجاهل: ${ignored}).`);
 }
 
 async function importStudentsFile(file){
@@ -1131,9 +1131,9 @@ async function importStudentsFile(file){
   if(name.endsWith(".csv")){
     const text = await file.text();
     const rows = parseCSV(text);
-    const mapped = rowsToStudents(rows);
-    await upsertStudents(mapped);
-    toast(`تم استيراد ${mapped.length} طالب من CSV.`);
+    const { students, ignored } = rowsToStudents(rows);
+    await upsertStudents(students);
+    toast(`تم الاستيراد: ${students.length} طالب (متجاهل: ${ignored}).`);
     return;
   }
 
@@ -1166,7 +1166,8 @@ async function importStudentsFile(file){
   }).filter(s=>s.studentNo && s.name);
 
   await upsertStudents(students);
-  toast(`تم استيراد ${students.length} طالب من Excel.`);
+  const ignored = Math.max(0, dataRows.length - students.length);
+  toast(`تم الاستيراد: ${students.length} طالب (متجاهل: ${ignored}).`);
 }
 
 function findHeader(aoa){
@@ -1190,22 +1191,78 @@ function findHeader(aoa){
   return { headerRowIndex: idx, headerMap: map };
 }
 
+
 function parseCSV(text){
-  // CSV بسيط يدعم الفاصلة والاقتباس
-  const lines = text.replace(/^\ufeff/,"").split(/\r?\n/).filter(l=>l.trim()!=="");
-  if(!lines.length) return [];
-  const header = splitCSVLine(lines[0]).map(h=>h.trim());
+  // CSV مرن: يدعم (,) و (;) و (tab) ويبحث عن سطر العناوين داخل أول 40 سطر
+  const cleaned = String(text ?? "").replace(/\r\n/g,"\n").replace(/\r/g,"\n").replace(/^\ufeff/,"");
+  const rawLines = cleaned.split("\n").filter(l=>l.trim()!=="");
+  if(!rawLines.length) return [];
+
+  const headerIdx = findCSVHeaderLine(rawLines);
+  const headerLine = rawLines[headerIdx].replace(/^\ufeff/,"");
+  const delim = detectDelimiter(headerLine);
+
+  const header = splitCSVLine(headerLine, delim).map(h=>cleanHeader(h));
   const rows = [];
-  for(let i=1;i<lines.length;i++){
-    const cols = splitCSVLine(lines[i]);
+
+  for(let i=headerIdx+1;i<rawLines.length;i++){
+    const cols = splitCSVLine(rawLines[i], delim);
+    if(cols.every(c=>String(c).trim()==="")) continue;
     const obj = {};
-    header.forEach((h, j)=> obj[h] = (cols[j] ?? "").trim());
+    header.forEach((h, j)=>{
+      if(!h) return;
+      obj[h] = (cols[j] ?? "").trim();
+    });
     rows.push(obj);
   }
   return rows;
 }
 
-function splitCSVLine(line){
+function cleanHeader(h){
+  return String(h ?? "").replace(/^\ufeff/,"").trim();
+}
+
+function findCSVHeaderLine(lines){
+  const max = Math.min(lines.length, 40);
+  for(let i=0;i<max;i++){
+    const s = String(lines[i]).toLowerCase().replace(/\s+/g," ");
+    // عربي: اسم الطالب + رقم الطالب/الهوية/السجل
+    if(s.includes("اسم") && s.includes("الطالب") && (s.includes("رقم") || s.includes("هوية") || s.includes("السجل"))){
+      return i;
+    }
+    // English: student + name + id/no
+    if(s.includes("student") && (s.includes("name") || s.includes("fullname")) && (s.includes("id") || s.includes("no"))){
+      return i;
+    }
+  }
+  return 0;
+}
+
+function detectDelimiter(line){
+  const candidates = [",",";","\t","|"];
+  let best = {d:",", c:0};
+  for(const d of candidates){
+    const c = countDelimiter(line, d);
+    if(c > best.c) best = {d, c};
+  }
+  return best.c === 0 ? "," : best.d;
+}
+
+function countDelimiter(line, delim){
+  let inQ = false, cnt = 0;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(ch === '"'){
+      if(inQ && line[i+1] === '"'){ i++; }
+      else inQ = !inQ;
+    }else if(!inQ && ch === delim){
+      cnt++;
+    }
+  }
+  return cnt;
+}
+
+function splitCSVLine(line, delim=","){
   const out = [];
   let cur = "";
   let inQ = false;
@@ -1214,7 +1271,7 @@ function splitCSVLine(line){
     if(ch === '"'){
       if(inQ && line[i+1] === '"'){ cur += '"'; i++; }
       else inQ = !inQ;
-    }else if(ch === "," && !inQ){
+    }else if(ch === delim && !inQ){
       out.push(cur); cur="";
     }else{
       cur += ch;
@@ -1224,21 +1281,136 @@ function splitCSVLine(line){
   return out;
 }
 
+function normalizeKey(k){
+  // تطبيع اسم العمود لتقليل أخطاء BOM والمسافات واختلافات الإملاء
+  return String(k ?? "")
+    .replace(/^\ufeff/,"")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ")
+    .replace(/[ـ_\-]/g,"")
+    // توحيد بعض الحروف العربية الشائعة
+    .replace(/[أإآ]/g,"ا")
+    .replace(/ة/g,"ه")
+    .replace(/ى/g,"ي");
+}
+
+function mapRowKeys(row){
+  const m = new Map();
+  for(const [k,v] of Object.entries(row || {})){
+    m.set(normalizeKey(k), v);
+  }
+  return m;
+}
+
+function getByAliases(map, aliases){
+  for(const a of aliases){
+    const v = map.get(normalizeKey(a));
+    if(v !== undefined && String(v).trim() !== "") return v;
+  }
+  return "";
+}
+
+function getByContains(map, needles, minHits=1){
+  // يبحث في أسماء الأعمدة (بعد التطبيع) عن مفردات/كلمات
+  const ns = needles.map(normalizeKey);
+  let bestKey = null;
+  let bestScore = -1;
+  for(const k of map.keys()){
+    let score = 0;
+    for(const n of ns){
+      if(!n) continue;
+      if(k.includes(n)) score++;
+    }
+    if(score > bestScore){
+      bestScore = score;
+      bestKey = k;
+    }
+  }
+  if(bestKey && bestScore >= minHits){
+    const v = map.get(bestKey);
+    if(v !== undefined && String(v).trim() !== "") return v;
+  }
+  return "";
+}
+
 function rowsToStudents(rows){
-  // يدعم رؤوس عربية مثل ملف الإرشاد: الجوال, الفصل, رقم الصف, اسم الطالب, رقم الطالب
-  // أو رؤوس إنجليزية: phone,class,gradeNo,name,studentNo
-  const pick = (r, keys)=> {
-    for(const k of keys){ if(r[k] !== undefined) return r[k]; }
-    return "";
+  // يدعم ملفات الإرشاد/نور بتسميات عربية أو إنجليزية + يفهم (;) و BOM
+  const ALIAS = {
+    studentNo: [
+      "رقم الطالب","studentno","student_no","student id","studentid","id","ID",
+      "رقم الهوية","هوية الطالب","السجل المدني","رقم السجل المدني","رقم السجل",
+      "رقم الهوية الوطنية","رقم الاقامة","الهوية","الاقامة"
+    ],
+    name: [
+      "اسم الطالب","اسم","studentname","student name","name","الاسم"
+    ],
+    className: [
+      "الفصل","الشعبة","الفصل/الشعبة","الشعبه","class","section","class name"
+    ],
+    gradeNo: [
+      "رقم الصف","الصف","الصف الدراسي","grade","gradenumber","gradeno","level","المستوى","المرحلة"
+    ],
+    phone: [
+      "الجوال","رقم الجوال","جوال ولي الأمر","جوال ولي الامر","جوال ولي الامر 1","رقم جوال ولي الامر",
+      "mobile","phone","guardian mobile","parent mobile","جوال الاب","جوال الأم"
+    ]
   };
 
-  return rows.map(r=>({
-    studentNo: String(pick(r, ["رقم الطالب","studentNo","StudentNo","ID","id"])).replace(/\D/g,""),
-    name: String(pick(r, ["اسم الطالب","name","StudentName"])).trim(),
-    className: String(pick(r, ["الفصل","class","Class","الشعبة"])).trim(),
-    gradeNo: String(pick(r, ["رقم الصف","gradeNo","GradeNo","الصف"])).trim(),
-    phone: normalizePhone(pick(r, ["الجوال","phone","Mobile","رقم الجوال"]))
-  })).filter(s=>s.studentNo && s.name);
+  const students = [];
+  let ignored = 0;
+
+  for(const r of (rows || [])){
+    const m = mapRowKeys(r);
+
+    const studentNoRaw =
+      getByAliases(m, ALIAS.studentNo) ||
+      getByContains(m, ["رقم","طالب"], 2) ||
+      getByContains(m, ["هوية"], 1) ||
+      getByContains(m, ["سجل"], 1) ||
+      getByContains(m, ["student","id"], 2) ||
+      getByContains(m, ["student","no"], 2);
+
+    const nameRaw =
+      getByAliases(m, ALIAS.name) ||
+      getByContains(m, ["اسم","طالب"], 2) ||
+      getByContains(m, ["student","name"], 2) ||
+      getByContains(m, ["name"], 1);
+
+    const classRaw =
+      getByAliases(m, ALIAS.className) ||
+      getByContains(m, ["الفصل"], 1) ||
+      getByContains(m, ["شعب"], 1) ||
+      getByContains(m, ["class"], 1) ||
+      getByContains(m, ["section"], 1);
+
+    const gradeRaw =
+      getByAliases(m, ALIAS.gradeNo) ||
+      getByContains(m, ["رقم","صف"], 2) ||
+      getByContains(m, ["صف"], 1) ||
+      getByContains(m, ["grade"], 1) ||
+      getByContains(m, ["level"], 1);
+
+    const phoneRaw =
+      getByAliases(m, ALIAS.phone) ||
+      getByContains(m, ["جوال"], 1) ||
+      getByContains(m, ["mobile"], 1) ||
+      getByContains(m, ["phone"], 1);
+
+    const studentNo = String(studentNoRaw ?? "").replace(/[^\d]/g,"");
+    const name = String(nameRaw ?? "").trim();
+    const className = String(classRaw ?? "").trim();
+    const gradeNo = String(gradeRaw ?? "").trim();
+    const phone = normalizePhone(phoneRaw);
+
+    if(studentNo && name){
+      students.push({ studentNo, name, className, gradeNo, phone });
+    }else{
+      ignored++;
+    }
+  }
+
+  return { students, ignored };
 }
 
 async function upsertStudents(list){
