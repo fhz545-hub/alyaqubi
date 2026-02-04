@@ -1,4 +1,4 @@
-const CACHE = "yaqubi-rsd-cache-v13";
+const CACHE = "yaqubi-rsd-cache-v14";
 const ASSETS = [
   "./",
   "./index.html",

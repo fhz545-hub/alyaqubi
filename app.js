@@ -2,7 +2,7 @@ import { DB, normalizeArabic } from "./db.js";
 import { DEFAULTS, fillTemplate, pointsForLevel, formatDate } from "./rules.js";
 import { waLink, sendSmsBatch } from "./sms.js";
 
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.3.0";
 const SCHOOL_NAME = "ثانوية اليعقوبي";
 
 let db;
@@ -820,7 +820,11 @@ function viewSettings(){
         <div class="big">الإعدادات</div>
         <div class="muted small">استيراد/نسخ احتياطي/مستخدمون/مزود الرسائل</div>
       </div>
-      <button class="btn ghost small" id="btnLogout">خروج</button>
+      <div class="hstack" style="gap:8px; flex-wrap:wrap; justify-content:flex-end">
+        <span class="pill muted small">إصدار ${APP_VERSION}</span>
+        <button class="btn ghost small" id="btnUpdate">تحديث</button>
+        <button class="btn ghost small" id="btnLogout">خروج</button>
+      </div>
     </div>
   `;
   wrap.appendChild(top);
@@ -831,6 +835,20 @@ function viewSettings(){
     state.route = "login";
     render();
   });
+  $("#btnUpdate", top).addEventListener("click", async ()=>{
+    try{
+      if("caches" in window){
+        const keys = await caches.keys();
+        await Promise.all(keys.filter(k=>k.startsWith("yaqubi-rsd-cache-")).map(k=>caches.delete(k)));
+      }
+      if("serviceWorker" in navigator){
+        const reg = await navigator.serviceWorker.getRegistration();
+        if(reg) await reg.update();
+      }
+    }catch(e){}
+    location.reload();
+  });
+
 
   // import students
   const importCard = el("div",{class:"card pad"});
