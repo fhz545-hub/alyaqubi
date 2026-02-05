@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "attendance": {
+    "types": [
+      {
+        "code": "LATE",
+        "label": "تأخر صباحي",
+        "defaultActions": [
+          "CALL_PARENT",
+          "COUNSEL_SESSION"
+        ]
+      },
+      {
+        "code": "ABSENT",
+        "label": "غياب",
+        "defaultActions": [
+          "CALL_PARENT",
+          "LETTER"
+        ]
+      }
+    ]
+  },
+  "behavior": {
+    "infractions": [
+      {
+        "code": "B001",
+        "label": "تأخر عن الحصة/الاصطفاف",
+        "severity": "low",
+        "defaultActions": [
+          "COUNSEL_SESSION",
+          "CALL_PARENT"
+        ],
+        "requiresApproval": false
+      },
+      {
+        "code": "B002",
+        "label": "عدم إحضار الأدوات/الإهمال الدراسي",
+        "severity": "low",
+        "defaultActions": [
+          "COUNSEL_SESSION"
+        ],
+        "requiresApproval": false
+      },
+      {
+        "code": "B003",
+        "label": "استخدام الجوال داخل المدرسة دون إذن",
+        "severity": "medium",
+        "defaultActions": [
+          "CONFISCATE",
+          "CALL_PARENT",
+          "LETTER"
+        ],
+        "requiresApproval": true
+      },
+      {
+        "code": "B004",
+        "label": "مخالفة الزي/المظهر",
+        "severity": "low",
+        "defaultActions": [
+          "NOTICE",
+          "CALL_PARENT"
+        ],
+        "requiresApproval": false
+      },
+      {
+        "code": "B005",
+        "label": "تلفظ/إساءة لفظية بسيطة",
+        "severity": "medium",
+        "defaultActions": [
+          "COUNSEL_SESSION",
+          "CALL_PARENT",
+          "LETTER"
+        ],
+        "requiresApproval": true
+      },
+      {
+        "code": "B006",
+        "label": "مشاجرة بسيطة دون إصابات",
+        "severity": "medium",
+        "defaultActions": [
+          "COUNSEL_SESSION",
+          "CALL_PARENT",
+          "COMMITTEE"
+        ],
+        "requiresApproval": true
+      },
+      {
+        "code": "B007",
+        "label": "تخريب ممتلكات المدرسة",
+        "severity": "high",
+        "defaultActions": [
+          "COMMITTEE",
+          "CALL_PARENT",
+          "COMPENSATION"
+        ],
+        "requiresApproval": true
+      },
+      {
+        "code": "B008",
+        "label": "اعتداء/إصابة أو تهديد جسدي",
+        "severity": "high",
+        "defaultActions": [
+          "COMMITTEE",
+          "CALL_PARENT",
+          "REFER_EXTERNAL"
+        ],
+        "requiresApproval": true
+      },
+      {
+        "code": "B009",
+        "label": "تنمّر/إيذاء متكرر",
+        "severity": "high",
+        "defaultActions": [
+          "COUNSEL_PROGRAM",
+          "CALL_PARENT",
+          "COMMITTEE"
+        ],
+        "requiresApproval": true
+      },
+      {
+        "code": "B010",
+        "label": "غش/محاولة غش في اختبار",
+        "severity": "medium",
+        "defaultActions": [
+          "COMMITTEE",
+          "LETTER"
+        ],
+        "requiresApproval": true
+      },
+      {
+        "code": "B011",
+        "label": "إدخال/حيازة أدوات ممنوعة داخل المدرسة",
+        "severity": "high",
+        "defaultActions": [
+          "COMMITTEE",
+          "CALL_PARENT",
+          "REFER_EXTERNAL"
+        ],
+        "requiresApproval": true
+      },
+      {
+        "code": "B012",
+        "label": "انتحال/تزوير توقيع أو بيانات مدرسية",
+        "severity": "high",
+        "defaultActions": [
+          "COMMITTEE",
+          "CALL_PARENT",
+          "REFER_EXTERNAL"
+        ],
+        "requiresApproval": true
+      }
+    ],
+    "actionsCatalog": {
+      "CALL_PARENT": "إشعار ولي الأمر",
+      "COUNSEL_SESSION": "جلسة توجيه/إرشاد",
+      "LETTER": "إشعار/خطاب رسمي",
+      "NOTICE": "تنبيه",
+      "CONFISCATE": "مصادرة وفق الضوابط",
+      "COMMITTEE": "رفع للجنة (التوجيه/الانضباط)",
+      "COMPENSATION": "تعويض/إصلاح الضرر",
+      "COUNSEL_PROGRAM": "إحالة لبرنامج إرشادي",
+      "REFER_EXTERNAL": "إحالة للجهات ذات العلاقة حسب الأنظمة"
+    }
+  }
+}
