@@ -1,299 +1,0 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="theme-color" content="#0b7e88"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-  <title>راصد - ثانوية اليعقوبي</title>
-
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="assets/icon-192.png" sizes="192x192">
-  <link rel="apple-touch-icon" href="assets/icon-192.png">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="app.css"/>
-
-  <script defer src="db.js"></script>
-  <script defer src="barcode.js"></script>
-  <script defer src="rules.js"></script>
-  <script defer src="sms.js"></script>
-  <script defer src="assets/app.js"></script>
-</head>
-
-<body>
-  <div class="topbar noPrint">
-    <div class="container">
-      <div class="row">
-        <div class="brand">
-          <div class="logo">ر</div>
-          <div>
-            <h1>راصد — متابعة المواظبة والسلوك</h1>
-            <p>بحث سريع + سجل الطالب + كشوف طباعة + حفظ محلي داخل الجهاز</p>
-          </div>
-        </div>
-        <div class="grow"></div>
-        <div class="pill">وضع دون إنترنت: يعمل (بعد فتحه مرة واحدة)</div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div class="search grow">
-          <span class="muted">🔎</span>
-          <input id="q" placeholder="اكتب اسم الطالب أو رقم الهوية…" autocomplete="off" inputmode="search"/>
-          <button class="btn ghost" id="btnClearSearch" title="مسح">مسح</button>
-        </div>
-        <div class="pill">إجمالي الطلاب: <b id="kTotal">0</b></div>
-      </div>
-
-      <div class="tabs">
-        <button class="pill tab active" data-tab="students">الطلاب</button>
-        <button class="pill tab" data-tab="print">الطباعة</button>
-        <button class="pill tab" data-tab="data">إدارة البيانات</button>
-        <button class="pill tab" data-tab="settings">الإعدادات</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="container">
-    <div id="fatal" class="muted" style="padding:10px 2px"></div>
-
-    <!-- Students tab -->
-    <section class="panel" data-tab="students">
-      <div class="grid">
-        <div class="card">
-          <h2>نتائج البحث</h2>
-          <div class="muted">لن تظهر الأسماء إلا عبر البحث (حفاظًا على الخصوصية وسهولة الوصول).</div>
-          <div class="list" id="results" style="margin-top:10px"></div>
-        </div>
-
-        <div class="card">
-          <h2>تعليمات سريعة</h2>
-          <div class="kpis" style="margin-top:10px">
-            <div class="kpi"><div class="muted">١) ابحث</div><b>بالاسم أو الهوية</b></div>
-            <div class="kpi"><div class="muted">٢) اختر الطالب</div><b>يفتح ملفه</b></div>
-            <div class="kpi"><div class="muted">٣) سجّل</div><b>تأخر / غياب / سلوك</b></div>
-          </div>
-          <hr/>
-          <div class="muted">
-            • إذا لم تظهر بيانات الطلاب: استخدم <b>إدارة البيانات → تحميل قاعدة الطلاب</b> أو استيراد CSV.<br/>
-            • أي بيانات تُحفظ داخل الجهاز (IndexedDB) ولا تُرفع تلقائيًا لأي مكان.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Print tab -->
-    <section class="panel" data-tab="print" style="display:none">
-      <div class="grid">
-        <div class="card">
-          <h2>كشف أسبوعي (أحد → خميس)</h2>
-          <div class="muted">الكشف يحتوي: اسم الطالب + أيام الأسبوع + باركود رقم الهوية.</div>
-
-          <div class="row" style="margin-top:10px">
-            <div class="field grow">
-              <label>تاريخ داخل الأسبوع</label>
-              <input id="printDate" type="date"/>
-            </div>
-            <div class="field grow">
-              <label>الصف</label>
-              <select id="printGrade"></select>
-            </div>
-            <div class="field grow">
-              <label>الشعبة</label>
-              <select id="printSection"></select>
-            </div>
-          </div>
-
-          <div class="row" style="margin-top:12px">
-            <button class="btn" id="btnPrintLate">طباعة كشف تأخر</button>
-            <button class="btn warn" id="btnPrintAbsent">طباعة كشف غياب</button>
-          </div>
-
-          <hr/>
-          <div class="muted">
-            ملاحظة: يمكن طباعة <b>كروت صغيرة</b> للطالب من نافذة الطالب (بعد اختياره).
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>كروت الطالب</h2>
-          <div class="muted">بعد اختيار الطالب من البحث، يمكنك طباعة:</div>
-          <div class="row" style="margin-top:12px">
-            <button class="btn" id="btnPrintCardLate">كرت تأخر</button>
-            <button class="btn warn" id="btnPrintCardAbsent">كرت غياب</button>
-            <button class="btn danger" id="btnPrintCardBehavior">كرت سلوك</button>
-          </div>
-          <hr/>
-          <div class="muted">الكرت يشمل: بيانات الطالب + باركود الهوية + ملخص أرشيف (كم تأخر/غاب/سلوك).</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Data tab -->
-    <section class="panel" data-tab="data" style="display:none">
-      <div class="grid">
-        <div class="card">
-          <h2>استيراد الطلاب (CSV)</h2>
-          <div class="muted">الأعمدة المطلوبة (أي اسم من التالي يكفي):</div>
-          <ul class="muted">
-            <li>اسم الطالب: (اسم الطالب / الاسم / name)</li>
-            <li>رقم الهوية: (رقم الهوية / الهوية / idNumber / NationalID)</li>
-            <li>الصف + الشعبة (اختياري لكن مهم للكشوف)</li>
-          </ul>
-
-          <input id="fileStudents" type="file" accept=".csv,text/csv" hidden>
-          <div class="row" style="margin-top:10px">
-            <button class="btn" id="btnImportStudents">استيراد ملف CSV</button>
-            <button class="btn ghost" id="btnLoadSeed">تحميل قاعدة الطلاب (600)</button>
-          </div>
-
-          <hr/>
-          <div class="muted">
-            إذا كان ملفك Excel: افتحه في Excel → حفظ باسم → CSV (UTF-8) ثم استورده هنا.
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>نسخ احتياطي</h2>
-          <div class="row" style="margin-top:10px">
-            <button class="btn ghost" id="btnExport">تصدير نسخة احتياطية</button>
-            <button class="btn ghost" id="btnImportBackup">استيراد نسخة احتياطية</button>
-            <input id="fileImportBackup" type="file" accept=".json,application/json" hidden>
-          </div>
-          <hr/>
-          <button class="btn danger" id="btnClearAll">مسح جميع البيانات من هذا الجهاز</button>
-          <div class="muted" style="margin-top:8px">تنبيه: المسح نهائي على هذا الجهاز فقط.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Settings tab -->
-    <section class="panel" data-tab="settings" style="display:none">
-      <div class="grid">
-        <div class="card">
-          <h2>ترويسة المدرسة (تظهر في الكشوف)</h2>
-          <div class="field">
-            <label>الترويسة الطويلة</label>
-            <input id="setSchoolHeader" placeholder="الإدارة العامة للتعليم..."/>
-          </div>
-          <div class="field" style="margin-top:10px">
-            <label>اسم المدرسة المختصر (للكروت)</label>
-            <input id="setSchoolShort" placeholder="ثانوية اليعقوبي الثانوية"/>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <div class="field grow">
-              <label>الفصل الدراسي</label>
-              <select id="setTerm">
-                <option>الفصل الدراسي الأول</option>
-                <option>الفصل الدراسي الثاني</option>
-              </select>
-            </div>
-            <div class="field grow">
-              <label>العام الهجري</label>
-              <input id="setHijri" placeholder="١٤٤٧هـ"/>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>إعداد وسيط الرسائل (اختياري)</h2>
-          <div class="muted">لإرسال SMS لولي الأمر عبر Cloudflare Worker Proxy (يحمي التوكن).</div>
-          <div class="field" style="margin-top:10px">
-            <label>رابط الـ Worker (مثال: https://xxxxx.workers.dev)</label>
-            <input id="setProxyUrl" placeholder="https://...workers.dev"/>
-          </div>
-          <div class="field" style="margin-top:10px">
-            <label>Proxy Key (مفتاح حماية)</label>
-            <input id="setProxyKey" placeholder="ضع مفتاح قوي هنا"/>
-          </div>
-          <button class="btn" id="btnSaveSettings" style="margin-top:12px">حفظ الإعدادات</button>
-
-          <hr/>
-          <h2>إرسال SMS من ملف الطالب</h2>
-          <div class="field">
-            <label>نص الرسالة</label>
-            <textarea id="smsMsg" placeholder="مثال: نأمل متابعة انضباط الطالب..."></textarea>
-          </div>
-          <button class="btn" id="btnSendSMS" style="margin-top:10px">إرسال SMS</button>
-          <div class="muted" style="margin-top:8px">سيظهر زر الإرسال بعد اختيار طالب (من تبويب الطلاب).</div>
-        </div>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- Student modal -->
-  <div class="modal" id="modal">
-    <div class="box">
-      <div class="head">
-        <div>
-          <h3 id="mName">—</h3>
-          <div id="mMeta" class="row" style="margin-top:6px;flex-wrap:wrap"></div>
-        </div>
-        <button class="btn ghost" id="modalClose">إغلاق</button>
-      </div>
-
-      <div class="body">
-        <div class="card" style="box-shadow:none">
-          <h2>ملخص سريع</h2>
-          <div class="kpis">
-            <div class="kpi"><div class="muted">تأخر</div><b id="kLate">0</b></div>
-            <div class="kpi"><div class="muted">غياب</div><b id="kAbsent">0</b></div>
-            <div class="kpi"><div class="muted">سلوك</div><b id="kBeh">0</b></div>
-          </div>
-          <hr/>
-          <div id="mBarcode"></div>
-        </div>
-
-        <div class="card" style="box-shadow:none">
-          <h2>تسجيل المواظبة</h2>
-          <div class="row">
-            <div class="field grow">
-              <label>التاريخ</label>
-              <input id="attDate" type="date"/>
-            </div>
-          </div>
-          <div class="field" style="margin-top:10px">
-            <label>ملاحظة (اختياري)</label>
-            <input id="attNote" placeholder="سبب/ملاحظة مختصرة…"/>
-          </div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn" id="btnLate">تسجيل تأخر</button>
-            <button class="btn warn" id="btnAbsent">تسجيل غياب</button>
-          </div>
-
-          <hr/>
-
-          <h2>تسجيل السلوك</h2>
-          <div class="row">
-            <div class="field grow">
-              <label>التاريخ</label>
-              <input id="behDate" type="date"/>
-            </div>
-            <div class="field grow">
-              <label>المخالفة</label>
-              <select id="selInfraction"></select>
-            </div>
-          </div>
-          <div class="field" style="margin-top:10px">
-            <label>ملاحظة (اختياري)</label>
-            <input id="behNote" placeholder="تفاصيل مختصرة…"/>
-          </div>
-          <button class="btn danger" id="btnBehavior" style="margin-top:10px">تسجيل مخالفة</button>
-        </div>
-
-        <div class="card" style="grid-column:1/-1;box-shadow:none">
-          <h2>السجل</h2>
-          <div id="history" class="muted"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-  <div class="printArea" id="printArea"></div>
-</body>
-</html>
