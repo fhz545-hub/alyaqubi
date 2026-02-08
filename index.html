@@ -1,0 +1,1966 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <meta name="theme-color" content="#0b7e88" />
+  <title>المواظبة والسلوك</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Libraries (cached by service worker after first run) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
+  <style>
+    :root{
+      --moe:#0b7e88; --moe2:#147e6d;
+      --ink:#0b2f2b; --muted:#5a6f6c;
+      --bg:#f6fafb; --card:#ffffff; --line:#e6eeee;
+      --danger:#b42318; --warn:#b54708; --ok:#027a48;
+      --shadow:0 10px 26px rgba(2,40,35,.08);
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg,#f4fbfb 0%,#ffffff 45%,#f6fafb 100%);
+      color:var(--ink); font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Arial;
+      line-height:1.75;
+    }
+    a{color:inherit}
+    button,input,select,textarea{font:inherit}
+    .wrap{max-width:1180px;margin:0 auto;padding:12px 14px 90px}
+    .topbar{
+      position:sticky; top:0; z-index:20;
+      background:rgba(246,250,251,.78); backdrop-filter:saturate(140%) blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar .inner{max-width:1180px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      background:linear-gradient(135deg,var(--moe) 0%,#14b8a6 45%,#60a5fa 100%);
+      box-shadow:0 10px 24px rgba(11,126,136,.22);
+      display:grid;place-items:center;color:#fff;font-weight:900
+    }
+    .brand h1{margin:0;font-size:16px;font-weight:900}
+    .brand .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn{
+      border:1px solid var(--line); background:#fff; color:var(--ink);
+      border-radius:999px; padding:8px 12px; cursor:pointer;
+      display:inline-flex; align-items:center; gap:8px;
+      box-shadow:0 1px 0 rgba(0,0,0,.02);
+    }
+    .btn.primary{background:linear-gradient(180deg,#0ea5a8,#0b7e88);border-color:transparent;color:#fff}
+    .btn.danger{background:#fff;border-color:#ffd3cf;color:var(--danger)}
+    .btn:active{transform:translateY(1px)}
+    .btn .i{width:18px;height:18px;display:inline-block}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      border:1px dashed #cfe7e5; background:rgba(11,126,136,.07);
+      color:var(--moe); padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px
+    }
+    .grid{display:grid;gap:12px}
+    @media(min-width:980px){
+      .grid{grid-template-columns:420px 1fr; align-items:start}
+    }
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+      box-shadow:var(--shadow); overflow:hidden
+    }
+    .card .hd{padding:12px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .card .hd .t{font-weight:900}
+    .card .bd{padding:12px}
+    .hint{color:var(--muted);font-size:12.5px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row > *{flex:1}
+    .field{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+    .field label{font-size:12px;color:var(--muted);font-weight:700}
+    .field input,.field select,.field textarea{
+      width:100%; padding:10px 12px; border-radius:14px;
+      border:1px solid #dfeceb; background:#fff; outline:none;
+    }
+    .field textarea{min-height:86px;resize:vertical}
+    .searchbox{
+      display:flex;gap:10px;align-items:center;
+      border:1px solid #dfeceb; background:#fff; border-radius:16px; padding:10px 12px;
+    }
+    .searchbox input{border:0;outline:0;flex:1;padding:0}
+    .seg{
+      display:flex;gap:6px; background:#fff;border:1px solid var(--line);
+      border-radius:999px;padding:6px; overflow:auto
+    }
+    .seg button{
+      border:0; background:transparent; padding:8px 10px; border-radius:999px; cursor:pointer;
+      font-weight:800; font-size:12.5px; color:var(--muted); white-space:nowrap
+    }
+    .seg button.on{background:rgba(11,126,136,.12); color:var(--moe)}
+    .list{display:flex;flex-direction:column;gap:8px}
+    .stu{
+      border:1px solid var(--line); border-radius:16px; padding:10px 10px;
+      display:flex;gap:10px;align-items:center;cursor:pointer;background:#fff
+    }
+    .stu:hover{border-color:#cfe7e5}
+    .stu.on{border-color:rgba(11,126,136,.45); box-shadow:0 0 0 3px rgba(11,126,136,.10)}
+    .avatar{
+      width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
+      background:rgba(11,126,136,.10); color:var(--moe); font-weight:900
+    }
+    .stu .meta{flex:1;min-width:0}
+    .stu .meta .name{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .stu .meta .info{font-size:12px;color:var(--muted)}
+    .tag{font-size:11px;font-weight:900;border-radius:999px;padding:4px 8px;border:1px solid var(--line);background:#fff;color:var(--muted)}
+    .tag.ok{color:var(--ok);border-color:#b7e4c7;background:#f1fcf6}
+    .tag.warn{color:var(--warn);border-color:#ffd7b0;background:#fff8f0}
+    .tag.danger{color:var(--danger);border-color:#ffd3cf;background:#fff3f2}
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .kpi .box{border:1px solid var(--line);border-radius:16px;padding:10px;background:linear-gradient(180deg,#ffffff,#f8fbfb)}
+    .kpi .box .n{font-size:18px;font-weight:900}
+    .kpi .box .l{font-size:12px;color:var(--muted);font-weight:700}
+    .detailHead{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap
+    }
+    .detailHead .who{display:flex;gap:10px;align-items:center}
+    .detailHead .who .big{width:54px;height:54px;border-radius:18px}
+    .detailHead h2{margin:0;font-size:18px;font-weight:900}
+    .detailHead .small{color:var(--muted);font-size:12.5px}
+    .quick{display:flex;gap:8px;flex-wrap:wrap}
+    .quick .btn{padding:9px 12px}
+    .divider{height:1px;background:var(--line);margin:10px 0}
+    .records{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .rec{
+      border:1px solid var(--line); border-radius:16px; padding:10px;background:#fff;
+      display:flex;gap:10px;align-items:flex-start
+    }
+    .rec .ic{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:#f3fbfa;color:var(--moe);font-weight:900}
+    .rec .txt{flex:1;min-width:0}
+    .rec .txt .h{font-weight:900}
+    .rec .txt .d{font-size:12px;color:var(--muted)}
+    .rec .ops{display:flex;gap:6px}
+    .rec .ops button{border:0;background:transparent;cursor:pointer;color:var(--muted);padding:6px;border-radius:12px}
+    .rec .ops button:hover{background:#f6fafb;color:var(--ink)}
+    .footerBar{
+      position:fixed;left:0;right:0;bottom:0;z-index:25;
+      background:rgba(255,255,255,.82); backdrop-filter:saturate(140%) blur(10px);
+      border-top:1px solid var(--line);
+    }
+    .footerBar .inner{
+      max-width:1180px;margin:0 auto;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between
+    }
+    .toast{
+      position:fixed;inset:auto 14px 76px 14px; max-width:640px; margin:0 auto;
+      background:#0b2f2b;color:#fff;border-radius:16px;padding:12px 12px;
+      display:none; box-shadow:0 16px 40px rgba(0,0,0,.25)
+    }
+    .toast.on{display:block}
+    dialog{
+      width:min(640px, calc(100% - 22px));
+      border:1px solid var(--line); border-radius:20px;
+      box-shadow:0 30px 80px rgba(0,0,0,.25);
+    }
+    dialog::backdrop{background:rgba(2,26,22,.42)}
+    .dlgHd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px;border-bottom:1px solid var(--line)}
+    .dlgHd .t{font-weight:900}
+    .dlgBd{padding:12px}
+    .dlgFt{padding:12px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-start;flex-wrap:wrap}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+    .muted{color:var(--muted)}
+    .miniGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:520px){ .miniGrid{grid-template-columns:1fr} }
+    .notice{
+      border:1px dashed #cfe7e5; background:rgba(11,126,136,.06);
+      padding:10px;border-radius:16px;color:var(--ink)
+    }
+    .notice strong{color:var(--moe)}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="inner">
+      <div class="brand">
+        <div class="logo">م</div>
+        <div>
+          <h1>المواظبة والسلوك</h1>
+          <div class="sub" id="subline">تطبيق رصد وإشعار ولي الأمر + أرشفة ذكية</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <span class="pill" id="statPill">0 طالب</span>
+        <button class="btn primary" id="btnImport"><span class="i">⬆️</span>استيراد Excel</button>
+        <button class="btn" id="btnArchive"><span class="i">🗂️</span>الأرشيف</button>
+        <button class="btn" id="btnExport"><span class="i">⬇️</span>تصدير</button>
+        <button class="btn" id="btnSettings"><span class="i">⚙️</span>الإعدادات</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+      <!-- LEFT: students -->
+      <section class="card" id="cardStudents">
+        <div class="hd">
+          <div class="t">الطلاب</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn" id="btnAddStudent" title="إضافة طالب (مسؤول)">➕</button>
+            <div class="hint" id="dbHint">جاهز</div>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="searchbox">
+            <span>🔎</span>
+            <input id="q" placeholder="ابحث بالاسم أو رقم الطالب أو الجوال..." autocomplete="off">
+            <button class="btn" id="btnClearQ" title="مسح">✕</button>
+          </div>
+
+          <div style="height:10px"></div>
+
+          <div class="seg" id="segGrade">
+            <button data-g="all" class="on">الكل</button>
+            <button data-g="1314">الأول الثانوي</button>
+            <button data-g="1416">الثاني الثانوي</button>
+            <button data-g="1516">الثالث الثانوي</button>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>الشعبة</label>
+              <select id="fSection">
+                <option value="all">الكل</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>المسار</label>
+              <select id="fTrack">
+                <option value="all">الكل</option>
+                <option value="منتظم">منتظم</option>
+                <option value="تعليم إلكتروني">تعليم إلكتروني</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="kpi">
+            <div class="box">
+              <div class="n" id="kpiStudents">0</div>
+              <div class="l">إجمالي الطلاب</div>
+            </div>
+            <div class="box">
+              <div class="n" id="kpiRecords">0</div>
+              <div class="l">سجلات مرصودة</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="list" id="studentList"></div>
+
+          <div class="hint" style="margin-top:10px">
+            * إذا كان رقم الصف في ملف الإكسل (1314/1416/1516) سيُعرض تلقائيًا كمستوى دراسي.
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: details -->
+      <section class="card" id="cardDetail">
+        <div class="hd">
+          <div class="t">لوحة الرصد</div>
+          <div class="hint" id="selHint">اختر طالبًا</div>
+        </div>
+        <div class="bd">
+          <div id="emptyState" class="notice">
+            <strong>البدء السريع:</strong>
+            <div style="margin-top:6px" class="muted">
+              1) اضغط <b>استيراد Excel</b> واختر ملف بيانات الطلاب. <br>
+              2) ابحث عن الطالب ثم اختره. <br>
+              3) اختر نوع الرصد (مواظبة / سلوك / إذن) ثم أنشئ رسالة واتساب وأرشف السجل.
+            </div>
+          </div>
+
+          <div id="detail" style="display:none">
+            <div class="detailHead">
+              <div class="who">
+                <div class="avatar big" id="dAvatar">ط</div>
+                <div>
+                  <h2 id="dName">—</h2>
+                  <div class="small" id="dInfo">—</div>
+                  <div class="small mono" id="dSid">—</div>
+                </div>
+              </div>
+              <div class="quick">
+                <button class="btn" id="btnAttendance">🕘 مواظبة</button>
+                <button class="btn" id="btnBehavior">🧭 سلوك</button>
+                <button class="btn" id="btnPermit">🪪 إذن</button>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="notice">
+              <div><strong>ملاحظة مرجعية داخلية:</strong> التطبيق يذكّرك بالقواعد الأساسية ويُنتج إشعار ولي الأمر، بينما تقدير الدرجة والإجراء النهائي يبقى وفق الدليل المعتمد.</div>
+              <div style="margin-top:6px" class="muted">
+                يمكنك من الإعدادات تعديل مسميات الصفوف/الشعب، وقائمة المخالفات، وقوالب الرسائل.
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+              <button class="btn" id="btnWhatsAppNow">📲 واتساب (سجل أخير)</button>
+              <button class="btn" id="btnPrintNow">🖨️ طباعة (سجل أخير)</button>
+              <button class="btn" id="btnEditStudent">✏️ تعديل الطالب (مسؤول)</button><button class="btn danger" id="btnDeleteStudent">🗑️ حذف الطالب (مسؤول)</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+              <div style="font-weight:900">أرشيف الطالب</div>
+              <div class="hint" id="dRecCount">0 سجل</div>
+            </div>
+
+            <div class="records" id="studentRecords"></div>
+
+            <div class="hint" style="margin-top:10px">
+              * للحذف الشامل/التصفير: من <b>الإعدادات</b> (يتطلب رمز المسؤول الأول).
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="footerBar">
+    <div class="inner">
+      <div class="hint" id="footHint">جاهز للاستخدام</div>
+      <div class="row" style="flex:0;gap:8px;justify-content:flex-end">
+        <button class="btn" id="btnInstall" style="display:none">➕ تثبيت</button>
+        <button class="btn" id="btnHelp">❔ مساعدة</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- dialogs -->
+  <dialog id="dlgImport">
+    <div class="dlgHd"><div class="t">استيراد بيانات الطلاب</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="notice">
+        <strong>مهم:</strong> الملف المرفوع يجب أن يحتوي على الأعمدة: <b>اسم الطالب</b>، <b>رقم الصف</b>، <b>الفصل/الشعبة</b>، <b>الجوال</b>، <b>رقم الطالب</b>.
+      </div>
+      <div class="field">
+        <label>اختر ملف Excel</label>
+        <input type="file" id="fileExcel" accept=".xlsx,.xls,.xlsm,.csv">
+      </div>
+      <div class="field">
+        <label>استبدال بيانات الطلاب الحالية؟</label>
+        <select id="importMode">
+          <option value="merge">دمج/تحديث</option>
+          <option value="replace">استبدال كامل</option>
+        </select>
+      </div>
+      <div class="hint">سيتم حفظ الطلاب في الجهاز (IndexedDB) ويمكن نقلهم بالتصدير/الاستيراد.</div>
+    </div>
+    <div class="dlgFt">
+      <button class="btn primary" id="doImport">استيراد</button>
+      <button class="btn" onclick="this.closest('dialog').close()">إلغاء</button>
+    </div>
+  
+  <dialog id="dlgStudent">
+    <div class="dlgHd"><div class="t" id="stuDlgTitle">إدارة الطالب</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="notice">
+        <strong>ملاحظة:</strong> تعديل/إضافة الطلاب محمي برمز المسؤول الأول (PIN).
+      </div>
+      <div class="miniGrid">
+        <div class="field">
+          <label>اسم الطالب</label>
+          <input id="stuName" placeholder="اسم الطالب">
+        </div>
+        <div class="field">
+          <label>رقم الطالب (مفتاح)</label>
+          <input id="stuSid" class="mono" placeholder="مثال: 1234567">
+        </div>
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>رقم الصف</label>
+          <select id="stuGrade">
+            <option value="1314">1314 - الأول الثانوي</option>
+            <option value="1416">1416 - الثاني الثانوي</option>
+            <option value="1516">1516 - الثالث الثانوي</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الشعبة (الفصل)</label>
+          <input id="stuSection" type="number" min="1" step="1" placeholder="مثال: 1">
+        </div>
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>المسار</label>
+          <select id="stuTrack">
+            <option value="منتظم">منتظم</option>
+            <option value="تعليم إلكتروني">تعليم إلكتروني</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>جوال ولي الأمر</label>
+          <input id="stuPhone" inputmode="tel" class="mono" placeholder="9665XXXXXXXX">
+        </div>
+      </div>
+
+      <div class="hint">* يفضّل إدخال الجوال بصيغة 9665… لتسهيل فتح واتساب مباشرة.</div>
+      <input type="hidden" id="stuMode" value="add">
+      <input type="hidden" id="stuOldSid" value="">
+    </div>
+    <div class="dlgFt">
+      <button class="btn primary" id="saveStudent">حفظ</button>
+      <button class="btn" onclick="this.closest('dialog').close()">إغلاق</button>
+    </div>
+  </dialog>
+
+</dialog>
+
+  <dialog id="dlgAttendance">
+    <div class="dlgHd"><div class="t">رصد مواظبة</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="miniGrid">
+        <div class="field">
+          <label>النوع</label>
+          <select id="attType">
+            <option value="تأخر صباحي">تأخر صباحي</option>
+            <option value="غياب حصة">غياب حصة</option>
+            <option value="غياب يوم">غياب يوم</option>
+            <option value="استئذان بعذر">استئذان بعذر</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>عدد الحصص (عند الحاجة)</label>
+          <input id="attPeriods" type="number" min="1" step="1" placeholder="مثال: 1">
+        </div>
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>التاريخ</label>
+          <input id="attDate" type="date">
+        </div>
+        <div class="field">
+          <label>الوقت</label>
+          <input id="attTime" type="time">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>ملاحظة مختصرة</label>
+        <textarea id="attNote" placeholder="مثال: تأخر عن بداية اليوم، أو غياب الحصة (3) دون إذن..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>إدراج تنبيه نظامي في الرسالة؟</label>
+        <select id="attLegal">
+          <option value="yes">نعم (مختصر)</option>
+          <option value="no">لا</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>اسم القائم بالرصد</label>
+        <input id="attStaff" placeholder="مثال: وكيل شؤون الطلاب / معلم المادة">
+      </div>
+    </div>
+    <div class="dlgFt">
+      <button class="btn primary" id="saveAttendance">حفظ + تجهيز واتساب</button>
+      <button class="btn" onclick="this.closest('dialog').close()">إغلاق</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlgBehavior">
+    <div class="dlgHd"><div class="t">رصد سلوك</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="miniGrid">
+        <div class="field">
+          <label>المخالفة (قائمة قابلة للتعديل)</label>
+          <select id="behItem"></select>
+        </div>
+        <div class="field">
+          <label>درجة المشكلة (1–5)</label>
+          <select id="behDegree">
+            <option value="1">الأولى</option>
+            <option value="2">الثانية</option>
+            <option value="3">الثالثة</option>
+            <option value="4">الرابعة</option>
+            <option value="5">الخامسة</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>التاريخ</label>
+          <input id="behDate" type="date">
+        </div>
+        <div class="field">
+          <label>الوقت</label>
+          <input id="behTime" type="time">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>وصف مختصر (كما سيظهر في واتساب)</label>
+        <textarea id="behNote" placeholder="اكتب وصفًا مختصرًا وموضوعيًا دون تجريح..."></textarea>
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>إجراءات اتخذت (اختياري)</label>
+          <input id="behAction" placeholder="مثال: تنبيه شفهي / إبلاغ ولي الأمر / تعهد...">
+        </div>
+        <div class="field">
+          <label>اسم القائم بالرصد</label>
+          <input id="behStaff" placeholder="مثال: معلم المادة / وكيل شؤون الطلاب">
+        </div>
+      </div>
+
+      <div class="notice">
+        <strong>حسم الدرجات:</strong> التطبيق سيقترح مقدار الحسم وفق درجة المشكلة (قابل للتغيير في الإعدادات).
+      </div>
+    </div>
+    <div class="dlgFt">
+      <button class="btn primary" id="saveBehavior">حفظ + تجهيز واتساب</button>
+      <button class="btn" onclick="this.closest('dialog').close()">إغلاق</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlgPermit">
+    <div class="dlgHd"><div class="t">إذن (دخول/خروج)</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="miniGrid">
+        <div class="field">
+          <label>نوع الإذن</label>
+          <select id="perType">
+            <option value="إذن دخول فصل">إذن دخول فصل</option>
+            <option value="إذن خروج من الفصل">إذن خروج من الفصل</option>
+            <option value="إذن خروج من المدرسة">إذن خروج من المدرسة</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الوجهة/المكان (اختياري)</label>
+          <input id="perPlace" placeholder="مثال: الوكالة / العيادة / لجنة...">
+        </div>
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>التاريخ</label>
+          <input id="perDate" type="date">
+        </div>
+        <div class="field">
+          <label>الوقت</label>
+          <input id="perTime" type="time">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>السبب</label>
+        <textarea id="perReason" placeholder="سبب مختصر وواضح..."></textarea>
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>اسم المصرّح</label>
+          <input id="perStaff" placeholder="مثال: وكيل شؤون الطلاب">
+        </div>
+        <div class="field">
+          <label>مدة الإذن (دقائق)</label>
+          <input id="perMins" type="number" min="1" step="1" placeholder="مثال: 15">
+        </div>
+      </div>
+    </div>
+    <div class="dlgFt">
+      <button class="btn primary" id="savePermit">حفظ + تجهيز وطباعة</button>
+      <button class="btn" onclick="this.closest('dialog').close()">إغلاق</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlgArchive">
+    <div class="dlgHd"><div class="t">الأرشيف العام</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="row">
+        <div class="field">
+          <label>من تاريخ</label>
+          <input id="aFrom" type="date">
+        </div>
+        <div class="field">
+          <label>إلى تاريخ</label>
+          <input id="aTo" type="date">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>النوع</label>
+          <select id="aKind">
+            <option value="all">الكل</option>
+            <option value="attendance">مواظبة</option>
+            <option value="behavior">سلوك</option>
+            <option value="permit">إذن</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>كلمة بحث</label>
+          <input id="aQ" placeholder="اسم الطالب / رقم الطالب...">
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div id="archiveList" class="records"></div>
+      <div class="hint" style="margin-top:10px">يمكن حذف سجل منفرد، أو التصدير إلى ملف ثم استيراده في جهاز آخر.</div>
+    </div>
+    <div class="dlgFt">
+      <button class="btn" id="btnExportRange">تصدير وفق الفترة</button>
+      <button class="btn" onclick="this.closest('dialog').close()">إغلاق</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlgExport">
+    <div class="dlgHd"><div class="t">تصدير / استيراد (نقل بين الأجهزة)</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="notice">
+        <strong>نصيحة:</strong> للتنقل بين الأجهزة، صدّر ملف البيانات (JSON) ثم استورده في الجهاز الآخر.
+      </div>
+      <div class="row">
+        <button class="btn primary" id="doExportAll">تصدير كل البيانات</button>
+        <button class="btn" id="doExportStudents">تصدير الطلاب فقط</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label>استيراد ملف JSON</label>
+        <input type="file" id="fileJSON" accept=".json">
+      </div>
+      <div class="field">
+        <label>طريقة الاستيراد</label>
+        <select id="jsonMode">
+          <option value="merge">دمج/تحديث</option>
+          <option value="replace">استبدال كامل (مسؤول)</option>
+        </select>
+      </div>
+      <div class="hint">الاستبدال الكامل يتطلب رمز المسؤول الأول.</div>
+    </div>
+    <div class="dlgFt">
+      <button class="btn primary" id="doImportJSON">استيراد</button>
+      <button class="btn" onclick="this.closest('dialog').close()">إغلاق</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlgSettings">
+    <div class="dlgHd"><div class="t">الإعدادات</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="notice">
+        <strong>المسؤول الأول:</strong> ضع رمزًا (PIN) ليصبح الحذف الشامل/التصفير وتعديل بيانات الطلاب محميًا.
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>اسم المدرسة (يظهر في رسائل واتساب)</label>
+          <input id="sSchool" placeholder="مثال: ثانوية اليعقوبي الثانوية بالخبر">
+        </div>
+        <div class="field">
+          <label>اسم المسؤول/المرسل (اختياري)</label>
+          <input id="sSender" placeholder="مثال: إدارة المدرسة / وكيل شؤون الطلاب">
+        </div>
+      </div>
+
+      <div class="miniGrid">
+        <div class="field">
+          <label>PIN (تعيين/تغيير)</label>
+          <input id="sPin" type="password" inputmode="numeric" placeholder="••••">
+        </div>
+        <div class="field">
+          <label>تأكيد PIN</label>
+          <input id="sPin2" type="password" inputmode="numeric" placeholder="••••">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>حسم درجات السلوك حسب درجة المشكلة</label>
+        <div class="row">
+          <input id="p1" style="max-width:100px" type="number" min="0" step="1" placeholder="1">
+          <input id="p2" style="max-width:100px" type="number" min="0" step="1" placeholder="2">
+          <input id="p3" style="max-width:100px" type="number" min="0" step="1" placeholder="3">
+          <input id="p4" style="max-width:100px" type="number" min="0" step="1" placeholder="10">
+          <input id="p5" style="max-width:100px" type="number" min="0" step="1" placeholder="15">
+        </div>
+        <div class="hint">يمكن تعديل القيم وفق الدليل المعتمد لديكم (الافتراضي: 1/2/3/10/15).</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label>قائمة المخالفات (سريعة)</label>
+        <textarea id="sBehList" placeholder="كل سطر = مخالفة واحدة"></textarea>
+        <div class="hint">مثال: التـأخر الصباحي / عدم التقيد بالزي / دخول فصل آخر دون استئذان ...</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <button class="btn primary" id="saveSettings">حفظ الإعدادات</button>
+        <button class="btn danger" id="wipeAll">تصفير كل البيانات (مسؤول)</button>
+      </div>
+
+      <div class="hint" style="margin-top:10px">
+        إذا لم يظهر زر التثبيت: افتح الصفحة من متصفح يدعم التثبيت، أو استخدم "إضافة للشاشة الرئيسية" في iOS.
+      </div>
+    </div>
+    <div class="dlgFt">
+      <button class="btn" onclick="this.closest('dialog').close()">إغلاق</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlgHelp">
+    <div class="dlgHd"><div class="t">مساعدة سريعة</div><button class="btn" onclick="this.closest('dialog').close()">✕</button></div>
+    <div class="dlgBd">
+      <div class="notice">
+        <strong>كيف يعمل التطبيق؟</strong>
+        <div class="muted" style="margin-top:6px">
+          - يستورد بيانات الطلاب من Excel، ثم يحفظها محليًا في الجهاز.<br>
+          - ينشئ سجلات (مواظبة/سلوك/إذن) ويُجهز رسالة واتساب جاهزة للإرسال.<br>
+          - يوجد أرشيف قابل للبحث والتصدير/الاستيراد بين الأجهزة.<br>
+          - الحذف الشامل/التصفير محمي برمز (PIN) للمسؤول الأول.
+        </div>
+      </div>
+      <div style="height:10px"></div>
+      <div class="notice">
+        <strong>طباعة الإذن (حرارية 80mm):</strong>
+        <div class="muted" style="margin-top:6px">
+          عند حفظ "إذن" يمكنك طباعة بطاقة صغيرة مناسبة للطابعات الحرارية، أو طباعة A4 من نافذة الطباعة.
+        </div>
+      </div>
+    </div>
+    <div class="dlgFt">
+      <button class="btn" onclick="this.closest('dialog').close()">إغلاق</button>
+    </div>
+  </dialog>
+
+<script>
+/* =========================
+   المواظبة والسلوك - نسخة محلية/PWA
+   ========================= */
+
+const APP = {
+  DB_NAME: "moathaba_sulook_db",
+  DB_VER: 1,
+  selectedSid: null,
+  lastRecordBySid: new Map(),
+  cache: { students: [], records: [], settings: null },
+  gradeMap: { "1314":"الأول الثانوي", "1416":"الثاني الثانوي", "1516":"الثالث الثانوي" },
+  eSection: { "1314":8, "1416":6, "1516":6 },
+};
+
+const $ = (id)=>document.getElementById(id);
+const toast = (msg)=>{
+  const t=$("toast"); t.textContent=msg; t.classList.add("on");
+  clearTimeout(toast._tm);
+  toast._tm=setTimeout(()=>t.classList.remove("on"),2200);
+};
+
+const pad2 = (n)=>String(n).padStart(2,"0");
+const nowLocal = ()=>{
+  const d=new Date();
+  const yyyy=d.getFullYear(), mm=pad2(d.getMonth()+1), dd=pad2(d.getDate());
+  const hh=pad2(d.getHours()), mi=pad2(d.getMinutes());
+  return {date:`${yyyy}-${mm}-${dd}`, time:`${hh}:${mi}`, iso:d.toISOString()};
+};
+const dayNameAr = (d)=>{
+  const names=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  return names[d.getDay()];
+};
+const safeStr = (v)=>{
+  if(v===null||v===undefined) return "";
+  let s=String(v).trim();
+  if(s.endsWith(".0")) s=s.slice(0,-2);
+  // remove scientific notation for big numbers if possible
+  if(/e\+?/i.test(s)){
+    const n=Number(v);
+    if(Number.isFinite(n)) s = Math.trunc(n).toString();
+  }
+  return s;
+};
+const firstLetter = (name)=>{
+  const s=(name||"").trim();
+  if(!s) return "ط";
+  return s.split(/\s+/)[0].slice(0,1);
+};
+const isMobile = ()=>matchMedia("(max-width: 979px)").matches;
+
+function downloadBlob(filename, blob){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1200);
+}
+
+async function sha256(text){
+  const enc=new TextEncoder().encode(text);
+  const buf=await crypto.subtle.digest("SHA-256", enc);
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+/* ============ IndexedDB ============ */
+let _db=null;
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(APP.DB_NAME, APP.DB_VER);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains("students")){
+        const s=db.createObjectStore("students", { keyPath:"sid" });
+        s.createIndex("gradeCode","gradeCode",{unique:false});
+        s.createIndex("section","section",{unique:false});
+      }
+      if(!db.objectStoreNames.contains("records")){
+        const r=db.createObjectStore("records", { keyPath:"rid", autoIncrement:true });
+        r.createIndex("sid","sid",{unique:false});
+        r.createIndex("createdAt","createdAt",{unique:false});
+      }
+      if(!db.objectStoreNames.contains("settings")){
+        db.createObjectStore("settings", { keyPath:"key" });
+      }
+    };
+    req.onsuccess=()=>{ _db=req.result; resolve(_db); };
+    req.onerror=()=>reject(req.error);
+  });
+}
+function tx(store, mode="readonly"){
+  return _db.transaction(store, mode).objectStore(store);
+}
+function idbGetAll(store){
+  return new Promise((resolve,reject)=>{
+    const req=tx(store).getAll();
+    req.onsuccess=()=>resolve(req.result||[]);
+    req.onerror=()=>reject(req.error);
+  });
+}
+function idbPut(store, val){
+  return new Promise((resolve,reject)=>{
+    const req=tx(store,"readwrite").put(val);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+function idbAdd(store, val){
+  return new Promise((resolve,reject)=>{
+    const req=tx(store,"readwrite").add(val);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+function idbDel(store, key){
+  return new Promise((resolve,reject)=>{
+    const req=tx(store,"readwrite").delete(key);
+    req.onsuccess=()=>resolve(true);
+    req.onerror=()=>reject(req.error);
+  });
+}
+function idbClear(store){
+  return new Promise((resolve,reject)=>{
+    const req=tx(store,"readwrite").clear();
+    req.onsuccess=()=>resolve(true);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function getSetting(key, fallback=null){
+  const all = await idbGetAll("settings");
+  const obj = all.find(x=>x.key===key);
+  return obj ? obj.value : fallback;
+}
+async function setSetting(key, value){
+  await idbPut("settings", {key, value});
+}
+
+/* ============ Defaults ============ */
+const DEFAULT_SETTINGS = {
+  schoolName: "ثانوية اليعقوبي الثانوية بالخبر",
+  senderName: "إدارة المدرسة",
+  pinHash: "",
+  behaviorPointsByDegree: {1:1,2:2,3:3,4:10,5:15},
+  behaviorList: [
+    "عدم التقيد بالزي المدرسي",
+    "التأخر الصباحي",
+    "التأخر عن الاصطفاف الصباحي/العبث أثناءه",
+    "التأخر عن الدخول إلى الحصص",
+    "إعاقة سير الحصة (حديث جانبي/مقاطعة/تشويش)",
+    "النوم داخل الفصل",
+    "دخول/خروج من الفصل دون استئذان",
+    "دخول فصل آخر دون استئذان",
+    "الشجار أو الاشتراك في مضاربة",
+    "إتلاف ممتلكات الطلبة أو تجهيزات المدرسة",
+    "عدم حضور الحصة أو الهروب منها"
+  ],
+};
+
+async function loadSettings(){
+  let s = await getSetting("app_settings", null);
+  if(!s){ s = DEFAULT_SETTINGS; await setSetting("app_settings", s); }
+  // fill missing keys
+  s = Object.assign({}, DEFAULT_SETTINGS, s);
+  if(!s.behaviorPointsByDegree) s.behaviorPointsByDegree = DEFAULT_SETTINGS.behaviorPointsByDegree;
+  if(!s.behaviorList || !Array.isArray(s.behaviorList) || !s.behaviorList.length) s.behaviorList = DEFAULT_SETTINGS.behaviorList.slice();
+  APP.cache.settings = s;
+  return s;
+}
+
+/* ============ UI state ============ */
+let gradeFilter="all";
+function gradeName(code){ return APP.gradeMap[String(code)] || safeStr(code) || "—"; }
+
+function trackName(gradeCode, section){
+  const code=String(gradeCode);
+  const sNum=Number(section);
+  const e = APP.eSection[code];
+  if(Number.isFinite(sNum) && e && sNum===e) return "تعليم إلكتروني";
+  return "منتظم";
+}
+
+function sectionOptionsForGrade(code){
+  const c=String(code);
+  const max = APP.eSection[c] || 0;
+  const arr=[];
+  for(let i=1;i<=max;i++) arr.push(i);
+  return arr;
+}
+
+function fillSectionFilter(){
+  const sel=$("fSection");
+  sel.innerHTML = '<option value="all">الكل</option>';
+  const code=gradeFilter;
+  const seen = new Set();
+  if(code==="all"){
+    APP.cache.students.forEach(s=>seen.add(String(s.section)));
+  }else{
+    sectionOptionsForGrade(code).forEach(x=>seen.add(String(x)));
+  }
+  [...seen].filter(Boolean).sort((a,b)=>Number(a)-Number(b)).forEach(s=>{
+    const o=document.createElement("option");
+    o.value=s; o.textContent=`شعبة ${s}`;
+    sel.appendChild(o);
+  });
+}
+
+function humanClass(s){
+  const g=gradeName(s.gradeCode);
+  const track=s.track || trackName(s.gradeCode, s.section);
+  return `${g} • شعبة ${s.section} • ${track}`;
+}
+
+function setStats(){
+  $("kpiStudents").textContent = APP.cache.students.length;
+  $("kpiRecords").textContent = APP.cache.records.length;
+  $("statPill").textContent = `${APP.cache.students.length} طالب`;
+}
+
+function renderStudents(){
+  const q = $("q").value.trim();
+  const sec = $("fSection").value;
+  const track = $("fTrack").value;
+
+  let items = APP.cache.students.slice();
+  if(gradeFilter!=="all") items = items.filter(s=>String(s.gradeCode)===String(gradeFilter));
+  if(sec!=="all") items = items.filter(s=>String(s.section)===String(sec));
+  if(track!=="all") items = items.filter(s=>String(s.track)===String(track));
+  if(q){
+    const qq=q.toLowerCase();
+    items = items.filter(s=>{
+      return (s.name||"").toLowerCase().includes(qq)
+          || (s.sid||"").toLowerCase().includes(qq)
+          || (s.phone||"").toLowerCase().includes(qq);
+    });
+  }
+
+  const box=$("studentList");
+  box.innerHTML="";
+  if(!items.length){
+    const d=document.createElement("div");
+    d.className="hint";
+    d.textContent = "لا توجد نتائج.";
+    box.appendChild(d);
+    return;
+  }
+
+  items.slice(0, 2600).forEach(s=>{
+    const div=document.createElement("div");
+    div.className="stu"+(APP.selectedSid===s.sid?" on":"");
+    div.innerHTML = `
+      <div class="avatar">${firstLetter(s.name)}</div>
+      <div class="meta">
+        <div class="name">${s.name||"—"}</div>
+        <div class="info">${humanClass(s)}</div>
+      </div>
+      <div class="tag ${s.track==="تعليم إلكتروني"?"warn":"ok"}">${s.track}</div>
+    `;
+    div.onclick=()=>selectStudent(s.sid);
+    box.appendChild(div);
+  });
+}
+
+function recordIcon(kind){
+  return kind==="attendance"?"🕘":(kind==="behavior"?"🧭":"🪪");
+}
+function recordTitle(rec){
+  if(rec.kind==="attendance") return `مواظبة: ${rec.subtype}`;
+  if(rec.kind==="behavior") return `سلوك: ${rec.item || "مخالفة"} (درجة ${rec.degree})`;
+  return `إذن: ${rec.subtype}`;
+}
+function recordDesc(rec){
+  return `${rec.day} • ${rec.date} • ${rec.time} ${rec.points?`• حسم: ${rec.points}`:""}${rec.staff?` • ${rec.staff}`:""}`;
+}
+
+async function selectStudent(sid){
+  APP.selectedSid=sid;
+  const s = APP.cache.students.find(x=>x.sid===sid);
+  if(!s) return;
+
+  $("emptyState").style.display="none";
+  $("detail").style.display="block";
+  $("selHint").textContent = "جاهز";
+  $("dAvatar").textContent = firstLetter(s.name);
+  $("dName").textContent = s.name;
+  $("dInfo").textContent = humanClass(s);
+  $("dSid").textContent = `رقم الطالب: ${s.sid || "—"} • الجوال: ${s.phone || "—"}`;
+
+  // update list highlight
+  renderStudents();
+
+  const recs = APP.cache.records
+    .filter(r=>r.sid===sid)
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+
+  $("dRecCount").textContent = `${recs.length} سجل`;
+  const box=$("studentRecords");
+  box.innerHTML="";
+  if(!recs.length){
+    const d=document.createElement("div");
+    d.className="hint";
+    d.textContent = "لا يوجد سجلات لهذا الطالب حتى الآن.";
+    box.appendChild(d);
+  }else{
+    recs.slice(0, 40).forEach(rec=>{
+      const div=document.createElement("div");
+      div.className="rec";
+      div.innerHTML = `
+        <div class="ic">${recordIcon(rec.kind)}</div>
+        <div class="txt">
+          <div class="h">${recordTitle(rec)}</div>
+          <div class="d">${recordDesc(rec)}</div>
+          ${rec.note?`<div class="d" style="margin-top:6px">${escapeHtml(rec.note)}</div>`:""}
+        </div>
+        <div class="ops">
+          <button title="واتساب" onclick="event.stopPropagation(); sendWhatsAppForRecord(${rec.rid})">📲</button>
+          <button title="طباعة" onclick="event.stopPropagation(); printRecord(${rec.rid})">🖨️</button>
+          <button title="حذف" onclick="event.stopPropagation(); deleteRecord(${rec.rid})">🗑️</button>
+        </div>
+      `;
+      box.appendChild(div);
+    });
+  }
+
+  // remember last record
+  if(recs[0]) APP.lastRecordBySid.set(sid, recs[0].rid);
+}
+
+/* ============ Import Excel ============ */
+function guessHeaderRow(rows){
+  const keys = ["اسم الطالب","رقم الصف","الفصل","الشعبة","الجوال","رقم الطالب","Student"];
+  for(let i=0;i<Math.min(rows.length,30);i++){
+    const line = rows[i].map(x=>safeStr(x)).join("|");
+    if(keys.some(k=>line.includes(k)) && line.includes("اسم")) return i;
+    if(line.includes("اسم الطالب") && line.includes("رقم الصف")) return i;
+  }
+  // fallback: find row that has at least 3 arabic header cells
+  for(let i=0;i<Math.min(rows.length,30);i++){
+    const r=rows[i].map(x=>safeStr(x));
+    const hit = r.filter(x=>["اسم الطالب","رقم الصف","الفصل","الجوال","رقم الطالب"].includes(x)).length;
+    if(hit>=2) return i;
+  }
+  return 0;
+}
+
+function mapCols(header){
+  const norm = (s)=>safeStr(s).replace(/\s+/g,"").toLowerCase();
+  const idx = {};
+  header.forEach((h,i)=>{
+    const k = norm(h);
+    if(k.includes("اسم") && k.includes("طالب")) idx.name=i;
+    if(k.includes("رقمالصف") || (k.includes("صف") && k.includes("رقم"))) idx.grade=i;
+    if(k==="الفصل" || k.includes("الشعبة") || k.includes("الفصل")) idx.section=i;
+    if(k.includes("جوال") || k.includes("phone") || k.includes("mobile")) idx.phone=i;
+    if(k.includes("رقمالطالب") || (k.includes("طالب") && k.includes("رقم"))) idx.sid=i;
+  });
+  return idx;
+}
+
+function parseStudentsFromWorkbook(wb){
+  const sheetName = wb.SheetNames.find(n=>/sheet2/i.test(n)) || wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+  const hRow = guessHeaderRow(rows);
+  const header = rows[hRow] || [];
+  const idx = mapCols(header);
+
+  const dataRows = rows.slice(hRow+1);
+  const out=[];
+  dataRows.forEach(r=>{
+    const name = safeStr(r[idx.name]);
+    const sid  = safeStr(r[idx.sid]);
+    const phone = safeStr(r[idx.phone]);
+    const gradeCode = safeStr(r[idx.grade]);
+    const section = safeStr(r[idx.section]);
+
+    if(!name || (!sid && !phone)) return;
+
+    const gCode = gradeCode || "";
+    const secNum = section || "";
+    const track = trackName(gCode, secNum);
+    const st = {
+      sid: sid || `${name}-${gCode}-${secNum}`,
+      name,
+      phone,
+      gradeCode: gCode,
+      gradeName: gradeName(gCode),
+      section: secNum,
+      track,
+      updatedAt: new Date().toISOString(),
+    };
+    out.push(st);
+  });
+  return out;
+}
+
+/* ============ Records ============ */
+function escapeHtml(s){
+  return String(s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+}
+
+function buildWhatsAppMessage(student, rec, settings){
+  const school = settings.schoolName || DEFAULT_SETTINGS.schoolName;
+  const sender = settings.senderName || "";
+  const hello = "السلام عليكم ورحمة الله وبركاته";
+  const who = `نفيدكم بشأن ابنكم الطالب: ${student.name} (الصف: ${gradeName(student.gradeCode)} - الشعبة: ${student.section}${student.track?` - ${student.track}`:""})`;
+  const when = `بتاريخ ${rec.date} الموافق ${rec.day} الساعة ${rec.time}.`;
+
+  let what = "";
+  if(rec.kind==="attendance"){
+    what = `تم رصد: ${rec.subtype}${rec.periods?` (عدد الحصص: ${rec.periods})`:""}.`;
+  }else if(rec.kind==="behavior"){
+    what = `تم رصد مشكلة سلوكية: ${rec.item || "—"} (درجة ${rec.degree}).`;
+  }else{
+    what = `تم إصدار: ${rec.subtype}
+  let follow = "";
+  if(rec.kind==="behavior"){
+    const deg = Number(rec.degree||0);
+    if(deg >= 4){
+      follow = "تنبيه: سيتم استدعاؤكم واستكمال الإجراءات النظامية وفق الدليل المعتمد، بحسب نوع المخالفة وملابساتها.";
+    }
+  }
+${rec.minutes?` (المدة: ${rec.minutes} دقيقة)`:""}.`;
+  }
+
+  const details = rec.note ? `التفاصيل: ${rec.note}` : "";
+  let legal = "";
+  if(rec.kind==="attendance" && rec.includeLegal==="yes"){
+    legal = "تنبيه: تُحتسب المواظبة ضمن بطاقة الدرجات، ويُراعى تقديم العذر وفق المدد النظامية عند وجوده.";
+  }
+
+  const thanks = "نأمل المتابعة والتعاون بما يعزز الانضباط ويحفظ مصلحة ابنكم، مع خالص الشكر.";
+  const sign = sender ? `${sender} - ${school}` : school;
+
+  return [hello, who, what, when, details, legal, follow, thanks, sign].filter(Boolean).join("\n");
+}
+
+function waLink(phone, text){
+  const p = safeStr(phone).replace(/[^\d]/g,"");
+  const full = p.startsWith("966") ? p : (p.startsWith("0") ? ("966"+p.slice(1)) : p);
+  return `https://wa.me/${full}?text=${encodeURIComponent(text)}`;
+}
+
+async function addRecord(rec){
+  const rid = await idbAdd("records", rec);
+  rec.rid = rid;
+  APP.cache.records.push(rec);
+  APP.lastRecordBySid.set(rec.sid, rid);
+  setStats();
+  if(APP.selectedSid===rec.sid) selectStudent(rec.sid);
+  return rid;
+}
+
+async function deleteRecord(rid){
+  const ok = await requireAdmin("حذف السجل عملية محمية.
+أدخل PIN للمتابعة:");
+  if(!ok) return;
+  if(!confirm("حذف هذا السجل؟")) return;
+  await idbDel("records", rid);
+  APP.cache.records = APP.cache.records.filter(r=>r.rid!==rid);
+  toast("تم حذف السجل");
+  setStats();
+  if(APP.selectedSid) selectStudent(APP.selectedSid);
+}
+
+function getRecordById(rid){
+  return APP.cache.records.find(r=>r.rid===rid);
+}
+
+async function sendWhatsAppForRecord(rid){
+  const rec = getRecordById(rid);
+  if(!rec){ toast("السجل غير موجود"); return; }
+  const s = APP.cache.students.find(x=>x.sid===rec.sid);
+  const settings = APP.cache.settings;
+  const msg = buildWhatsAppMessage(s, rec, settings);
+  const link = waLink(s.phone, msg);
+  window.open(link, "_blank", "noopener");
+}
+
+async function printRecord(rid){
+  const rec = getRecordById(rid);
+  if(!rec){ toast("السجل غير موجود"); return; }
+  const st = APP.cache.students.find(x=>x.sid===rec.sid);
+  const settings = APP.cache.settings;
+
+  const html = buildPrintHTML(st, rec, settings);
+  const w = window.open("", "_blank", "noopener,noreferrer,width=420,height=720");
+  if(!w){ toast("منع المتصفح فتح نافذة الطباعة"); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(), 250);
+}
+
+function buildPrintHTML(st, rec, settings){
+  const school = escapeHtml(settings.schoolName || DEFAULT_SETTINGS.schoolName);
+  const title = rec.kind==="permit" ? "بطاقة إذن" : "إشعار";
+  const subtitle = escapeHtml(recordTitle(rec));
+  const name = escapeHtml(st.name);
+  const cls = escapeHtml(`${gradeName(st.gradeCode)} - شعبة ${st.section}${st.track?` - ${st.track}`:""}`);
+  const sid = escapeHtml(st.sid || "");
+  const phone = escapeHtml(st.phone || "");
+  const note = escapeHtml(rec.note || "");
+  const staff = escapeHtml(rec.staff || "");
+  const stamp = staff ? staff : (settings.senderName||"");
+
+  // Thermal friendly (80mm) + A4 friendly
+  return `<!doctype html><html lang="ar" dir="rtl"><head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>${title}</title>
+    <style>
+      body{font-family:Tajawal,system-ui; margin:0; padding:0; color:#111}
+      .paper{width:80mm; padding:8mm; margin:0 auto}
+      .h{font-weight:900;text-align:center; font-size:14px}
+      .s{font-size:12px;text-align:center;color:#444;margin-top:3px}
+      .box{border:1px dashed #999; border-radius:10px; padding:10px; margin-top:10px}
+      .k{color:#444;font-size:11px}
+      .v{font-weight:800}
+      .row{display:flex; justify-content:space-between; gap:10px}
+      .small{font-size:11px;color:#444}
+      svg{max-width:100%}
+      @media print{
+        @page{size:80mm auto; margin:0}
+        .paper{width:80mm}
+      }
+      /* A4 fallback if needed */
+      @media print and (min-width:600px){
+        @page{size:A4; margin:10mm}
+        .paper{width:auto; max-width:180mm}
+      }
+    </style>
+  </head><body>
+    <div class="paper">
+      <div class="h">${school}</div>
+      <div class="s">${title} • ${subtitle}</div>
+      <div class="box">
+        <div class="row"><div><div class="k">اسم الطالب</div><div class="v">${name}</div></div><div style="text-align:left"><div class="k">التاريخ/الوقت</div><div class="v">${escapeHtml(rec.date)} • ${escapeHtml(rec.time)}</div></div></div>
+        <div style="height:8px"></div>
+        <div class="row"><div><div class="k">الصف/الشعبة</div><div class="v">${cls}</div></div><div style="text-align:left"><div class="k">الجوال</div><div class="v">${phone}</div></div></div>
+        <div style="height:8px"></div>
+        <div><div class="k">التفاصيل</div><div class="v">${note || "—"}</div></div>
+        <div style="height:10px"></div>
+        <div class="row"><div class="small">القائم بالإجراء: ${escapeHtml(stamp||"—")}</div><div class="small">${escapeHtml(rec.day||"")}</div></div>
+      </div>
+
+      <div class="box" style="text-align:center">
+        <div class="k">باركود رقم الطالب</div>
+        <svg id="barcode"></svg>
+        <div class="small">${sid}</div>
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+      <script>try{JsBarcode("#barcode", "${sid}", {format:"CODE128", displayValue:false, margin:0, height:44});}catch(e){}<\/script>
+    </div>
+  </body></html>`;
+}
+
+/* ============ Admin (PIN) ============ */
+async function requireAdmin(reason="هذه العملية تتطلب رمز المسؤول الأول"){
+  const s = APP.cache.settings;
+  if(!s.pinHash){ alert("لم يتم تعيين PIN بعد. من الإعدادات قم بتعيين رمز المسؤول."); return false; }
+  const pin = prompt(reason + "\nأدخل PIN:");
+  if(pin===null) return false;
+  const h = await sha256(pin.trim());
+  if(h !== s.pinHash){ alert("PIN غير صحيح"); return false; }
+  return true;
+}
+
+/* ============ Archive dialog ============ */
+function renderArchive(){
+  const from = $("aFrom").value;
+  const to = $("aTo").value;
+  const kind = $("aKind").value;
+  const q = $("aQ").value.trim().toLowerCase();
+
+  const fromD = from ? new Date(from+"T00:00:00") : null;
+  const toD = to ? new Date(to+"T23:59:59") : null;
+
+  let recs = APP.cache.records.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+
+  if(fromD) recs = recs.filter(r=>new Date(r.createdAt)>=fromD);
+  if(toD) recs = recs.filter(r=>new Date(r.createdAt)<=toD);
+  if(kind!=="all") recs = recs.filter(r=>r.kind===kind);
+
+  if(q){
+    recs = recs.filter(r=>{
+      const st = APP.cache.students.find(s=>s.sid===r.sid) || {};
+      return (st.name||"").toLowerCase().includes(q) || (r.sid||"").toLowerCase().includes(q);
+    });
+  }
+
+  const box=$("archiveList");
+  box.innerHTML="";
+  if(!recs.length){
+    const d=document.createElement("div"); d.className="hint"; d.textContent="لا يوجد سجلات ضمن الفلتر."; box.appendChild(d);
+    return;
+  }
+  recs.slice(0,200).forEach(r=>{
+    const st = APP.cache.students.find(s=>s.sid===r.sid) || {name:"—"};
+    const div=document.createElement("div");
+    div.className="rec";
+    div.innerHTML=`
+      <div class="ic">${recordIcon(r.kind)}</div>
+      <div class="txt">
+        <div class="h">${escapeHtml(st.name)} — ${escapeHtml(recordTitle(r))}</div>
+        <div class="d">${escapeHtml(recordDesc(r))}</div>
+        ${r.note?`<div class="d" style="margin-top:6px">${escapeHtml(r.note)}</div>`:""}
+      </div>
+      <div class="ops">
+        <button title="واتساب" onclick="sendWhatsAppForRecord(${r.rid})">📲</button>
+        <button title="طباعة" onclick="printRecord(${r.rid})">🖨️</button>
+        <button title="حذف" onclick="deleteRecord(${r.rid})">🗑️</button>
+      </div>
+    `;
+    box.appendChild(div);
+  });
+}
+
+function exportPayload(students, records, settings){
+  return {
+    app: "المواظبة والسلوك",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    students,
+    records,
+    settings: Object.assign({}, settings, { pinHash: settings.pinHash ? "***" : "" }) // do not export hash in clear
+  };
+}
+
+async function exportAll(){
+  const settings = APP.cache.settings;
+  const payload = exportPayload(APP.cache.students, APP.cache.records, settings);
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json;charset=utf-8"});
+  const {date} = nowLocal();
+  downloadBlob(`المواظبة-والسلوك-${date}.json`, blob);
+}
+
+async function exportStudentsOnly(){
+  const settings = APP.cache.settings;
+  const payload = exportPayload(APP.cache.students, [], settings);
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json;charset=utf-8"});
+  const {date} = nowLocal();
+  downloadBlob(`طلاب-${date}.json`, blob);
+}
+
+async function exportRange(){
+  const from = $("aFrom").value;
+  const to = $("aTo").value;
+  const kind = $("aKind").value;
+
+  const fromD = from ? new Date(from+"T00:00:00") : null;
+  const toD = to ? new Date(to+"T23:59:59") : null;
+
+  let recs = APP.cache.records.slice();
+  if(fromD) recs = recs.filter(r=>new Date(r.createdAt)>=fromD);
+  if(toD) recs = recs.filter(r=>new Date(r.createdAt)<=toD);
+  if(kind!=="all") recs = recs.filter(r=>r.kind===kind);
+
+  const settings = APP.cache.settings;
+  const payload = exportPayload(APP.cache.students, recs, settings);
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json;charset=utf-8"});
+  const tag = `${from||"من-البداية"}_إلى_${to||"حتى-اليوم"}_${kind}`;
+  downloadBlob(`أرشيف-${tag}.json`, blob);
+}
+
+/* ============ Import JSON ============ */
+async function importJSON(file){
+  const text = await file.text();
+  const payload = JSON.parse(text);
+
+  const mode = $("jsonMode").value;
+  if(mode==="replace"){
+    const ok = await requireAdmin("الاستبدال الكامل سيحذف جميع البيانات الحالية.\nأدخل PIN للمتابعة:");
+    if(!ok) return;
+    await idbClear("students"); await idbClear("records");
+    APP.cache.students=[]; APP.cache.records=[];
+  }
+
+  const incomingStudents = (payload.students || []).map(s=>({
+    sid: safeStr(s.sid),
+    name: safeStr(s.name),
+    phone: safeStr(s.phone),
+    gradeCode: safeStr(s.gradeCode),
+    gradeName: gradeName(s.gradeCode),
+    section: safeStr(s.section),
+    track: safeStr(s.track) || trackName(s.gradeCode, s.section),
+    updatedAt: new Date().toISOString()
+  })).filter(s=>s.sid && s.name);
+
+  const incomingRecords = (payload.records || []).map(r=>({
+    rid: r.rid, // may be ignored
+    sid: safeStr(r.sid),
+    kind: safeStr(r.kind),
+    subtype: safeStr(r.subtype),
+    item: safeStr(r.item),
+    degree: Number(r.degree)||null,
+    points: Number(r.points)||0,
+    date: safeStr(r.date),
+    time: safeStr(r.time),
+    day: safeStr(r.day),
+    note: safeStr(r.note),
+    staff: safeStr(r.staff),
+    includeLegal: safeStr(r.includeLegal||"no"),
+    periods: safeStr(r.periods||""),
+    minutes: safeStr(r.minutes||""),
+    createdAt: r.createdAt || new Date().toISOString()
+  })).filter(r=>r.sid && r.kind);
+
+  // upsert students
+  for(const s of incomingStudents){
+    await idbPut("students", s);
+  }
+  // add records (do not preserve rid)
+  for(const r of incomingRecords){
+    delete r.rid;
+    await idbAdd("records", r);
+  }
+
+  // settings: do not import pin hash
+  if(payload.settings){
+    const cur = APP.cache.settings;
+    const next = Object.assign({}, cur, payload.settings);
+    next.pinHash = cur.pinHash;
+    await setSetting("app_settings", next);
+  }
+
+  await refreshFromDB();
+  toast("تم الاستيراد بنجاح");
+}
+
+/* ============ Student operations ============ */
+async function deleteStudent(sid){
+  const ok = await requireAdmin("حذف الطالب سيحذف سجلاته أيضًا.\nأدخل PIN للمتابعة:");
+  if(!ok) return;
+
+  const st = APP.cache.students.find(s=>s.sid===sid);
+  if(!st) return;
+
+  if(!confirm(`حذف الطالب: ${st.name} ؟`)) return;
+
+  // delete student
+  await idbDel("students", sid);
+  APP.cache.students = APP.cache.students.filter(s=>s.sid!==sid);
+
+  // delete records for sid
+  const toDel = APP.cache.records.filter(r=>r.sid===sid).map(r=>r.rid);
+  for(const rid of toDel) await idbDel("records", rid);
+  APP.cache.records = APP.cache.records.filter(r=>r.sid!==sid);
+
+  APP.selectedSid=null;
+  $("detail").style.display="none";
+  $("emptyState").style.display="block";
+  setStats(); fillSectionFilter(); renderStudents();
+  toast("تم حذف الطالب وسجلاته");
+}
+
+
+async function openStudentDialog(mode, sid=null){
+  const ok = await requireAdmin("إدارة بيانات الطلاب عملية محمية.\nأدخل PIN للمتابعة:");
+  if(!ok) return;
+
+  $("stuMode").value = mode;
+  $("stuOldSid").value = "";
+
+  if(mode==="edit"){
+    const st = APP.cache.students.find(s=>s.sid===sid);
+    if(!st){ toast("الطالب غير موجود"); return; }
+    $("stuDlgTitle").textContent = "تعديل بيانات الطالب";
+    $("stuName").value = st.name || "";
+    $("stuSid").value = st.sid || "";
+    $("stuOldSid").value = st.sid || "";
+    $("stuGrade").value = String(st.gradeCode||"1314");
+    $("stuSection").value = st.section || "";
+    $("stuTrack").value = st.track || trackName(st.gradeCode, st.section);
+    $("stuPhone").value = st.phone || "";
+  }else{
+    $("stuDlgTitle").textContent = "إضافة طالب";
+    $("stuName").value = "";
+    $("stuSid").value = "";
+    $("stuGrade").value = "1314";
+    $("stuSection").value = "";
+    $("stuTrack").value = "منتظم";
+    $("stuPhone").value = "";
+  }
+
+  $("dlgStudent").showModal();
+}
+
+async function saveStudentFromDialog(){
+  const ok = await requireAdmin("حفظ بيانات الطالب عملية محمية.\nأدخل PIN للمتابعة:");
+  if(!ok) return;
+
+  const mode = $("stuMode").value;
+  const oldSid = safeStr($("stuOldSid").value);
+  const sid = safeStr($("stuSid").value);
+  const name = safeStr($("stuName").value);
+  const gradeCode = safeStr($("stuGrade").value);
+  const section = safeStr($("stuSection").value);
+  const track = safeStr($("stuTrack").value);
+  const phone = safeStr($("stuPhone").value);
+
+  if(!sid || !name){ alert("يرجى إدخال رقم الطالب واسم الطالب"); return; }
+
+  if(mode==="add" && APP.cache.students.some(s=>s.sid===sid)){
+    alert("رقم الطالب موجود مسبقًا"); return;
+  }
+  if(mode==="edit" && oldSid && oldSid!==sid && APP.cache.students.some(s=>s.sid===sid)){
+    alert("رقم الطالب الجديد مستخدم لطالب آخر"); return;
+  }
+
+  const st = {
+    sid, name, phone,
+    gradeCode,
+    gradeName: gradeName(gradeCode),
+    section,
+    track: track || trackName(gradeCode, section),
+    updatedAt: new Date().toISOString()
+  };
+
+  // If sid changed, migrate records
+  if(mode==="edit" && oldSid && oldSid!==sid){
+    await idbDel("students", oldSid);
+    await idbPut("students", st);
+
+    const affected = APP.cache.records.filter(r=>r.sid===oldSid);
+    for(const r of affected){
+      r.sid = sid;
+      await idbPut("records", r);
+    }
+  }else{
+    await idbPut("students", st);
+  }
+
+  await refreshFromDB();
+  $("dlgStudent").close();
+  toast("تم حفظ بيانات الطالب");
+
+  // keep selection
+  APP.selectedSid = sid;
+  selectStudent(sid);
+}
+
+/* ============ Forms fill ============ */
+function fillDateTime(dialogPrefix){
+  const {date,time} = nowLocal();
+  $(dialogPrefix+"Date").value = date;
+  $(dialogPrefix+"Time").value = time;
+}
+
+function fillBehaviorSelect(settings){
+  const sel=$("behItem");
+  sel.innerHTML="";
+  settings.behaviorList.forEach((x,i)=>{
+    const o=document.createElement("option");
+    o.value=x; o.textContent=x;
+    sel.appendChild(o);
+  });
+  if(!settings.behaviorList.length){
+    const o=document.createElement("option"); o.value=""; o.textContent="—"; sel.appendChild(o);
+  }
+}
+
+/* ============ Save dialogs ============ */
+async function saveAttendance(){
+  if(!APP.selectedSid){ toast("اختر طالبًا أولًا"); return; }
+  const st = APP.cache.students.find(s=>s.sid===APP.selectedSid);
+  const settings = APP.cache.settings;
+
+  const type = $("attType").value;
+  const periods = safeStr($("attPeriods").value);
+  const date = $("attDate").value || nowLocal().date;
+  const time = $("attTime").value || nowLocal().time;
+  const note = safeStr($("attNote").value);
+  const staff = safeStr($("attStaff").value) || settings.senderName || "";
+  const includeLegal = $("attLegal").value;
+
+  const d = new Date(date+"T"+(time||"00:00")+":00");
+  const rec = {
+    sid: st.sid,
+    kind:"attendance",
+    subtype:type,
+    periods: periods,
+    date, time,
+    day: dayNameAr(d),
+    note,
+    staff,
+    includeLegal,
+    createdAt: new Date().toISOString()
+  };
+  await addRecord(rec);
+  $("dlgAttendance").close();
+  toast("تم حفظ سجل المواظبة");
+  // open whatsapp
+  const msg = buildWhatsAppMessage(st, rec, settings);
+  window.open(waLink(st.phone, msg), "_blank", "noopener");
+}
+
+async function saveBehavior(){
+  if(!APP.selectedSid){ toast("اختر طالبًا أولًا"); return; }
+  const st = APP.cache.students.find(s=>s.sid===APP.selectedSid);
+  const settings = APP.cache.settings;
+
+  const item = $("behItem").value;
+  const degree = Number($("behDegree").value);
+  const date = $("behDate").value || nowLocal().date;
+  const time = $("behTime").value || nowLocal().time;
+  const note = safeStr($("behNote").value);
+  const action = safeStr($("behAction").value);
+  const staff = safeStr($("behStaff").value) || settings.senderName || "";
+
+  const points = Number(settings.behaviorPointsByDegree[degree] ?? 0);
+
+  const d = new Date(date+"T"+(time||"00:00")+":00");
+  const rec = {
+    sid: st.sid,
+    kind:"behavior",
+    subtype:"مشكلة سلوكية",
+    item,
+    degree,
+    points,
+    date,time,
+    day: dayNameAr(d),
+    note: note || (action ? `الإجراء: ${action}` : ""),
+    staff,
+    createdAt: new Date().toISOString()
+  };
+  await addRecord(rec);
+  $("dlgBehavior").close();
+  toast("تم حفظ سجل السلوك");
+  const msg = buildWhatsAppMessage(st, rec, settings);
+  window.open(waLink(st.phone, msg), "_blank", "noopener");
+}
+
+async function savePermit(){
+  if(!APP.selectedSid){ toast("اختر طالبًا أولًا"); return; }
+  const st = APP.cache.students.find(s=>s.sid===APP.selectedSid);
+  const settings = APP.cache.settings;
+
+  const subtype = $("perType").value;
+  const place = safeStr($("perPlace").value);
+  const date = $("perDate").value || nowLocal().date;
+  const time = $("perTime").value || nowLocal().time;
+  const reason = safeStr($("perReason").value);
+  const staff = safeStr($("perStaff").value) || settings.senderName || "";
+  const minutes = safeStr($("perMins").value);
+
+  const d = new Date(date+"T"+(time||"00:00")+":00");
+  const rec = {
+    sid: st.sid,
+    kind:"permit",
+    subtype,
+    minutes,
+    date,time,
+    day: dayNameAr(d),
+    note: [reason, place?`الوجهة: ${place}`:""].filter(Boolean).join(" • "),
+    staff,
+    createdAt: new Date().toISOString()
+  };
+  await addRecord(rec);
+  $("dlgPermit").close();
+  toast("تم حفظ الإذن");
+  // print immediately (thermal)
+  const msg = buildWhatsAppMessage(st, rec, settings);
+  // open whatsapp too
+  window.open(waLink(st.phone, msg), "_blank", "noopener");
+  // then print
+  setTimeout(()=>printRecord(APP.lastRecordBySid.get(st.sid)), 300);
+}
+
+/* ============ Settings save ============ */
+async function saveSettings(){
+  const school = safeStr($("sSchool").value) || DEFAULT_SETTINGS.schoolName;
+  const sender = safeStr($("sSender").value) || "";
+  const pin = safeStr($("sPin").value);
+  const pin2 = safeStr($("sPin2").value);
+
+  const p = {
+    1: Number($("p1").value||1),
+    2: Number($("p2").value||2),
+    3: Number($("p3").value||3),
+    4: Number($("p4").value||10),
+    5: Number($("p5").value||15),
+  };
+
+  let list = $("sBehList").value.split("\n").map(x=>x.trim()).filter(Boolean);
+  if(!list.length) list = DEFAULT_SETTINGS.behaviorList.slice();
+
+  const cur = APP.cache.settings;
+  const next = Object.assign({}, cur, {
+    schoolName: school,
+    senderName: sender,
+    behaviorPointsByDegree: p,
+    behaviorList: list
+  });
+
+  if(pin || pin2){
+    if(pin !== pin2){ alert("PIN غير متطابق"); return; }
+    if(pin.length < 4){ alert("PIN قصير جدًا (4 أرقام على الأقل)"); return; }
+    next.pinHash = await sha256(pin);
+  }
+
+  await setSetting("app_settings", next);
+  APP.cache.settings = next;
+  fillBehaviorSelect(next);
+  toast("تم حفظ الإعدادات");
+  $("dlgSettings").close();
+}
+
+async function wipeAll(){
+  const ok = await requireAdmin("تصفير كل البيانات سيحذف الطلاب والسجلات.\nأدخل PIN للمتابعة:");
+  if(!ok) return;
+  if(!confirm("تأكيد التصفير الكامل؟")) return;
+  await idbClear("students");
+  await idbClear("records");
+  APP.cache.students=[]; APP.cache.records=[];
+  APP.selectedSid=null;
+  $("detail").style.display="none";
+  $("emptyState").style.display="block";
+  setStats(); fillSectionFilter(); renderStudents();
+  toast("تم تصفير البيانات");
+}
+
+/* ============ Refresh ============ */
+async function refreshFromDB(){
+  APP.cache.students = (await idbGetAll("students")).map(s=>{
+    s.gradeName = gradeName(s.gradeCode);
+    s.track = s.track || trackName(s.gradeCode, s.section);
+    return s;
+  }).sort((a,b)=>(a.name||"").localeCompare(b.name||"","ar"));
+  APP.cache.records = await idbGetAll("records");
+  setStats();
+  fillSectionFilter();
+  renderStudents();
+  if(APP.selectedSid) selectStudent(APP.selectedSid);
+}
+
+/* ============ PWA install ============ */
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  $("btnInstall").style.display="inline-flex";
+});
+$("btnInstall").onclick = async ()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  $("btnInstall").style.display="none";
+};
+
+/* ============ Events wiring ============ */
+function setGradeFilter(code){
+  gradeFilter = code;
+  [...$("segGrade").querySelectorAll("button")].forEach(b=>b.classList.toggle("on", b.dataset.g===code));
+  fillSectionFilter();
+  renderStudents();
+}
+
+$("segGrade").addEventListener("click",(e)=>{
+  const b = e.target.closest("button[data-g]");
+  if(!b) return;
+  setGradeFilter(b.dataset.g);
+});
+
+$("q").addEventListener("input", ()=>renderStudents());
+$("fSection").addEventListener("change", ()=>renderStudents());
+$("fTrack").addEventListener("change", ()=>renderStudents());
+$("btnClearQ").onclick = ()=>{ $("q").value=""; renderStudents(); };
+
+$("btnImport").onclick = ()=>$("dlgImport").showModal();
+$("btnExport").onclick = ()=>$("dlgExport").showModal();
+$("btnSettings").onclick = async ()=>{
+  const s=APP.cache.settings;
+  $("sSchool").value = s.schoolName || "";
+  $("sSender").value = s.senderName || "";
+  $("sPin").value=""; $("sPin2").value="";
+  $("p1").value = s.behaviorPointsByDegree[1] ?? 1;
+  $("p2").value = s.behaviorPointsByDegree[2] ?? 2;
+  $("p3").value = s.behaviorPointsByDegree[3] ?? 3;
+  $("p4").value = s.behaviorPointsByDegree[4] ?? 10;
+  $("p5").value = s.behaviorPointsByDegree[5] ?? 15;
+  $("sBehList").value = (s.behaviorList||[]).join("\n");
+  $("dlgSettings").showModal();
+};
+$("btnHelp").onclick = ()=>$("dlgHelp").showModal();
+
+$("btnArchive").onclick = ()=>{
+  const {date} = nowLocal();
+  $("aFrom").value = date;
+  $("aTo").value = date;
+  $("aKind").value = "all";
+  $("aQ").value = "";
+  renderArchive();
+  $("dlgArchive").showModal();
+};
+$("aFrom").addEventListener("change", renderArchive);
+$("aTo").addEventListener("change", renderArchive);
+$("aKind").addEventListener("change", renderArchive);
+$("aQ").addEventListener("input", renderArchive);
+$("btnExportRange").onclick = exportRange;
+
+$("doExportAll").onclick = exportAll;
+$("doExportStudents").onclick = exportStudentsOnly;
+$("doImportJSON").onclick = async ()=>{
+  const f=$("fileJSON").files[0];
+  if(!f){ toast("اختر ملف JSON"); return; }
+  await importJSON(f);
+  $("dlgExport").close();
+};
+
+$("saveSettings").onclick = saveSettings;
+$("wipeAll").onclick = wipeAll;
+
+$("btnAttendance").onclick = ()=>{
+  fillDateTime("att");
+  $("attPeriods").value="";
+  $("attNote").value="";
+  $("attStaff").value = APP.cache.settings.senderName || "";
+  $("attLegal").value = "yes";
+  $("dlgAttendance").showModal();
+};
+$("btnBehavior").onclick = ()=>{
+  fillDateTime("beh");
+  $("behNote").value="";
+  $("behAction").value="";
+  $("behStaff").value = APP.cache.settings.senderName || "";
+  $("dlgBehavior").showModal();
+};
+$("btnPermit").onclick = ()=>{
+  fillDateTime("per");
+  $("perReason").value="";
+  $("perPlace").value="";
+  $("perMins").value="15";
+  $("perStaff").value = APP.cache.settings.senderName || "";
+  $("dlgPermit").showModal();
+};
+
+$("saveAttendance").onclick = saveAttendance;
+$("saveBehavior").onclick = saveBehavior;
+$("savePermit").onclick = savePermit;
+
+$("btnDeleteStudent").onclick = ()=>{ if(APP.selectedSid) deleteStudent(APP.selectedSid); };
+
+$("btnAddStudent").onclick = ()=>openStudentDialog("add");
+$("btnEditStudent").onclick = ()=>{ if(APP.selectedSid) openStudentDialog("edit", APP.selectedSid); };
+$("saveStudent").onclick = saveStudentFromDialog;
+
+$("btnWhatsAppNow").onclick = ()=>{
+  if(!APP.selectedSid) return;
+  const rid = APP.lastRecordBySid.get(APP.selectedSid);
+  if(!rid){ toast("لا يوجد سجل أخير"); return; }
+  sendWhatsAppForRecord(rid);
+};
+$("btnPrintNow").onclick = ()=>{
+  if(!APP.selectedSid) return;
+  const rid = APP.lastRecordBySid.get(APP.selectedSid);
+  if(!rid){ toast("لا يوجد سجل أخير"); return; }
+  printRecord(rid);
+};
+
+$("doImport").onclick = async ()=>{
+  const f=$("fileExcel").files[0];
+  if(!f){ toast("اختر ملف Excel"); return; }
+  const mode=$("importMode").value;
+  if(mode==="replace"){
+    const ok = await requireAdmin("الاستبدال سيحذف جميع الطلاب الحاليين.\nأدخل PIN للمتابعة:");
+    if(!ok) return;
+    await idbClear("students");
+    APP.cache.students=[];
+  }
+
+  const buf = await f.arrayBuffer();
+  let wb;
+  try{ wb = XLSX.read(buf, {type:"array"}); }
+  catch(e){ console.error(e); alert("تعذر قراءة الملف. تأكد أنه Excel صالح."); return; }
+
+  const newStudents = parseStudentsFromWorkbook(wb);
+  if(!newStudents.length){ alert("لم يتم العثور على بيانات طلاب. تحقق من الأعمدة."); return; }
+
+  // upsert
+  for(const s of newStudents){
+    await idbPut("students", s);
+  }
+  await refreshFromDB();
+  $("dlgImport").close();
+  toast(`تم استيراد ${newStudents.length} طالب`);
+};
+
+/* ============ Startup ============ */
+(async function boot(){
+  $("dbHint").textContent = "تهيئة...";
+  await openDB();
+  const settings = await loadSettings();
+  fillBehaviorSelect(settings);
+
+  // PWA: service worker
+  if("serviceWorker" in navigator){
+    try{
+      await navigator.serviceWorker.register("./sw.js");
+    }catch(e){ /* ignore */ }
+  }
+
+  // request persistent storage
+  if(navigator.storage && navigator.storage.persist){
+    try{ await navigator.storage.persist(); }catch(e){}
+  }
+
+  await refreshFromDB();
+  $("dbHint").textContent = "محفوظ محليًا";
+  $("footHint").textContent = "جاهز • بياناتك محفوظة على هذا الجهاز";
+  setGradeFilter("all");
+})();
+</script>
+</body>
+</html>
