@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>المواظبة والسلوك</title>
+
+  <meta name="theme-color" content="#1e8a79" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon-192.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="titlewrap">
+          <div class="title">المواظبة والسلوك</div>
+          <div class="subtitle">بحث سريع → اختيار طالب → رصد → واتساب → أرشفة</div>
+        </div>
+      </div>
+      <button class="iconbtn" id="menuBtn" type="button" aria-label="القائمة"></button>
+    </header>
+
+    <main class="content">
+      <section class="section" id="previewBanner" style="display:none">
+        <div class="sectionHead">
+          <div class="h">بدء سريع</div>
+          <div class="pill">بدون إنترنت</div>
+        </div>
+        <div class="searchRow" style="align-items:stretch">
+          <div style="flex:1;min-width:220px;color:#5a6c68;line-height:1.9">
+            لم يتم العثور على بيانات طلاب محفوظة على هذا الجهاز.
+            يمكنك تحميل بيانات المدرسة المضمنة (سريع) أو استيراد CSV/JSON من جهاز آخر.
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="actionbtn" id="loadEmbeddedBtn" type="button">تحميل البيانات المضمنة</button>
+            <button class="actionbtn secondary" id="importBtn" type="button">استيراد ملف</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-label="بحث الطلاب">
+        <div class="sectionHead">
+          <div class="h">الطلاب</div>
+          <div class="pill" id="countPill">عدد الطلاب: 0</div>
+        </div>
+
+        <div class="searchRow">
+          <div class="search" role="search">
+            <span id="searchIcon" aria-hidden="true"></span>
+            <input id="q" type="search" placeholder="ابحث بالاسم / رقم الطالب / الجوال / الشعبة…" autocomplete="off" />
+          </div>
+          <div class="badges" id="badges" aria-label="تصفية بالمرحلة"></div>
+        </div>
+
+        <div class="list" id="list" aria-label="قائمة الطلاب"></div>
+      </section>
+
+      <section class="section" style="margin-top:14px">
+        <div class="sectionHead">
+          <div class="h">الأرشفة</div>
+          <div class="pill">يُحفظ على هذا الجهاز</div>
+        </div>
+        <div class="searchRow" style="color:#5a6c68">
+          كل عملية رصد يتم حفظها تلقائيًا في الأرشيف داخل التطبيق. لنسخ البيانات إلى جهاز آخر استخدم (القائمة → تصدير نسخة احتياطية).
+        </div>
+      </section>
+    </main>
+
+    <div class="actionbar" id="actionbar" style="display:none">
+      <div class="actionbarInner">
+        <div class="selCard">
+          <div class="who">
+            <div class="n" id="selName">—</div>
+            <div class="s" id="selMeta">—</div>
+          </div>
+          <div class="pill">محدد</div>
+        </div>
+
+        <button class="actionbtn" id="btnAttendance" type="button">مواظبة</button>
+        <button class="actionbtn secondary" id="btnBehavior" type="button">سلوك</button>
+        <button class="actionbtn secondary" id="btnPermit" type="button">إذن</button>
+      </div>
+    </div>
+
+    <div class="backdrop" id="backdrop" aria-hidden="true">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="نافذة">
+        <div class="sheetHead">
+          <div class="sheetTitle" id="sheetTitle">—</div>
+          <button class="close" id="closeBtn" type="button" aria-label="إغلاق"></button>
+        </div>
+
+        <input type="hidden" id="sheetKind" value="" />
+
+        <div class="form">
+          <div class="field">
+            <label for="typeSelect">النوع</label>
+            <select id="typeSelect"></select>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label id="whenLabel" for="when">اليوم/التاريخ/الوقت</label>
+              <input id="when" type="text" />
+            </div>
+            <div class="field">
+              <label id="phoneLabel" for="phone">رقم واتساب ولي الأمر</label>
+              <input id="phone" type="tel" inputmode="tel" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label id="noteLabel" for="note">تفاصيل مختصرة (اختياري)</label>
+            <textarea id="note"></textarea>
+            <div class="hint">النص يُستخدم لإثراء الرسالة دون إطالة.</div>
+          </div>
+
+          <button class="primary" id="saveBtn" type="button">حفظ السجل وإنشاء رسالة</button>
+
+          <div id="afterSave" style="display:none">
+            <div class="field">
+              <label>معاينة الرسالة</label>
+              <div class="preview" id="preview"></div>
+            </div>
+
+            <div class="inlineBtns">
+              <button class="secondaryBtn" id="copyBtn" type="button">نسخ النص</button>
+              <button class="primary" id="waBtn" type="button">فتح واتساب</button>
+            </div>
+
+            <button class="secondaryBtn" id="doMenu" type="button" style="display:none">تنفيذ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" aria-live="polite" aria-atomic="true">
+      <div class="toastInner" id="toastInner">—</div>
+    </div>
+  </div>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
