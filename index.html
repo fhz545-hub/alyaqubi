@@ -1,340 +1,0 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="theme-color" content="#0b7e88"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-  <title>اليعقوبي • شؤون الطلاب</title>
-
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon-192.png" sizes="192x192">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="app.css">
-</head>
-<body>
-  <div class="topbar">
-    <div class="container">
-      <div class="brand">
-        <div class="title">
-          <div class="logo" aria-hidden="true"></div>
-          <div class="hgroup">
-            <h1>اليعقوبي • شؤون الطلاب</h1>
-            <p id="bSchool">—</p>
-          </div>
-        </div>
-        <div class="badges">
-          <div class="badge" id="bTerm">—</div>
-          <div class="badge" id="bYear">—</div>
-        </div>
-      </div>
-
-      <div class="nav" role="tablist" aria-label="التنقل">
-        <button class="tab" data-action="tab" data-tab="home" aria-selected="true">🏠 الرئيسية</button>
-        <button class="tab" data-action="tab" data-tab="attendance" aria-selected="false">⏱️ المواظبة</button>
-        <button class="tab" data-action="tab" data-tab="behavior" aria-selected="false">⚖️ السلوك</button>
-        <button class="tab" data-action="tab" data-tab="prints" aria-selected="false">🖨️ الكشوف والطباعة</button>
-        <button class="tab" data-action="tab" data-tab="settings" aria-selected="false">⚙️ الإعدادات</button>
-      </div>
-
-      <div class="topsearch" role="search" aria-label="بحث سريع">
-        <div class="topsearchRow">
-          <input id="qTop" inputmode="search" placeholder="بحث سريع: الاسم أو رقم الهوية…" aria-label="بحث سريع بالاسم أو الهوية">
-          <button class="iconBtn" id="qTopClear" type="button" title="مسح">✕</button>
-        </div>
-        <div id="topSearchResults" class="searchDrop" hidden></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="container">
-    <!-- HOME -->
-    <section class="page" id="home">
-      <div class="grid">
-        <div class="card">
-          <h2>بحث الطالب</h2>
-          <div class="row">
-            <div class="field" style="flex:2">
-              <label>ابحث بالاسم أو رقم الهوية</label>
-              <input id="q" inputmode="search" placeholder="مثال: محمد… أو 1148…">
-            </div>
-            <div class="field">
-              <label>القائم بالتسجيل</label>
-              <input id="actor" placeholder="اسم المعلم/الموظف">
-            </div>
-          </div>
-          <div class="hr"></div>
-          <div id="searchResults"></div>
-        </div>
-
-        <div class="card">
-          <h2>مؤشرات سريعة</h2>
-          <div class="row">
-            <div class="help" style="flex:1">
-              <div style="font-weight:900">عدد الطلاب</div>
-              <div style="font-size:22px" id="stats_students">0</div>
-            </div>
-            <div class="help" style="flex:1">
-              <div style="font-weight:900">إجمالي السجلات</div>
-              <div style="font-size:22px" id="stats_logs">0</div>
-            </div>
-          </div>
-          <div class="hr"></div>
-          <div class="small">
-            * يعمل التطبيق بدون إنترنت بعد الاستيراد، مع حفظ كامل داخل الجهاز.
-          </div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:14px">
-        <h2>بطاقة الطالب</h2>
-        <div id="studentCard"></div>
-        <div class="hr"></div>
-        <h2 style="margin-top:0">سجل آخر 30 إجراء</h2>
-        <div id="logList"></div>
-      </div>
-    </section>
-
-    <!-- ATTENDANCE -->
-    <section class="page" id="attendance" hidden>
-      <div class="grid">
-        <div class="card">
-          <h2>تسجيل تأخر</h2>
-          <div class="field">
-            <label>ملاحظة مختصرة (اختياري)</label>
-            <input id="late_note" placeholder="مثال: تأخر عن الطابور / عذر مذكور…">
-          </div>
-          <div class="actions">
-            <button class="btn primary" data-action="add-late">تسجيل التأخر</button>
-            <button class="btn ghost" data-action="print-entry-card">طباعة ورقة إذن دخول</button>
-            <button class="btn ghost" data-action="print-exit-card">طباعة ورقة إذن خروج</button>
-          </div>
-          <div class="small">يُفضل توثيق الملاحظة بشكل تربوي موجز حسب الإجراءات المعتمدة.</div>
-        </div>
-
-        <div class="card">
-          <h2>تسجيل غياب</h2>
-          <div class="field">
-            <label>ملاحظة مختصرة (اختياري)</label>
-            <input id="abs_note" placeholder="مثال: غياب دون عذر / عذر (بانتظار الإثبات)…">
-          </div>
-          <div class="actions">
-            <button class="btn primary" data-action="add-absent">تسجيل الغياب</button>
-            <button class="btn ghost" data-action="print-entry-card">طباعة ورقة إذن دخول</button>
-            <button class="btn ghost" data-action="print-exit-card">طباعة ورقة إذن خروج</button>
-          </div>
-          <div class="small">عند تكرار الغياب يُوثّق التواصل مع ولي الأمر والإجراء المتخذ.</div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:14px">
-        <h2>إرسال SMS لولي الأمر (اختياري)</h2>
-        <div class="help">لأمان التوكن: لا يتم الإرسال مباشرة من التطبيق. يجب ضبط وسيط (Proxy) مثل Cloudflare Worker داخل صفحة الإعدادات.</div>
-        <div class="field" style="margin-top:10px">
-          <label>نص الرسالة</label>
-          <textarea id="sms_body" placeholder="مثال: نأمل متابعة مواظبة الطالب…"></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn primary" id="btnSendSMS" data-action="send-sms">إرسال SMS</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- BEHAVIOR -->
-    <section class="page" id="behavior" hidden>
-      <div class="grid">
-        <div class="card">
-          <h2>تسجيل مخالفة سلوكية</h2>
-          <div class="field">
-            <label>اختر المخالفة</label>
-            <select id="beh_rule"></select>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div class="help" style="flex:1">
-              <div class="mini">الدرجة</div>
-              <div style="font-weight:900;font-size:18px" id="beh_sev">—</div>
-            </div>
-            <div class="help" style="flex:2">
-              <div class="mini">ملاحظة</div>
-              <div class="mini">اختر المخالفة ثم عدّل الإجراءات حسب الحاجة.</div>
-            </div>
-          </div>
-          <div class="field" style="margin-top:8px">
-            <label>الإجراءات المتخذة (قابلة للتعديل)</label>
-            <textarea id="beh_actions" placeholder="مثال: تنبيه + إشعار ولي الأمر…"></textarea>
-          </div>
-          <div class="field" style="margin-top:8px">
-            <label>تفاصيل/توضيح (اختياري)</label>
-            <textarea id="beh_note" placeholder="وصف موجز للواقعة دون مبالغة…"></textarea>
-          </div>
-          <div class="actions">
-            <button class="btn primary" data-action="add-behavior">تسجيل المخالفة</button>
-            <button class="btn ghost" data-action="print-behavior-card">طباعة إشعار</button>
-          </div>
-          <div class="small">ملاحظة: القائمة افتراضية ويمكن تحديثها وفق الدليل المعتمد لديكم.</div>
-        </div>
-
-        <div class="card">
-          <h2>عرض بطاقة الطالب</h2>
-          <div id="studentCardBeh" class="help">ارجع للرئيسية واختر الطالب ثم عد هنا.</div>
-          <div class="hr"></div>
-          <div class="small">* سيتم استخدام نفس الطالب المختار في الشاشة الرئيسية.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PRINTS -->
-    <section class="page" id="prints" hidden>
-      <div class="grid">
-        <div class="card">
-          <h2>إنشاء كشف متابعة</h2>
-          <div class="row">
-            <div class="field">
-              <label>الصف</label>
-              <select id="sheet_grade"></select>
-            </div>
-            <div class="field">
-              <label>الشعبة</label>
-              <select id="sheet_section"></select>
-            </div>
-            <div class="field">
-              <label>التاريخ</label>
-              <input type="date" id="sheet_date">
-            </div>
-          </div>
-          <div class="actions">
-            <button class="btn primary" data-action="print-late-sheet">طباعة كشف التأخر</button>
-            <button class="btn primary" data-action="print-abs-sheet">طباعة كشف الغياب</button>
-          </div>
-          <div class="small">الكشف A4 أفقي • الأعمدة: الأحد–الخميس + باركود الهوية.</div>
-        </div>
-
-        <div class="card">
-          <h2>طباعة بطاقة (ورقة إذن)</h2>
-          <div class="help">
-            تُطبع على ورق صغير (80mm) بشكل واضح، وتحتوي: الاسم، الصف/الشعبة، التأخر/الغياب المتراكم، وباركود الهوية.
-          </div>
-          <div class="actions" style="margin-top:10px">
-            <button class="btn primary" data-action="print-entry-card">طباعة ورقة إذن دخول</button>
-            <button class="btn primary" data-action="print-exit-card">طباعة ورقة إذن خروج</button>
-            <button class="btn ghost" data-action="print-behavior-card">طباعة إشعار سلوكي</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SETTINGS -->
-    <section class="page" id="settings" hidden>
-      <div class="grid">
-        <div class="card">
-          <h2>بيانات المدرسة</h2>
-          <div class="field">
-            <label>اسم المدرسة</label>
-            <input id="set_schoolName">
-          </div>
-          <div class="field" style="margin-top:8px">
-            <label>الترويسة/الجهة</label>
-            <input id="set_educationOffice">
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div class="field">
-              <label>مدير المدرسة</label>
-              <input id="set_managerName" placeholder="اسم المدير">
-            </div>
-            <div class="field">
-              <label>الوكيل</label>
-              <input id="set_deputyName" placeholder="اسم الوكيل">
-            </div>
-          </div>
-          <div class="field" style="margin-top:8px">
-            <label>الموجّه الطلابي</label>
-            <input id="set_counselorName" placeholder="اسم الموجّه الطلابي">
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div class="field">
-              <label>العام الهجري</label>
-              <input id="set_hijriYear" placeholder="1447">
-            </div>
-            <div class="field">
-              <label>الفصل الدراسي</label>
-              <select id="set_term">
-                <option>الأول</option>
-                <option>الثاني</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="hr"></div>
-          <h2 style="margin-top:0">إعدادات SMS (اختياري)</h2>
-          <div class="help">ضع هنا رابط وسيط Cloudflare Worker ومفتاح الحماية. لا تضع التوكن داخل GitHub أو داخل التطبيق.</div>
-          <div class="field" style="margin-top:8px">
-            <label>Proxy URL (رابط العامل)</label>
-            <input id="set_proxyUrl" placeholder="مثال: https://xxx.workers.dev">
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div class="field">
-              <label>Proxy Key (مفتاح الحماية)</label>
-              <input id="set_proxyKey" placeholder="ضع المفتاح هنا مرة واحدة">
-            </div>
-            <div class="field">
-              <label>Sender Name</label>
-              <input id="set_smsSender" placeholder="Mobile.SA">
-            </div>
-          </div>
-
-          <div class="actions">
-            <button class="btn primary" data-action="save-settings">حفظ الإعدادات</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>إدارة البيانات</h2>
-          <div class="help">البيانات تُحفظ داخل هذا الجهاز فقط (offline). بإمكانك عمل نسخة احتياطية واسترجاعها.</div>
-
-          <div class="hr"></div>
-          <h2 style="margin-top:0">استيراد بيانات الطلاب</h2>
-          <div class="small">يدعم CSV بالعناوين: اسم الطالب، رقم الطالب، الجوال، رقم الصف، الفصل</div>
-          <div class="actions" style="margin-top:10px">
-            <button class="btn primary" data-action="import-students">استيراد CSV</button>
-            <input id="studentsFile" type="file" accept=".csv,text/csv" hidden>
-          </div>
-
-          <div class="hr"></div>
-          <h2 style="margin-top:0">نسخة احتياطية</h2>
-          <div class="actions">
-            <button class="btn" data-action="export-backup">تصدير نسخة احتياطية</button>
-            <button class="btn" data-action="import-backup">استيراد نسخة احتياطية</button>
-            <input id="backupFile" type="file" accept="application/json,.json" hidden>
-          </div>
-
-          <div class="hr"></div>
-          <h2 style="margin-top:0;color:#991b1b">مسح كامل</h2>
-          <div class="actions">
-            <button class="btn danger" data-action="clear-all">مسح جميع البيانات من هذا الجهاز</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="footerNote">
-        * هذا الإصدار مُحسّن للطباعة والكشوف، ويستخدم باركود (Code39) لرقم الهوية لتسهيل المسح.
-      </div>
-    </section>
-  </div>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <script type="module" src="app.js"></script>
-  <script>
-    // service worker
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('./sw.js').catch(()=>{});
-    }
-  </script>
-</body>
-</html>
