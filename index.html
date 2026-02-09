@@ -23,7 +23,7 @@ button,input,select,textarea{font-family:inherit}
 #app{min-height:100%;display:flex;flex-direction:column}
 
 .topbar{
-  position:sticky;top:0;z-index:50;
+  position:sticky;top:0;z-index:70;
   display:flex;align-items:center;gap:10px;
   padding:12px 14px;
   background:rgba(246,251,250,.92);
@@ -41,7 +41,7 @@ button,input,select,textarea{font-family:inherit}
 .iconbtn:active{transform:translateY(1px)}
 .iconbtn svg{width:18px;height:18px;display:block}
 
-.content{width:min(980px,100%);margin:0 auto;padding:14px 14px 128px}
+.content{width:min(980px,100%);margin:0 auto;padding:14px 14px 138px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .card + .card{margin-top:14px}
 .head{padding:12px 12px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -65,38 +65,39 @@ button,input,select,textarea{font-family:inherit}
   color:var(--moe-d);border:1px solid rgba(30,138,121,.22)}
 .btn.secondary{background:rgba(15,179,176,.10);border-color:rgba(15,179,176,.22);color:var(--moe-d)}
 .btn.ghost{background:#fff;border-color:var(--line);color:var(--ink)}
+.btn.danger{background:rgba(180,30,30,.08);border-color:rgba(180,30,30,.18);color:#7b1f1f}
 .btn:active{transform:translateY(1px)}
 
 .listWrap{border-top:1px solid var(--line);display:none}
 .listHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:rgba(247,251,250,.7)}
-.list{max-height:58vh;overflow:auto}
-.item{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--line);cursor:pointer}
+.list{max-height:56vh;overflow:auto}
+.item{display:flex;align-items:flex-start;gap:12px;padding:12px;border-bottom:1px solid var(--line);cursor:pointer}
 .item:last-child{border-bottom:0}
 .item:active{background:rgba(30,138,121,.06)}
-.ck{width:22px;height:22px;border-radius:8px;border:1px solid rgba(30,138,121,.28);background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ck{width:22px;height:22px;border-radius:8px;border:1px solid rgba(30,138,121,.28);background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin-top:2px}
 .ck.checked{background:rgba(30,138,121,.14);border-color:rgba(30,138,121,.35)}
 .ck svg{width:16px;height:16px;display:block;color:var(--moe-d)}
-.avatar{width:38px;height:38px;border-radius:14px;background:rgba(30,138,121,.10);border:1px solid rgba(30,138,121,.18);
-  display:flex;align-items:center;justify-content:center;color:var(--moe-d);font-weight:900;flex:0 0 auto}
 .main{min-width:0;flex:1}
 .name{font-size:15.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta{margin-top:2px;font-size:12.8px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
 .meta span{border:1px dashed rgba(90,108,104,.22);border-radius:999px;padding:2px 8px;background:rgba(247,251,250,.7)}
+.mini{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+.mini .btn{padding:8px 10px;border-radius:12px;font-weight:900;font-size:12.5px}
 .empty{padding:14px 12px;text-align:center;color:var(--muted);line-height:1.9}
 .kbd{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;color:var(--ink)}
 
 .actionbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(246,251,250,.94);backdrop-filter:saturate(160%) blur(10px);
   border-top:1px solid var(--line);padding:10px 12px}
-.actionbarInner{width:min(980px,100%);margin:0 auto;display:flex;gap:10px;align-items:center}
-.selCard{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 12px;
+.actionbarInner{width:min(980px,100%);margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.selCard{flex:1;min-width:260px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 12px;
   display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 10px 20px rgba(0,0,0,.05)}
 .selCard .n{font-weight:900;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .selCard .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.backdrop{position:fixed;inset:0;background:rgba(8,25,22,.35);display:none;align-items:flex-end;justify-content:center;z-index:80}
+.backdrop{position:fixed;inset:0;background:rgba(8,25,22,.35);display:none;align-items:flex-end;justify-content:center;z-index:90}
 .backdrop.show{display:flex}
-.sheet{width:min(760px,100%);background:#fff;border-radius:22px 22px 0 0;border:1px solid var(--line);box-shadow:0 30px 70px rgba(0,0,0,.25);
-  padding:12px 14px 18px;max-height:90vh;overflow:auto}
+.sheet{width:min(860px,100%);background:#fff;border-radius:22px 22px 0 0;border:1px solid var(--line);box-shadow:0 30px 70px rgba(0,0,0,.25);
+  padding:12px 14px 18px;max-height:92vh;overflow:auto}
 .sheetHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
 .sheetTitle{font-weight:900;font-size:15px}
 .close{border:1px solid var(--line);background:#fff;padding:10px 12px;border-radius:14px;cursor:pointer}
@@ -118,10 +119,32 @@ button,input,select,textarea{font-family:inherit}
 .preview{border:1px solid var(--line);border-radius:16px;padding:12px;background:rgba(247,251,250,.6);font-size:14px;line-height:1.9;white-space:pre-wrap}
 .small{font-size:12.7px;color:var(--muted);line-height:1.8}
 
-.toast{position:fixed;left:12px;right:12px;bottom:92px;z-index:90;display:none}
+.toast{position:fixed;left:12px;right:12px;bottom:98px;z-index:120;display:none}
 .toast.show{display:block}
 .toastInner{width:min(640px,100%);margin:0 auto;background:#0b2f2b;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 18px 40px rgba(0,0,0,.25);font-size:13.5px}
+
 hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+
+/* ===== Print (A4 sheet) ===== */
+#printArea{display:none}
+@media print{
+  body{background:#fff}
+  #app{display:none !important}
+  #printArea{display:block !important}
+  @page { size: A4 landscape; margin: 10mm; }
+}
+.printWrap{font-family:Tajawal,Arial; color:#000}
+.printHead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:6px}
+.printTitle{font-weight:900;font-size:16px}
+.printMeta{font-size:12px}
+.printTable{width:100%;border-collapse:collapse;table-layout:fixed}
+.printTable th,.printTable td{border:1px solid #000;padding:4px 6px;font-size:12px;vertical-align:middle}
+.printTable th{background:#f3f3f3}
+.colNum{width:40px;text-align:center}
+.colName{width:260px}
+.colDay{width:78px;text-align:center}
+.colBar{width:250px}
+.barSvg{width:100%;height:34px;display:block}
 </style>
 </head>
 
@@ -132,7 +155,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
       <div class="logo" aria-hidden="true"></div>
       <div class="titlewrap">
         <div class="title">المواظبة والسلوك</div>
-        <div class="subtitle">بحث سريع → تحديد الطلاب → مواظبة/سلوك/إذن → واتساب + أرشفة لكل طالب</div>
+        <div class="subtitle">بحث لا يُظهر الأسماء إلا عند الطلب • كشف A4 (40) • باركود + تقارير يومية</div>
       </div>
     </div>
     <button class="iconbtn" id="menuBtn" type="button" aria-label="القائمة"></button>
@@ -146,9 +169,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
         <div class="pill">يعمل دون إنترنت</div>
       </div>
       <div class="pad">
-        <div class="help">
-          لا توجد بيانات طلاب محمّلة على هذا الجهاز. اضغط <span class="kbd">تحميل بيانات الطلاب</span> أو استورد CSV/JSON.
-        </div>
+        <div class="help">لا توجد بيانات طلاب محمّلة على هذا الجهاز. اضغط <span class="kbd">تحميل بيانات الطلاب</span> أو استورد CSV/JSON.</div>
         <div class="actions" style="margin-top:10px">
           <button class="btn" id="loadEmbeddedBtn" type="button">تحميل بيانات الطلاب</button>
           <button class="btn secondary" id="importBtn" type="button">استيراد ملف</button>
@@ -158,7 +179,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 
     <section class="card">
       <div class="head">
-        <div class="h">البحث والتحديد</div>
+        <div class="h">المرحلة والشعبة</div>
         <div class="pill" id="countPill">محدد: 0</div>
       </div>
 
@@ -172,7 +193,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 
           <div class="search" role="search">
             <span id="searchIcon" aria-hidden="true"></span>
-            <input id="q" type="search" placeholder="ابحث (اسم/رقم طالب/جوال)… ولن تظهر الأسماء إلا عند البحث/الطلب" autocomplete="off" disabled/>
+            <input id="q" type="search" placeholder="ابحث (اسم/هوية/جوال)… ولن تظهر الأسماء إلا عند البحث/الطلب" autocomplete="off" disabled/>
           </div>
         </div>
 
@@ -180,11 +201,12 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
           <button class="btn ghost" id="toggleListBtn" type="button" disabled>عرض قائمة الطلاب</button>
           <button class="btn secondary" id="selectAllBtn" type="button" disabled>تحديد الكل (حسب الفلتر)</button>
           <button class="btn ghost" id="clearSelBtn" type="button" disabled>إلغاء التحديد</button>
+          <button class="btn" id="sheetA4Btn" type="button" disabled>كشف A4 (40)</button>
         </div>
 
         <div class="help">
           • لن تظهر أسماء الطلاب إلا عند <b>البحث</b> (حرفان فأكثر) أو الضغط على <b>عرض قائمة الطلاب</b>.<br/>
-          • الأرشيف محفوظ لكل طالب داخل التطبيق (محليًا) ولا يُحذف إلا بإعادة ضبط المتصفح/التطبيق يدويًا.
+          • زر <b>كشف A4</b> يطبع كشف الشعبة (40 صف) مع باركود رقم الهوية/الرقم المتوفر في البيانات.
         </div>
       </div>
 
@@ -194,6 +216,20 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
           <button class="btn ghost" id="hideListBtn" type="button">إخفاء</button>
         </div>
         <div class="list" id="list"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="head">
+        <div class="h">الباركود والتقارير</div>
+        <div class="pill" id="todayPill">اليوم</div>
+      </div>
+      <div class="pad">
+        <div class="actions">
+          <button class="btn secondary" id="scanBtn" type="button" disabled>جلسة باركود (غياب/تأخر)</button>
+          <button class="btn ghost" id="reportBtn" type="button">تقرير اليوم</button>
+        </div>
+        <div class="help">• ابدأ جلسة باركود ثم مرّر القارئ: سيتم تسجيل الاسم فورًا وحفظه في أرشيف اليوم.</div>
       </div>
     </section>
 
@@ -215,7 +251,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
     </div>
   </div>
 
-  <!-- Bottom Sheet -->
+  <!-- Sheet -->
   <div class="backdrop" id="backdrop" aria-hidden="true">
     <div class="sheet" role="dialog" aria-modal="true">
       <div class="sheetHead">
@@ -226,10 +262,29 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
       <input type="hidden" id="sheetKind" value="" />
       <input type="hidden" id="sheetMode" value="" />
 
-      <div class="form" id="sheetForm">
+      <div class="form">
+
         <div class="field" id="profileBox" style="display:none">
           <label>الطالب</label>
           <div class="preview" id="profileInfo"></div>
+        </div>
+
+        <div class="field" id="editStudentBox" style="display:none">
+          <label>تعديل بيانات الطالب (محليًا)</label>
+          <div class="grid2">
+            <div class="field">
+              <label for="stPhone">رقم ولي الأمر (واتساب)</label>
+              <input id="stPhone" type="tel" inputmode="tel" placeholder="05xxxxxxxx أو 9665xxxxxxx"/>
+            </div>
+            <div class="field">
+              <label for="stId">رقم الهوية/الباركود</label>
+              <input id="stId" type="text" placeholder="رقم الهوية/رقم الطالب"/>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" id="saveStudentBtn" type="button">حفظ التعديل</button>
+          </div>
+          <div class="small">التعديل محلي على هذا الجهاز (ضمن النسخة الاحتياطية).</div>
         </div>
 
         <div class="field" id="recipientsBox" style="display:none">
@@ -257,17 +312,37 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
           <div class="small">يُحفظ دليل المعلمين محليًا داخل التطبيق.</div>
         </div>
 
+        <div class="field" id="scanBox" style="display:none">
+          <label>جلسة الباركود (لليوم)</label>
+          <div class="chips" id="scanTypeChips"></div>
+          <div class="grid2">
+            <div class="field">
+              <label for="scanInput">امسح الباركود هنا</label>
+              <input id="scanInput" type="text" inputmode="numeric" placeholder="مرّر القارئ…"/>
+            </div>
+            <div class="field">
+              <label>آخر عملية</label>
+              <div class="preview" id="scanLast" style="min-height:54px"></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" id="scanFocusBtn" type="button">تركيز الحقل</button>
+            <button class="btn danger" id="scanStopBtn" type="button">إنهاء الجلسة</button>
+          </div>
+          <div class="small">يُسجّل “غياب/تأخر” في أرشيف اليوم تلقائيًا عند كل مسح.</div>
+        </div>
+
         <div class="field" id="chipsBox">
           <label id="chipsLabel">اختيار سريع</label>
           <div class="chips" id="chips"></div>
         </div>
 
-        <div class="field">
+        <div class="field" id="typeBox">
           <label for="typeSelect">التصنيف</label>
           <select id="typeSelect"></select>
         </div>
 
-        <div class="grid2">
+        <div class="grid2" id="whenRow">
           <div class="field">
             <label for="when">اليوم/التاريخ/الوقت</label>
             <input id="when" type="text"/>
@@ -278,7 +353,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
           </div>
         </div>
 
-        <div class="field">
+        <div class="field" id="noteBox">
           <label for="note">سبب/تفاصيل مختصرة (اختياري)</label>
           <textarea id="note" placeholder="مثال: تكرر اليوم / تم التنبيه داخل الحصة / يرجى المتابعة…"></textarea>
         </div>
@@ -304,6 +379,19 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
             <div class="preview" id="archiveList"></div>
           </div>
         </div>
+
+        <div id="reportBox" style="display:none">
+          <hr/>
+          <div class="field">
+            <label>تقرير اليوم</label>
+            <div class="preview" id="reportText"></div>
+          </div>
+          <div class="inlineBtns">
+            <button class="secondaryBtn" id="reportCopyBtn" type="button">نسخ</button>
+            <button class="primary" id="reportWaBtn" type="button">واتساب للكل (متتابع)</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -312,6 +400,9 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
     <div class="toastInner" id="toastInner">—</div>
   </div>
 </div>
+
+<!-- Print Area -->
+<div id="printArea"></div>
 
 <script>
 "use strict";
@@ -338,14 +429,14 @@ const DEFAULT_ATTENDANCE = [
 ];
 
 const DEFAULT_BEHAVIOR = [
-  "درجة 1: ملاحظة/تنبيه سلوكي داخل الحصة",
-  "درجة 1: عدم الالتزام بالزي/المظهر",
-  "درجة 2: استخدام الجوال أثناء اليوم الدراسي",
-  "درجة 2: تلفظ غير لائق",
-  "درجة 3: إتلاف ممتلكات",
-  "درجة 4: مشاجرة/اعتداء",
-  "درجة 4: مخالفة تعليمات الأمن والسلامة",
-  "درجة 5: سلوك جسيم (وفق الدليل)",
+  "تنبيه سلوكي داخل الحصة",
+  "عدم الالتزام بالزي/المظهر",
+  "استخدام الجوال أثناء اليوم الدراسي",
+  "تلفظ غير لائق",
+  "إتلاف ممتلكات",
+  "مشاجرة/اعتداء",
+  "مخالفة تعليمات الأمن والسلامة",
+  "سلوك جسيم (وفق الدليل)",
   "تنبيه لزيارة المدرسة (سلوك)"
 ];
 
@@ -359,11 +450,10 @@ const DEFAULT_PERMIT = [
 
 /* ========== التخزين المحلي ========== */
 const KEYS = {
-  students: "ms_students_v7",
-  records: "ms_records_v7",
-  lists: "ms_lists_v7",
-  settings: "ms_settings_v7",
-  teachers: "ms_teachers_v7"
+  students: "ms_students_v9",
+  records: "ms_records_v9",
+  settings: "ms_settings_v9",
+  teachers: "ms_teachers_v9"
 };
 
 const store = {
@@ -381,15 +471,14 @@ const store = {
 const state = {
   students: [],
   records: [],
-  lists: { attendance: DEFAULT_ATTENDANCE.slice(), behavior: DEFAULT_BEHAVIOR.slice(), permit: DEFAULT_PERMIT.slice() },
   teachers: [],
   settings: { schoolName: "ثانوية اليعقوبي الثانوية بالخبر" },
   stage: "", section: "", q: "", listVisible: false,
-  selectedSids: new Set(), profileSid: ""
+  selectedSids: new Set(), profileSid: "",
+  scanType: "late"
 };
 
 function $(id) { return document.getElementById(id); }
-
 function icon(name) {
   const icons={
     dots:`<svg viewBox="0 0 24 24" fill="none"><path d="M6 12a1.6 1.6 0 1 1-3.2 0A1.6 1.6 0 0 1 6 12Zm7.6 0A1.6 1.6 0 1 1 10.4 12a1.6 1.6 0 0 1 3.2 0ZM21.2 12A1.6 1.6 0 1 1 18 12a1.6 1.6 0 0 1 3.2 0Z" fill="currentColor"/></svg>`,
@@ -406,27 +495,12 @@ function toast(msg) {
 }
 
 function safeText(s){ return String(s||"").replace(/\s+/g," ").trim(); }
+function uid(prefix="X") { return prefix + Math.random().toString(16).slice(2) + Date.now().toString(16); }
 
-function initials(name){
-  const t=safeText(name).split(" ").filter(Boolean);
-  if(!t.length) return "•";
-  const a=t[0][0]||"•"; const b=(t.length>1?t[1][0]:"")||"";
-  return (a+b).slice(0,2);
-}
-
+const GRADE_MAP2 = GRADE_MAP; // alias
 function stageLabel(code) {
-  const g=GRADE_MAP[String(code)];
+  const g=GRADE_MAP2[String(code)];
   return g?g.label:String(code||"");
-}
-
-function describeStudent(st){
-  const g=GRADE_MAP[String(st.gradeCode)]||{label:String(st.gradeCode||"")};
-  const sec=String(st.section||"");
-  const isEL=(g.elearning && sec===String(g.elearning));
-  const track=isEL?"تعليم إلكتروني":"منتظم";
-  const stage=g.label||"";
-  const section=sec?("شعبة "+sec):"";
-  return {stage,section,track,full:[stage,section,track].filter(Boolean).join(" - ")};
 }
 
 function nowInfo(){
@@ -434,7 +508,8 @@ function nowInfo(){
   return {
     day:d.toLocaleDateString("ar-SA",{weekday:"long"}),
     date:d.toLocaleDateString("ar-SA"),
-    time:d.toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"})
+    time:d.toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"}),
+    iso:d.toISOString().slice(0,10)
   };
 }
 
@@ -453,22 +528,37 @@ function normalizePhone(raw){
 function normalizeStudents(arr){
   const out=[]; const seen=new Set();
   for(const it of arr){
-    const sid=safeText(it.sid||it["رقم الطالب"]||it.id);
+    const sid=safeText(it.sid||it["رقم الطالب"]||it.id||it.student_id);
     const name=safeText(it.name||it["اسم الطالب"]||it.fullName||it.studentName);
     if(!sid||!name) continue;
     if(seen.has(sid)) continue;
     seen.add(sid);
+    const nid = safeText(it.nid||it.nationalId||it.national_id||it["رقم الهوية"]||it["الهوية"]||it["الهوية الوطنية"]||"");
     out.push({
       sid, name,
-      phone:safeText(it.phone||it["الجوال"]||""),
-      gradeCode:safeText(it.gradeCode||it["رقم الصف"]||""),
-      section:safeText(it.section||it["الفصل"]||"")
+      phone:safeText(it.phone||it["الجوال"]||it["رقم الجوال"]||""),
+      gradeCode:safeText(it.gradeCode||it["رقم الصف"]||it["الصف"]||""),
+      section:safeText(it.section||it["الفصل"]||it["الشعبة"]||""),
+      nid: nid
     });
   }
   return out;
 }
 
-function uid(prefix="X") { return prefix + Math.random().toString(16).slice(2) + Date.now().toString(16); }
+function describeStudent(st){
+  const g=GRADE_MAP2[String(st.gradeCode)]||{label:String(st.gradeCode||"")};
+  const sec=String(st.section||"");
+  const isEL=(g.elearning && sec===String(g.elearning));
+  const track=isEL?"تعليم إلكتروني":"منتظم";
+  const stage=g.label||"";
+  const section=sec?("شعبة "+sec):"";
+  return {stage,section,track,full:[stage,section,track].filter(Boolean).join(" - ")};
+}
+
+function barcodeValue(st){
+  const v = safeText(st.nid||"") || safeText(st.sid||"");
+  return v;
+}
 
 function getSectionsForStage(stageCode) {
   const secs = new Set();
@@ -484,6 +574,8 @@ function ensureReady() {
   $("selectAllBtn").disabled = !ready;
   $("clearSelBtn").disabled = state.selectedSids.size===0;
   $("q").disabled = !ready;
+  $("sheetA4Btn").disabled = !ready;
+  $("scanBtn").disabled = !ready;
 }
 
 function setListVisible(v) {
@@ -501,16 +593,15 @@ function filteredStudents() {
     arr = arr.filter(s =>
       (s.name||"").toLowerCase().includes(q) ||
       (s.sid||"").includes(q) ||
+      (s.nid||"").includes(q) ||
       (s.phone||"").includes(q)
     );
   }
+  arr.sort((a,b)=> (a.name||"").localeCompare((b.name||""), "ar"));
   return arr;
 }
 
-function shouldAutoShowList() {
-  const q = safeText(state.q);
-  return q.length >= 2;
-}
+function shouldAutoShowList() { return safeText(state.q).length >= 2; }
 
 function renderStageSeg() {
   const wrap=$("stageSeg");
@@ -543,7 +634,7 @@ function updateSelectionUI() {
     const stg = stageLabel(state.stage);
     const sec = state.section==="ALL" ? "كل الشعب" : ("شعبة "+state.section);
     $("selTitle").textContent = stg + " — " + sec;
-    $("selSub").textContent = "جاهز للإرسال المتتابع + أرشفة لكل طالب";
+    $("selSub").textContent = "جاهز للرصد + واتساب + أرشفة لكل طالب";
     $("actionbar").style.display = "block";
   } else {
     $("actionbar").style.display = "none";
@@ -560,28 +651,30 @@ function renderList() {
   $("listPill").textContent = labelParts.filter(Boolean).join(" • ");
 
   if(!arr.length) {
-    list.innerHTML = `<div class="empty">لا توجد نتائج. جرّب تغيير الشعبة أو كتابة جزء من الاسم/الرقم.</div>`;
+    list.innerHTML = `<div class="empty">لا توجد نتائج. جرّب تغيير الشعبة أو كتابة جزء من الاسم/الهوية/الرقم.</div>`;
     return;
   }
 
-  const max = 200;
+  const max = 220;
   const show = arr.slice(0,max);
   list.innerHTML = show.map(st=>{
     const d=describeStudent(st);
     const checked = state.selectedSids.has(st.sid);
+    const idText = barcodeValue(st);
     return `
       <div class="item" data-sid="${st.sid}">
         <div class="ck ${checked?'checked':''}" aria-hidden="true">${checked?icon('check'):''}</div>
-        <div class="avatar">${initials(st.name)}</div>
         <div class="main">
           <div class="name">${st.name}</div>
           <div class="meta">
             <span>${d.section}</span>
             <span>${d.track}</span>
-            <span>رقم: ${st.sid}</span>
+            <span>هوية/رقم: ${idText}</span>
           </div>
         </div>
-        <button class="btn ghost" type="button" data-open="1" style="padding:8px 10px;border-radius:12px">الأرشيف</button>
+        <div class="mini">
+          <button class="btn ghost" type="button" data-open="1">الأرشيف</button>
+        </div>
       </div>`;
   }).join("") + (arr.length>max ? `<div class="empty">تم عرض ${max} من ${arr.length}. اكتب بحثًا لتضييق النتائج.</div>`:"");
 
@@ -617,78 +710,93 @@ function clearSelection() {
   if(state.listVisible) renderList();
 }
 
-function openSheet(kind, mode="bulk", sid="") {
-  $("sheetKind").value = kind;
-  $("sheetMode").value = mode;
-  state.profileSid = sid || "";
+/* ===== Code39 SVG generator ===== */
+const CODE39 = {
+  "0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn",
+  "A":"wnnnnwnnw","B":"nnwnnwnnw","C":"wnwnnwnnn","D":"nnnnwwnnw","E":"wnnnwwnnn","F":"nnwnwwnnn","G":"nnnnnwwnw","H":"wnnnnwwnn","I":"nnwnnwwnn","J":"nnnnwwwnn",
+  "K":"wnnnnnnww","L":"nnwnnnnww","M":"wnwnnnnwn","N":"nnnnwnnww","O":"wnnnwnnwn","P":"nnwnwnnwn","Q":"nnnnnnwww","R":"wnnnnnwwn","S":"nnwnnnwwn","T":"nnnnwnwwn",
+  "U":"wwnnnnnnw","V":"nwwnnnnnw","W":"wwwnnnnnn","X":"nwnnwnnnw","Y":"wwnnwnnnn","Z":"nwwnwnnnn",
+  "-":"nwnnnnwnw",".":"wwnnnnwnn"," ":"nwwnnnwnn","$":"nwnwnwnnn","/":"nwnwnnnwn","+":"nwnnnwnwn","%":"nnnwnwnwn","*":"nwnnwnwnn"
+};
 
-  const isProfile = (mode==="profile");
-  $("profileBox").style.display = isProfile ? "block" : "none";
-  $("openArchiveBtn").style.display = isProfile ? "block" : "none";
-  $("archiveBox").style.display = "none";
-  $("afterSave").style.display = "none";
-  $("saveBtn").style.display = "block";
-
-  const info=nowInfo();
-  $("when").value = info.day + " - " + info.date + " - " + info.time;
-  $("note").value = "";
-  $("phone").value = "";
-  $("teacherName").value = "";
-  $("teacherPhone").value = "";
-
-  const recipBox = $("recipientsBox");
-  const teacherBox = $("teacherBox");
-  recipBox.style.display = (kind==="permit") ? "block" : "none";
-  teacherBox.style.display = "none";
-
-  const setRecipients = (val)=> {
-    recipBox.setAttribute("data-recips", val);
-    teacherBox.style.display = (kind==="permit" && (val==="teacher" || val==="both")) ? "block" : "none";
-    $("phoneBox").style.display = (kind==="permit" && val==="teacher") ? "none" : "block";
-  };
-
-  if(kind==="permit") {
-    const chips=$("recipientChips");
-    chips.innerHTML = `
-      <button class="chip active" type="button" data-v="parent">ولي الأمر</button>
-      <button class="chip" type="button" data-v="teacher">المعلم</button>
-      <button class="chip" type="button" data-v="both">كلاهما</button>
-    `;
-    chips.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
-      chips.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-      ch.classList.add("active");
-      setRecipients(ch.getAttribute("data-v"));
-    }));
-    setRecipients("parent");
-  }
-
-  const items = (kind==="attendance"?state.lists.attendance:(kind==="behavior"?state.lists.behavior:state.lists.permit));
-  $("sheetTitle").textContent =
-    (isProfile ? "سجل + واتساب + أرشيف" : "إرسال متتابع للمحددين") +
-    " — " + (kind==="attendance"?"مواظبة":(kind==="behavior"?"سلوك":"إذن"));
-
-  $("typeSelect").innerHTML = items.map(x=>`<option value="${x}">${x}</option>`).join("");
-
-  $("chips").innerHTML = items.slice(0,6).map(x=>`<button class="chip" type="button" data-v="${x}">${x}</button>`).join("");
-  $("chips").querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
-    $("chips").querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-    ch.classList.add("active");
-    $("typeSelect").value = ch.getAttribute("data-v");
-  }));
-
-  if(isProfile) {
-    const st = state.students.find(x=>x.sid===sid);
-    if(st) {
-      const d=describeStudent(st);
-      $("profileInfo").textContent = `${st.name}\n${d.full}\nرقم الطالب: ${st.sid}`;
-    }
-  }
-
-  $("backdrop").classList.add("show");
+function toCode39Text(val){
+  let t = safeText(val).toUpperCase();
+  t = t.replace(/[^0-9A-Z\-\.\ \$\/\+\%]/g,"");
+  if(!t) t = "0";
+  return "*" + t + "*";
 }
 
-function closeSheet() { $("backdrop").classList.remove("show"); }
+function code39SVG(val, height=34){
+  const txt = toCode39Text(val);
+  const narrow=1, wide=3, gap=1;
+  let x=5;
+  let bars=[];
+  for(let i=0;i<txt.length;i++){
+    const ch=txt[i];
+    const pattern = CODE39[ch] || CODE39["0"];
+    for(let j=0;j<9;j++){
+      const isBar = (j%2===0);
+      const bw = (pattern[j]==="w"?wide:narrow)*2;
+      if(isBar) bars.push(`<rect x="${x}" y="0" width="${bw}" height="${height}" fill="#000"/>`);
+      x += bw + (gap*2);
+    }
+    x += 2;
+  }
+  const w = x + 5;
+  return `<svg class="barSvg" viewBox="0 0 ${w} ${height}" xmlns="http://www.w3.org/2000/svg" aria-label="barcode">${bars.join("")}</svg>`;
+}
 
+/* ===== A4 Sheet ===== */
+function buildA4Sheet(mode){
+  const arr = filteredStudents().slice(0,40);
+  const info = nowInfo();
+  const stg = stageLabel(state.stage);
+  const sec = (state.section==="ALL"?"كل الشعب":"شعبة "+state.section);
+  const title = (mode==="absent") ? "كشف متابعة غياب" : "كشف متابعة تأخر";
+  const days = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس"];
+
+  const rows = arr.map((st, i)=>{
+    const b = code39SVG(barcodeValue(st));
+    const tdsDays = days.map(()=>`<td class="colDay"></td>`).join("");
+    return `<tr>
+      <td class="colNum">${i+1}</td>
+      <td class="colName">${st.name}</td>
+      ${tdsDays}
+      <td class="colBar">${b}</td>
+    </tr>`;
+  }).join("");
+
+  const html = `
+  <div class="printWrap">
+    <div class="printHead">
+      <div>
+        <div class="printTitle">${title}</div>
+        <div class="printMeta">${state.settings.schoolName} • ${stg} • ${sec}</div>
+      </div>
+      <div class="printMeta">${info.day} • ${info.date}</div>
+    </div>
+    <table class="printTable">
+      <thead>
+        <tr>
+          <th class="colNum">م</th>
+          <th class="colName">اسم الطالب</th>
+          ${days.map(d=>`<th class="colDay">${d}</th>`).join("")}
+          <th class="colBar">الباركود (هوية/رقم)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows || `<tr><td colspan="8" style="text-align:center">لا يوجد طلاب ضمن الفلتر</td></tr>`}
+      </tbody>
+    </table>
+    <div class="printMeta" style="margin-top:6px">
+      ملاحظة: يُستخدم هذا الكشف لتتبع ${mode==="absent"?"الغياب":"التأخر"}.
+    </div>
+  </div>`;
+  $("printArea").innerHTML = html;
+  window.print();
+}
+
+/* ===== Messages & records ===== */
 function buildMessageParent(st, kind, subtype, when, note) {
   const d=describeStudent(st);
   const lines=[];
@@ -697,11 +805,9 @@ function buildMessageParent(st, kind, subtype, when, note) {
   lines.push("نحيطكم علمًا بشأن الطالب/ " + st.name);
   lines.push("الصف/ " + d.stage + " – " + d.section + " (" + d.track + ")");
   lines.push("");
-  if(kind==="attendance") {
-    lines.push("المواظبة: " + subtype);
-  } else if(kind==="behavior") {
-    lines.push("السلوك: " + subtype);
-  } else {
+  if(kind==="attendance") lines.push("المواظبة: " + subtype);
+  else if(kind==="behavior") lines.push("السلوك: " + subtype);
+  else {
     if(subtype.includes("زيارة") || subtype.includes("دعوة")) {
       lines.push("نأمل تكرمكم بمراجعة المدرسة لمناقشة الأمر التالي:");
       lines.push("السبب: " + (note||"—"));
@@ -712,7 +818,7 @@ function buildMessageParent(st, kind, subtype, when, note) {
   }
   lines.push("الوقت: " + when);
   lines.push("");
-  lines.push("نأمل منكم المتابعة والتعاون بما يدعم انضباط الطالب واستقراره الدراسي، شاكرين لكم.");
+  lines.push("نأمل المتابعة والتعاون بما يدعم انضباط الطالب واستقراره الدراسي، شاكرين لكم.");
   lines.push("— " + state.settings.schoolName);
   return lines.join("\n");
 }
@@ -722,13 +828,9 @@ function buildMessageTeacher(st, subtype, when, note) {
   const lines=[];
   lines.push("السلام عليكم ورحمة الله وبركاته،");
   lines.push("");
-  if(subtype.includes("دخول")) {
-    lines.push("يرجى التكرم بالسماح للطالب/ " + st.name + " بالدخول إلى الفصل.");
-  } else if(subtype.includes("خروج")) {
-    lines.push("يرجى التكرم بالسماح للطالب/ " + st.name + " بالخروج وفق الإذن.");
-  } else {
-    lines.push("تنبيه بخصوص الطالب/ " + st.name + " (إذن).");
-  }
+  if(subtype.includes("دخول")) lines.push("يرجى التكرم بالسماح للطالب/ " + st.name + " بالدخول إلى الفصل.");
+  else if(subtype.includes("خروج")) lines.push("يرجى التكرم بالسماح للطالب/ " + st.name + " بالخروج وفق الإذن.");
+  else lines.push("تنبيه بخصوص الطالب/ " + st.name + " (إذن).");
   lines.push("الصف/ " + d.stage + " – " + d.section + " (" + d.track + ")");
   if(note) lines.push("ملاحظة: " + note);
   lines.push("الوقت: " + when);
@@ -749,6 +851,184 @@ function copyText(text) {
   navigator.clipboard.writeText(text).then(()=>toast("تم النسخ.")).catch(()=>toast("تعذر النسخ تلقائياً."));
 }
 
+function makeEntry(st, kind, subtype, when, note, to, toName, toPhone, msg) {
+  const entry = {
+    id: uid("R"),
+    sid: st.sid,
+    kind, subtype, when, note,
+    to, toName: toName||"", toPhone: normalizePhone(toPhone||""),
+    msg,
+    createdAt: new Date().toISOString(),
+    dayISO: new Date().toISOString().slice(0,10),
+    stage: String(st.gradeCode||""), section: String(st.section||"")
+  };
+  state.records.unshift(entry);
+  return entry;
+}
+
+function openSheet(kind, mode="bulk", sid="") {
+  $("sheetKind").value = kind;
+  $("sheetMode").value = mode;
+  state.profileSid = sid || "";
+
+  $("scanBox").style.display = "none";
+  $("reportBox").style.display = "none";
+  $("afterSave").style.display = "none";
+  $("archiveBox").style.display = "none";
+  $("saveBtn").style.display = "block";
+  $("typeBox").style.display = "block";
+  $("whenRow").style.display = "grid";
+  $("noteBox").style.display = "block";
+  $("chipsBox").style.display = "block";
+  $("recipientsBox").style.display = "none";
+  $("teacherBox").style.display = "none";
+  $("editStudentBox").style.display = "none";
+  $("profileBox").style.display = (mode==="profile") ? "block" : "none";
+  $("openArchiveBtn").style.display = (mode==="profile") ? "block" : "none";
+
+  const info=nowInfo();
+  $("when").value = info.day + " - " + info.date + " - " + info.time;
+  $("note").value = "";
+  $("phone").value = "";
+  $("teacherName").value = "";
+  $("teacherPhone").value = "";
+
+  let items = (kind==="attendance"?DEFAULT_ATTENDANCE:(kind==="behavior"?DEFAULT_BEHAVIOR:DEFAULT_PERMIT));
+  $("sheetTitle").textContent =
+    (mode==="profile" ? "سجل + واتساب + أرشيف" : "إرسال متتابع للمحددين") +
+    " — " + (kind==="attendance"?"مواظبة":(kind==="behavior"?"سلوك":"إذن"));
+
+  $("typeSelect").innerHTML = items.map(x=>`<option value="${x}">${x}</option>`).join("");
+
+  $("chips").innerHTML = items.slice(0,6).map(x=>`<button class="chip" type="button" data-v="${x}">${x}</button>`).join("");
+  $("chips").querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
+    $("chips").querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+    ch.classList.add("active");
+    $("typeSelect").value = ch.getAttribute("data-v");
+  }));
+
+  if(kind==="permit") {
+    $("recipientsBox").style.display = "block";
+    const chips=$("recipientChips");
+    chips.innerHTML = `
+      <button class="chip active" type="button" data-v="parent">ولي الأمر</button>
+      <button class="chip" type="button" data-v="teacher">المعلم</button>
+      <button class="chip" type="button" data-v="both">كلاهما</button>
+    `;
+    const setRecipients = (val)=> {
+      chips.setAttribute("data-recips", val);
+      $("teacherBox").style.display = (val==="teacher" || val==="both") ? "block" : "none";
+      $("phoneBox").style.display = (val==="teacher") ? "none" : "block";
+    };
+    chips.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
+      chips.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+      ch.classList.add("active");
+      setRecipients(ch.getAttribute("data-v"));
+    }));
+    setRecipients("parent");
+  }
+
+  if(mode==="profile") {
+    const st = state.students.find(x=>x.sid===sid);
+    if(st) {
+      const d=describeStudent(st);
+      $("profileInfo").textContent = `${st.name}\n${d.full}\nهوية/رقم: ${barcodeValue(st)}`;
+      $("editStudentBox").style.display="block";
+      $("stPhone").value = st.phone||"";
+      $("stId").value = barcodeValue(st);
+      $("saveStudentBtn").onclick = ()=>{
+        st.phone = safeText($("stPhone").value);
+        st.nid = safeText($("stId").value);
+        store.set(KEYS.students, state.students);
+        toast("تم حفظ التعديل.");
+        $("profileInfo").textContent = `${st.name}\n${d.full}\nهوية/رقم: ${barcodeValue(st)}`;
+        if(state.listVisible) renderList();
+      };
+    }
+  }
+
+  $("backdrop").classList.add("show");
+}
+
+function openScanSession() {
+  if(!state.stage || !state.section) return toast("اختر المرحلة والشعبة أولاً.");
+  $("sheetTitle").textContent = "جلسة باركود — غياب/تأخر";
+
+  $("profileBox").style.display="none";
+  $("editStudentBox").style.display="none";
+  $("recipientsBox").style.display="none";
+  $("teacherBox").style.display="none";
+  $("chipsBox").style.display="none";
+  $("typeBox").style.display="none";
+  $("whenRow").style.display="none";
+  $("noteBox").style.display="none";
+  $("afterSave").style.display="none";
+  $("archiveBox").style.display="none";
+  $("reportBox").style.display="none";
+  $("saveBtn").style.display="none";
+
+  $("scanBox").style.display="block";
+  const chips=$("scanTypeChips");
+  chips.innerHTML = `
+    <button class="chip ${state.scanType==='late'?'active':''}" type="button" data-v="late">تأخر</button>
+    <button class="chip ${state.scanType==='absent'?'active':''}" type="button" data-v="absent">غياب</button>
+  `;
+  chips.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
+    chips.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+    ch.classList.add("active");
+    state.scanType = ch.getAttribute("data-v");
+    toast("نوع الجلسة: " + (state.scanType==="absent"?"غياب":"تأخر"));
+    focusScan();
+  }));
+
+  $("scanLast").textContent = "—";
+  $("scanStopBtn").onclick = ()=>closeSheet();
+  $("scanFocusBtn").onclick = ()=>focusScan();
+
+  const inp=$("scanInput");
+  inp.value="";
+  inp.onkeydown = (e)=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+      const raw = safeText(inp.value);
+      inp.value="";
+      if(!raw) return;
+      handleScan(raw);
+    }
+  };
+
+  $("backdrop").classList.add("show");
+  setTimeout(()=>focusScan(), 150);
+}
+
+function focusScan(){ $("scanInput").focus(); }
+
+function findStudentByBarcode(code){
+  let c = safeText(code).replace(/\*/g,"");
+  const map={"٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"};
+  c=c.replace(/[٠-٩]/g,(d)=>map[d]||d);
+  return state.students.find(s => safeText(s.nid)===c || safeText(s.sid)===c);
+}
+
+function handleScan(code){
+  const st = findStudentByBarcode(code);
+  const info = nowInfo();
+  if(!st){
+    $("scanLast").textContent = "لم يتم العثور على الطالب: " + code;
+    return toast("باركود غير مطابق.");
+  }
+  const subtype = (state.scanType==="absent") ? "غياب (تسجيل بالباركود)" : "تأخر صباحي (تسجيل بالباركود)";
+  const when = info.day + " - " + info.date + " - " + info.time;
+  const msg = buildMessageParent(st, "attendance", subtype, when, "");
+  makeEntry(st, "attendance", subtype, when, "", "parent", "ولي الأمر", st.phone||"", msg);
+  store.set(KEYS.records, state.records);
+
+  $("scanLast").textContent = `${st.name}\n${describeStudent(st).full}\nتم تسجيل: ${state.scanType==="absent"?"غياب":"تأخر"}\n${info.time}`;
+  toast("تم التسجيل: " + st.name);
+}
+
+function closeSheet(){ $("backdrop").classList.remove("show"); }
+
 function saveRecordsAndPreview() {
   const kind=$("sheetKind").value;
   const mode=$("sheetMode").value;
@@ -757,7 +1037,7 @@ function saveRecordsAndPreview() {
   const note=safeText($("note").value);
 
   let recips="parent";
-  if(kind==="permit") recips = $("recipientsBox").getAttribute("data-recips") || "parent";
+  if(kind==="permit") recips = $("recipientChips").getAttribute("data-recips") || "parent";
 
   const commonParentPhone = safeText($("phone").value);
   const tName = safeText($("teacherName").value);
@@ -775,36 +1055,19 @@ function saveRecordsAndPreview() {
   const saved=[];
   const previews=[];
 
-  const makeEntry = (sid, kind, to, toName, toPhone, msg) => {
-    const entry = {
-      id: uid("R"),
-      sid,
-      kind,
-      subtype,
-      when,
-      note,
-      to,
-      toName: toName||"",
-      toPhone: normalizePhone(toPhone||""),
-      msg,
-      createdAt: new Date().toISOString()
-    };
-    state.records.unshift(entry);
-    saved.push(entry);
-    return entry;
-  };
-
   for(const st of targets) {
     if(kind!=="permit" || recips==="parent" || recips==="both") {
       const msgP = buildMessageParent(st, kind, subtype, when, note);
       const phoneP = normalizePhone(commonParentPhone || st.phone || "");
-      makeEntry(st.sid, kind, "parent", "ولي الأمر", phoneP, msgP);
+      saved.push({toPhone:phoneP, msg:msgP});
+      makeEntry(st, kind, subtype, when, note, "parent", "ولي الأمر", phoneP, msgP);
       previews.push("— — —\n" + msgP);
     }
     if(kind==="permit" && (recips==="teacher" || recips==="both")) {
       const msgT = buildMessageTeacher(st, subtype, when, note);
       const phoneT = normalizePhone(tPhone);
-      makeEntry(st.sid, kind, "teacher", (tName||"المعلم"), phoneT, msgT);
+      saved.push({toPhone:phoneT, msg:msgT});
+      makeEntry(st, kind, subtype, when, note, "teacher", (tName||"المعلم"), phoneT, msgT);
       previews.push("— — —\n" + msgT);
     }
   }
@@ -821,32 +1084,24 @@ function saveRecordsAndPreview() {
     if(!item) return toast("انتهى الإرسال المتتابع.");
     openWhatsApp(item.toPhone||"", item.msg);
     idx++;
-    toast(idx < saved.length ? ("التالي: " + (saved[idx]?.to==="teacher" ? "معلم" : "ولي أمر")) : "تم فتح آخر رسالة.");
+    toast(idx < saved.length ? "التالي..." : "تم فتح آخر رسالة.");
   };
 
   $("copyBtn").onclick = ()=>copyText(previews.join("\n\n"));
-  toast("تم الحفظ في أرشيف الطلاب (" + saved.length + ").");
-}
-
-function openProfile(sid) {
-  openSheet("attendance","profile",sid);
-  $("openArchiveBtn").onclick = ()=>showArchive(sid);
-  $("openArchiveBtn").style.display="block";
-  setTimeout(()=>showArchive(sid), 0);
+  toast("تم الحفظ في الأرشيف (" + saved.length + ").");
 }
 
 function showArchive(sid) {
   const st=state.students.find(x=>x.sid===sid);
   if(!st) return;
-  const rows = state.records.filter(r=>r.sid===sid).slice(0,80);
+  const rows = state.records.filter(r=>r.sid===sid).slice(0,120);
   const d=describeStudent(st);
   const lines=[];
   lines.push("الطالب/ "+st.name);
   lines.push(d.full);
   lines.push("—");
-  if(!rows.length) {
-    lines.push("لا يوجد سجلات بعد.");
-  } else {
+  if(!rows.length) lines.push("لا يوجد سجلات بعد.");
+  else {
     for(const r of rows) {
       const when = r.when || "";
       const tag = (r.kind==="attendance"?"مواظبة":(r.kind==="behavior"?"سلوك":"إذن"));
@@ -857,6 +1112,81 @@ function showArchive(sid) {
   }
   $("archiveList").textContent = lines.join("\n");
   $("archiveBox").style.display="block";
+}
+
+function openProfile(sid) {
+  openSheet("attendance","profile",sid);
+  $("openArchiveBtn").onclick = ()=>showArchive(sid);
+  setTimeout(()=>showArchive(sid), 0);
+}
+
+/* ===== Report ===== */
+function buildTodayReport(){
+  const info = nowInfo();
+  const today = info.iso;
+  const rows = state.records.filter(r=>r.dayISO===today);
+  const late = rows.filter(r=>r.kind==="attendance" && (r.subtype||"").includes("تأخر"));
+  const absent = rows.filter(r=>r.kind==="attendance" && (r.subtype||"").includes("غياب"));
+  const behavior = rows.filter(r=>r.kind==="behavior");
+  const permit = rows.filter(r=>r.kind==="permit");
+
+  const fmtList = (arr, label)=> {
+    if(!arr.length) return `${label}: لا يوجد`;
+    const names = arr.map(r=>{
+      const st = state.students.find(s=>s.sid===r.sid);
+      return st ? st.name : r.sid;
+    });
+    const uniq = Array.from(new Set(names));
+    return `${label} (${uniq.length}):\n- ` + uniq.join("\n- ");
+  };
+
+  const lines=[];
+  lines.push("تقرير اليوم: " + info.day + " - " + info.date);
+  lines.push("—");
+  lines.push(fmtList(absent, "الغياب"));
+  lines.push("—");
+  lines.push(fmtList(late, "التأخر"));
+  lines.push("—");
+  lines.push(fmtList(behavior, "مخالفات سلوكية/تنبيهات"));
+  lines.push("—");
+  lines.push(fmtList(permit, "أذونات"));
+  return {text: lines.join("\n")};
+}
+
+function openTodayReport(){
+  $("sheetTitle").textContent="تقرير اليوم";
+
+  $("scanBox").style.display="none";
+  $("profileBox").style.display="none";
+  $("editStudentBox").style.display="none";
+  $("recipientsBox").style.display="none";
+  $("teacherBox").style.display="none";
+  $("chipsBox").style.display="none";
+  $("typeBox").style.display="none";
+  $("whenRow").style.display="none";
+  $("noteBox").style.display="none";
+  $("afterSave").style.display="none";
+  $("archiveBox").style.display="none";
+  $("saveBtn").style.display="none";
+
+  const rep = buildTodayReport();
+  $("reportText").textContent = rep.text;
+  $("reportBox").style.display="block";
+
+  $("reportCopyBtn").onclick = ()=>copyText(rep.text);
+
+  const today = nowInfo().iso;
+  const items = state.records.filter(r=>r.dayISO===today && r.to==="parent").slice().reverse();
+  let i=0;
+  $("reportWaBtn").onclick = ()=>{
+    const it = items[i];
+    if(!it) return toast("لا توجد رسائل اليوم للإرسال.");
+    openWhatsApp(it.toPhone||"", it.msg);
+    i++;
+    toast(i<items.length ? "التالي..." : "تم فتح آخر رسالة.");
+  };
+
+  $("backdrop").classList.add("show");
 }
 
 async function readTextFile(file){ return await file.text(); }
@@ -870,7 +1200,8 @@ async function readCSVStudents(file) {
   const delim = (sample.split(";").length > sample.split(",").length) ? ";" : (sample.split("\t").length > sample.split(",").length ? "\t" : ",");
   const parseLine=(line)=>{
     const out=[]; let cur=""; let q=false;
-    for(let i=0;i<line.length;i++){ const ch=line[i];
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
       if(ch=='"'){ if(q && line[i+1]=='"'){cur+='"';i++;continue;} q=!q; continue; }
       if(!q && ch===delim){ out.push(cur); cur=""; continue; }
       cur+=ch;
@@ -882,6 +1213,7 @@ async function readCSVStudents(file) {
   const idx=(names)=>{ for(const n of names){ const i=hdr.findIndex(h=>h===n); if(i>=0) return i; } return -1; };
   const iName=idx(["اسم الطالب","الاسم","اسم"]);
   const iSid=idx(["رقم الطالب","StudentID","id"]);
+  const iNid=idx(["رقم الهوية","الهوية","الهوية الوطنية","nid","nationalId"]);
   const iPhone=idx(["الجوال","رقم الجوال","phone"]);
   const iGrade=idx(["رقم الصف","الصف","gradeCode"]);
   const iSec=idx(["الفصل","الشعبة","section"]);
@@ -890,6 +1222,7 @@ async function readCSVStudents(file) {
   for(let li=1; li<lines.length; li++) {
     const cells=parseLine(lines[li]);
     const st={ sid:safeText(cells[iSid]), name:safeText(cells[iName]),
+      nid:safeText(iNid>=0?cells[iNid]:""),
       phone:safeText(iPhone>=0?cells[iPhone]:""),
       gradeCode:safeText(iGrade>=0?cells[iGrade]:""),
       section:safeText(iSec>=0?cells[iSec]:"") };
@@ -997,38 +1330,48 @@ function resetFilters() {
   ensureReady();
 }
 
-function openMenu() {
-  const choice = prompt(
-`القائمة:
-1) تحميل بيانات الطلاب (مضمنة)
-2) استيراد بيانات طلاب (CSV/JSON)
-3) تنزيل نسخة احتياطية
-4) استيراد نسخة احتياطية
-اكتب رقم الخيار:`
-  );
-  if(!choice) return;
-  const c=String(choice).trim();
-  if(c==="1") {
+function openMenuSheet() {
+  $("sheetTitle").textContent="القائمة";
+  $("scanBox").style.display="none";
+  $("profileBox").style.display="none";
+  $("editStudentBox").style.display="none";
+  $("recipientsBox").style.display="none";
+  $("teacherBox").style.display="none";
+  $("typeBox").style.display="none";
+  $("whenRow").style.display="none";
+  $("noteBox").style.display="none";
+  $("afterSave").style.display="none";
+  $("archiveBox").style.display="none";
+  $("reportBox").style.display="none";
+  $("saveBtn").style.display="none";
+
+  $("chipsBox").style.display="block";
+  $("chipsLabel").textContent="خيارات";
+  $("chips").innerHTML = `
+    <button class="chip" type="button" id="mLoad">تحميل بيانات الطلاب</button>
+    <button class="chip" type="button" id="mImport">استيراد بيانات</button>
+    <button class="chip" type="button" id="mBackup">تنزيل نسخة احتياطية</button>
+    <button class="chip" type="button" id="mRestore">استيراد نسخة احتياطية</button>
+  `;
+  $("backdrop").classList.add("show");
+  $("mLoad").onclick = ()=>{
     state.students = normalizeStudents(EMBEDDED_STUDENTS);
     store.set(KEYS.students, state.students);
     $("firstRun").style.display="none";
     resetFilters();
     toast("تم تحميل البيانات: "+state.students.length);
-  } else if(c==="2") {
-    importStudents();
-  } else if(c==="3") {
-    exportBackup();
-  } else if(c==="4") {
-    restoreBackup();
-  }
+    closeSheet();
+  };
+  $("mImport").onclick = ()=>{ importStudents(); };
+  $("mBackup").onclick = ()=>{ exportBackup(); };
+  $("mRestore").onclick = ()=>{ restoreBackup(); };
 }
 
 function wire() {
   $("menuBtn").innerHTML = icon("dots");
   $("searchIcon").innerHTML = icon("search");
   $("closeBtn").innerHTML = icon("close");
-
-  $("menuBtn").onclick = openMenu;
+  $("menuBtn").onclick = openMenuSheet;
 
   $("sectionSelect").addEventListener("change",(e)=>{
     state.section = e.target.value || "";
@@ -1060,6 +1403,14 @@ function wire() {
   $("btnBehavior").onclick = ()=>openSheet("behavior","bulk");
   $("btnPermit").onclick = ()=>openSheet("permit","bulk");
 
+  $("sheetA4Btn").onclick = ()=>{
+    const choice = confirm("طباعة كشف الغياب؟ اضغط (موافق) للغياب، أو (إلغاء) لكشف التأخر.");
+    buildA4Sheet(choice ? "absent" : "late");
+  };
+
+  $("scanBtn").onclick = ()=>openScanSession();
+  $("reportBtn").onclick = ()=>openTodayReport();
+
   $("closeBtn").onclick = ()=>closeSheet();
   $("backdrop").addEventListener("click",(e)=>{ if(e.target.id==="backdrop") closeSheet(); });
   document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSheet(); });
@@ -1086,20 +1437,17 @@ function init() {
   state.teachers = store.get(KEYS.teachers, []);
   state.settings = store.get(KEYS.settings, state.settings);
 
-  if(!Array.isArray(state.students) || state.students.length===0) {
-    state.students = [];
-    $("firstRun").style.display="block";
-  } else {
-    $("firstRun").style.display="none";
-  }
+  const info=nowInfo();
+  $("todayPill").textContent = info.day + " • " + info.date;
+
+  if(!Array.isArray(state.students) || state.students.length===0) $("firstRun").style.display="block";
+  else $("firstRun").style.display="none";
 
   renderStageSeg();
   updateSelectionUI();
   ensureReady();
 
-  if("serviceWorker" in navigator) {
-    window.addEventListener("load",()=>{ navigator.serviceWorker.register("./sw.js").catch(()=>{}); });
-  }
+  if("serviceWorker" in navigator) window.addEventListener("load",()=>{ navigator.serviceWorker.register("./sw.js").catch(()=>{}); });
 }
 
 document.addEventListener("DOMContentLoaded",()=>{ wire(); init(); });

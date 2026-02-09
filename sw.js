@@ -1,4 +1,4 @@
-const CACHE = "ms-v7-20260208";
+const CACHE = "ms-v9-20260209";
 const ASSETS = ["./","./index.html","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./sw.js"];
 self.addEventListener("install", (e)=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener("activate", (e)=>e.waitUntil(
@@ -10,7 +10,7 @@ self.addEventListener("fetch", (e)=>{
     e.respondWith(
       caches.match(req).then(cached=>cached||fetch(req).then(res=>{
         const copy=res.clone(); caches.open(CACHE).then(c=>c.put(req,copy)); return res;
-      }))
+      }).catch(()=>cached))
     );
   }
 });
