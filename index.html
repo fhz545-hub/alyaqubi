@@ -144,7 +144,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
   body{background:#fff}
   #app{display:none !important}
   #printArea{display:block !important}
-  @page { size: A4 portrait; margin: 10mm; }
+  @page { size: A4 landscape; margin: 10mm; }
 }
 .printWrap{font-family:Tajawal,Arial; color:#000}
 .printTitle{font-weight:900;font-size:16px;margin:0 0 6px}
@@ -158,8 +158,21 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 .colKind{width:160px}
 .colAct{width:auto}
 .colBar{width:280px}
-.barSvg{width:100%;height:40px;display:block}
+.barSvg{width:100%;height:var(--bcH,40px);display:block}
 .pageBreak{page-break-after:always}
+
+/* ===== A4 كشف شعبة: ضغط ذكي + منع تقسيم الصفوف ===== */
+.sectionSheet .printTitle{font-size:14px}
+.sectionSheet .printMeta{font-size:11px}
+.sectionSheet .printTable th,.sectionSheet .printTable td{
+  font-size:var(--fs,11px);
+  padding:var(--pad,3px) var(--padX,4px);
+  line-height:1.2;
+}
+.sectionSheet .colNum{width:28px;text-align:center}
+.sectionSheet .colName{width:200px}
+.sectionSheet .colBar{width:260px}
+.printTable tr{page-break-inside:avoid;break-inside:avoid}
 
 /* ===== تحسين الجوال: أشرطة أزرار في صف واحد بدون تمرير أفقي ===== */
 #app, .container {overflow-x:hidden}
@@ -277,7 +290,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
           <select class="sel" id="sectionSelect" disabled>
             <option value="">اختر الشعبة…</option>
           </select>
-          <button class="btn" id="sheetA4Btn" type="button" disabled>كشف شعبة A4 (40)</button>
+          <button class="btn" id="sheetA4Btn" type="button" disabled>كشف شعبة A4</button>
           <button class="btn secondary" id="scanBtn" type="button" disabled>جلسة باركود (تأخر/غياب)</button>
         </div>
         <div class="help">
@@ -1401,39 +1414,70 @@ function printDaily(kind){
   window.print();
 }
 
-/* ===== A4 class sheet for section (40 rows, days + barcode) ===== */
+/* ===== A4 class sheet for section (single page, days + barcode) ===== */
 function buildA4SectionSheet(mode){
   const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس"];
   const info=nowInfo();
-  const stg=stageLabel(state.stage);
-  const sec="شعبة "+state.section;
-  const title = (mode==='absent')?'كشف متابعة غياب':'كشف متابعة تأخر';
 
+  const stgRaw = stageLabel(state.stage);
+  const stgTitle = (()=>{
+    const t=safeText(stgRaw);
+    if(t.startsWith('أول')) return 'الأول ثانوي';
+    if(t.startsWith('ثاني')) return 'الثاني ثانوي';
+    if(t.startsWith('ثالث')) return 'الثالث ثانوي';
+    return t || '—';
+  })();
+
+  const secVal = safeText(state.section) || '—';
+
+  // track (regular / e-learning)
+  const g=GRADE_MAP[String(state.stage)]||{};
+  const isEL = (g.elearning && String(secVal)===String(g.elearning));
+  const track = isEL ? 'تعليم إلكتروني' : 'منتظم';
+
+  const tWord = (mode==='absent')?'الغياب':'التأخر';
+  const title = `كشف متابعة ${tWord} للمرحلة الثانوية – الصف ${stgTitle} – شعبة ${secVal} – ${track}`;
+
+  // students of selected stage + section
   let arr = state.students.filter(s=>String(s.gradeCode)===String(state.stage) && String(s.section)===String(state.section));
   arr.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ar'));
-  arr = arr.slice(0,40);
 
-  const rows = arr.map((st,i)=>{
-    const bc=code39SVG(barcodeValue(st));
-    const tdsDays = days.map(()=>`<td style="text-align:center"></td>`).join('');
+  const n = arr.length;
+
+  // ===== compact print tuning (single page) =====
+  let fs=11.2, pad=3.6, padX=5.2, bcH=38, dayW=40;
+  if(n>45){ fs=9.6;  pad=2.6; padX=4.4; bcH=30; dayW=34; }
+  if(n>60){ fs=8.4;  pad=2.0; padX=3.8; bcH=26; dayW=30; }
+  if(n>80){ fs=7.2;  pad=1.6; padX=3.2; bcH=22; dayW=26; }
+  if(n>100){fs=6.4;  pad=1.2; padX=2.8; bcH=18; dayW=22; }
+  if(n>120){fs=5.8;  pad=1.0; padX=2.4; bcH=16; dayW=20; }
+  bcH = Math.max(16, Math.min(40, bcH));
+
+  const rows = (arr.map((st,i)=>{
+    const bc=code39SVG(barcodeValue(st), bcH);
+    const tdsDays = days.map(()=>`<td class="dayCell"></td>`).join('');
     return `<tr>
       <td class="colNum">${i+1}</td>
       <td class="colName">${st.name}</td>
       ${tdsDays}
-      <td class="colBar">${bc}</td>
+      <td class="colBar">
+        ${bc}
+        <div style="font-size:calc(var(--fs,11px) - 1.2px);letter-spacing:.6px;margin-top:2px;text-align:center">${barcodeValue(st)}</div>
+      </td>
     </tr>`;
-  }).join('') || `<tr><td colspan="8" style="text-align:center">لا يوجد طلاب ضمن هذه الشعبة</td></tr>`;
+  }).join('')) || `<tr><td colspan="8" style="text-align:center">لا يوجد طلاب ضمن هذه الشعبة</td></tr>`;
 
   const html = `
-  <div class="printWrap">
+  <div class="printWrap sectionSheet" style="--fs:${fs}px;--pad:${pad}px;--padX:${padX}px;--bcH:${bcH}px;--dayW:${dayW}px">
     <div class="printTitle">${title}</div>
-    <div class="printMeta">${state.settings.schoolName} • ${stg} • ${sec} • ${info.day} • ${info.date}</div>
+    <div class="printMeta"><b>التاريخ: ${info.date}</b> • ${info.day} • الوقت: ${info.time} • من الأحد إلى الخميس</div>
+
     <table class="printTable">
       <thead>
         <tr>
           <th class="colNum">م</th>
           <th class="colName">اسم الطالب</th>
-          ${days.map(d=>`<th style="width:46px;text-align:center">${d}</th>`).join('')}
+          ${days.map(d=>`<th class="dayHead" style="width:var(--dayW);text-align:center">${d}</th>`).join('')}
           <th class="colBar">الباركود</th>
         </tr>
       </thead>
