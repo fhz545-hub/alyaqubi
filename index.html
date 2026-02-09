@@ -18,21 +18,22 @@
   --line:#e6f1ee; --shadow:0 12px 28px rgba(0,0,0,.08); --r:18px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Tajawal,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Tajawal,system-ui,-apple-system,Segoe UI,Roboto,Arial;overflow-x:hidden}
+body{overscroll-behavior-x:none;touch-action:pan-y;}
 button,input,select,textarea{font-family:inherit}
-#app{min-height:100%;display:flex;flex-direction:column}
+#app{min-height:100%;width:100vw;display:flex;flex-direction:column}
 
 .topbar{
   position:sticky;top:0;z-index:70;
   display:flex;align-items:center;gap:10px;
   padding:12px 14px;
-  background:rgba(246,251,250,.92);
+  background:rgba(246,251,250,.94);
   backdrop-filter:saturate(160%) blur(10px);
   border-bottom:1px solid rgba(230,241,238,.7);
 }
 .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .logo{width:40px;height:40px;border-radius:14px;background:radial-gradient(circle at 30% 30%, #2bd6c8, #1e8a79 55%, #0c594e);
-  box-shadow:0 10px 22px rgba(30,138,121,.20);position:relative}
+  box-shadow:0 10px 22px rgba(30,138,121,.20);position:relative;flex:0 0 auto}
 .logo:after{content:"";position:absolute;inset:8px;border-radius:10px;border:1px solid rgba(255,255,255,.35)}
 .titlewrap{min-width:0}
 .title{font-weight:900;font-size:16.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -41,7 +42,9 @@ button,input,select,textarea{font-family:inherit}
 .iconbtn:active{transform:translateY(1px)}
 .iconbtn svg{width:18px;height:18px;display:block}
 
-.content{width:min(980px,100%);margin:0 auto;padding:14px 14px 138px}
+.content{width:100%;margin:0 auto;padding:14px 14px 150px}
+@media(min-width:1000px){.content{padding-left:22px;padding-right:22px}}
+
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .card + .card{margin-top:14px}
 .head{padding:12px 12px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -49,16 +52,17 @@ button,input,select,textarea{font-family:inherit}
 .pill{font-size:12px;color:var(--muted);background:rgba(15,179,176,.10);border:1px solid rgba(15,179,176,.22);padding:6px 10px;border-radius:999px;white-space:nowrap}
 
 .pad{padding:12px}
+
 .seg{display:flex;gap:8px;flex-wrap:wrap}
 .seg button{flex:1;min-width:120px;border:1px solid var(--line);background:#fff;border-radius:14px;padding:10px 12px;font-weight:900;cursor:pointer}
 .seg button.active{background:rgba(30,138,121,.12);border-color:rgba(30,138,121,.25);color:var(--moe-d)}
 
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.sel{border:1px solid var(--line);border-radius:16px;background:#fff;padding:10px 12px;font-size:14px;outline:0;min-width:210px;flex:0 0 auto}
-.search{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:#fff}
+.sel{border:1px solid var(--line);border-radius:16px;background:#fff;padding:10px 12px;font-size:14px;outline:0;min-width:210px;flex:0 0 auto;max-width:100%}
+
+.search{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:#fff;max-width:100%}
 .search svg{width:18px;height:18px;color:var(--muted)}
 .search input{border:0;outline:0;width:100%;font-size:15px;background:transparent;color:var(--ink)}
-.help{font-size:12.8px;color:var(--muted);line-height:1.8;margin-top:8px}
 
 .actions{display:flex;gap:10px;flex-wrap:wrap}
 .btn{border:0;cursor:pointer;padding:11px 12px;border-radius:16px;font-weight:900;font-size:13.5px;background:rgba(30,138,121,.12);
@@ -68,27 +72,32 @@ button,input,select,textarea{font-family:inherit}
 .btn.danger{background:rgba(180,30,30,.08);border-color:rgba(180,30,30,.18);color:#7b1f1f}
 .btn:active{transform:translateY(1px)}
 
+.help{font-size:12.8px;color:var(--muted);line-height:1.8;margin-top:8px}
+.kbd{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;color:var(--ink)}
+
 .listWrap{border-top:1px solid var(--line);display:none}
 .listHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);background:rgba(247,251,250,.7)}
 .list{max-height:56vh;overflow:auto}
-.item{display:flex;align-items:flex-start;gap:12px;padding:12px;border-bottom:1px solid var(--line);cursor:pointer}
+.item{display:flex;align-items:flex-start;gap:12px;padding:12px;border-bottom:1px solid var(--line)}
 .item:last-child{border-bottom:0}
 .item:active{background:rgba(30,138,121,.06)}
-.ck{width:22px;height:22px;border-radius:8px;border:1px solid rgba(30,138,121,.28);background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin-top:2px}
-.ck.checked{background:rgba(30,138,121,.14);border-color:rgba(30,138,121,.35)}
-.ck svg{width:16px;height:16px;display:block;color:var(--moe-d)}
-.main{min-width:0;flex:1}
+
+.ckbtn{width:34px;height:34px;border-radius:12px;border:1px solid rgba(30,138,121,.26);background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin-top:1px;cursor:pointer}
+.ckbtn.checked{background:rgba(30,138,121,.14);border-color:rgba(30,138,121,.35)}
+.ckbtn svg{width:18px;height:18px;color:var(--moe-d)}
+
+.main{min-width:0;flex:1;cursor:pointer}
 .name{font-size:15.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta{margin-top:2px;font-size:12.8px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
 .meta span{border:1px dashed rgba(90,108,104,.22);border-radius:999px;padding:2px 8px;background:rgba(247,251,250,.7)}
 .mini{display:flex;gap:8px;align-items:center;flex:0 0 auto}
 .mini .btn{padding:8px 10px;border-radius:12px;font-weight:900;font-size:12.5px}
+
 .empty{padding:14px 12px;text-align:center;color:var(--muted);line-height:1.9}
-.kbd{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;color:var(--ink)}
 
 .actionbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(246,251,250,.94);backdrop-filter:saturate(160%) blur(10px);
   border-top:1px solid var(--line);padding:10px 12px}
-.actionbarInner{width:min(980px,100%);margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.actionbarInner{width:100%;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .selCard{flex:1;min-width:260px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 12px;
   display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 10px 20px rgba(0,0,0,.05)}
 .selCard .n{font-weight:900;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -96,55 +105,61 @@ button,input,select,textarea{font-family:inherit}
 
 .backdrop{position:fixed;inset:0;background:rgba(8,25,22,.35);display:none;align-items:flex-end;justify-content:center;z-index:90}
 .backdrop.show{display:flex}
-.sheet{width:min(860px,100%);background:#fff;border-radius:22px 22px 0 0;border:1px solid var(--line);box-shadow:0 30px 70px rgba(0,0,0,.25);
+.sheet{width:100%;max-width:860px;background:#fff;border-radius:22px 22px 0 0;border:1px solid var(--line);box-shadow:0 30px 70px rgba(0,0,0,.25);
   padding:12px 14px 18px;max-height:92vh;overflow:auto}
 .sheetHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
 .sheetTitle{font-weight:900;font-size:15px}
 .close{border:1px solid var(--line);background:#fff;padding:10px 12px;border-radius:14px;cursor:pointer}
 .close svg{width:18px;height:18px}
+
 .form{padding-top:12px;display:grid;gap:10px}
 .grid2{display:grid;gap:10px;grid-template-columns:1fr 1fr}
 @media(max-width:520px){.grid2{grid-template-columns:1fr}}
 .field label{display:block;font-weight:800;font-size:12.5px;color:var(--muted);margin:0 2px 6px}
 .field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:16px;padding:12px 12px;outline:0;font-size:15px;background:#fff}
 .field textarea{min-height:90px;resize:vertical}
+
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{font-size:12.5px;font-weight:800;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
 .chip.active{background:rgba(30,138,121,.12);border-color:rgba(30,138,121,.25);color:var(--moe-d)}
+
 .primary{width:100%;border:0;cursor:pointer;padding:13px 14px;border-radius:16px;font-weight:900;font-size:15px;background:linear-gradient(135deg,var(--moe),#2bd6c8);color:#fff;
   box-shadow:0 14px 30px rgba(30,138,121,.22)}
 .secondaryBtn{width:100%;border:1px solid var(--line);cursor:pointer;padding:12px 14px;border-radius:16px;font-weight:900;font-size:14px;background:#fff;color:var(--ink)}
 .inlineBtns{display:grid;gap:10px;grid-template-columns:1fr 1fr}
 @media(max-width:520px){.inlineBtns{grid-template-columns:1fr}}
+
 .preview{border:1px solid var(--line);border-radius:16px;padding:12px;background:rgba(247,251,250,.6);font-size:14px;line-height:1.9;white-space:pre-wrap}
 .small{font-size:12.7px;color:var(--muted);line-height:1.8}
 
 .toast{position:fixed;left:12px;right:12px;bottom:98px;z-index:120;display:none}
 .toast.show{display:block}
-.toastInner{width:min(640px,100%);margin:0 auto;background:#0b2f2b;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 18px 40px rgba(0,0,0,.25);font-size:13.5px}
+.toastInner{width:100%;max-width:640px;margin:0 auto;background:#0b2f2b;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 18px 40px rgba(0,0,0,.25);font-size:13.5px}
 
 hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 
-/* ===== Print (A4 sheet) ===== */
+/* ===== Print (A4) ===== */
 #printArea{display:none}
 @media print{
   body{background:#fff}
   #app{display:none !important}
   #printArea{display:block !important}
-  @page { size: A4 landscape; margin: 10mm; }
+  @page { size: A4 portrait; margin: 10mm; }
 }
 .printWrap{font-family:Tajawal,Arial; color:#000}
-.printHead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:6px}
-.printTitle{font-weight:900;font-size:16px}
-.printMeta{font-size:12px}
+.printTitle{font-weight:900;font-size:16px;margin:0 0 6px}
+.printMeta{font-size:12px;margin:0 0 8px}
 .printTable{width:100%;border-collapse:collapse;table-layout:fixed}
-.printTable th,.printTable td{border:1px solid #000;padding:4px 6px;font-size:12px;vertical-align:middle}
+.printTable th,.printTable td{border:1px solid #000;padding:4px 6px;font-size:11.5px;vertical-align:middle}
 .printTable th{background:#f3f3f3}
-.colNum{width:40px;text-align:center}
-.colName{width:260px}
-.colDay{width:78px;text-align:center}
-.colBar{width:250px}
+.colNum{width:36px;text-align:center}
+.colName{width:220px}
+.colSec{width:80px;text-align:center}
+.colKind{width:160px}
+.colAct{width:auto}
+.colBar{width:200px}
 .barSvg{width:100%;height:34px;display:block}
+.pageBreak{page-break-after:always}
 </style>
 </head>
 
@@ -155,7 +170,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
       <div class="logo" aria-hidden="true"></div>
       <div class="titlewrap">
         <div class="title">المواظبة والسلوك</div>
-        <div class="subtitle">بحث لا يُظهر الأسماء إلا عند الطلب • كشف A4 (40) • باركود + تقارير يومية</div>
+        <div class="subtitle">بحث سريع (قبل اختيار الصف) • تحديد جماعي • تقارير A4 يومية مع باركود</div>
       </div>
     </div>
     <button class="iconbtn" id="menuBtn" type="button" aria-label="القائمة"></button>
@@ -169,7 +184,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
         <div class="pill">يعمل دون إنترنت</div>
       </div>
       <div class="pad">
-        <div class="help">لا توجد بيانات طلاب محمّلة على هذا الجهاز. اضغط <span class="kbd">تحميل بيانات الطلاب</span> أو استورد CSV/JSON.</div>
+        <div class="help">لا توجد بيانات طلاب على هذا الجهاز. اختر <span class="kbd">تحميل بيانات الطلاب</span> أو استورد CSV/JSON أو استورد نسخة احتياطية.</div>
         <div class="actions" style="margin-top:10px">
           <button class="btn" id="loadEmbeddedBtn" type="button">تحميل بيانات الطلاب</button>
           <button class="btn secondary" id="importBtn" type="button">استيراد ملف</button>
@@ -179,35 +194,32 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 
     <section class="card">
       <div class="head">
-        <div class="h">المرحلة والشعبة</div>
+        <div class="h">جاهزية الرصد + البحث</div>
         <div class="pill" id="countPill">محدد: 0</div>
       </div>
-
       <div class="pad">
-        <div class="seg" id="stageSeg" aria-label="المراحل"></div>
+
+        <div class="seg" id="quickSeg" aria-label="نوع الرصد"></div>
 
         <div class="row" style="margin-top:10px">
-          <select class="sel" id="sectionSelect" disabled>
-            <option value="">اختر الشعبة…</option>
-          </select>
-
           <div class="search" role="search">
             <span id="searchIcon" aria-hidden="true"></span>
-            <input id="q" type="search" placeholder="ابحث (اسم/هوية/جوال)… ولن تظهر الأسماء إلا عند البحث/الطلب" autocomplete="off" disabled/>
+            <input id="q" type="search" placeholder="ابحث (اسم/هوية/رقم/جوال)… ولن تظهر الأسماء إلا عند البحث" autocomplete="off" disabled/>
           </div>
         </div>
 
-        <div class="actions" style="margin-top:10px">
-          <button class="btn ghost" id="toggleListBtn" type="button" disabled>عرض قائمة الطلاب</button>
-          <button class="btn secondary" id="selectAllBtn" type="button" disabled>تحديد الكل (حسب الفلتر)</button>
-          <button class="btn ghost" id="clearSelBtn" type="button" disabled>إلغاء التحديد</button>
-          <button class="btn" id="sheetA4Btn" type="button" disabled>كشف A4 (40)</button>
+        <div class="help">
+          • اختر النوع أولاً (تأخر/غياب/مخالفة/إذن) ثم ابحث. عند اختيار الطالب تُفتح لك الشاشة جاهزة للحفظ والواتساب.<br/>
+          • يمكنك لاحقًا تحديد الطلاب جماعيًا عبر زر <b>تحديد الكل</b> ثم الإرسال المتتابع.
         </div>
 
-        <div class="help">
-          • لن تظهر أسماء الطلاب إلا عند <b>البحث</b> (حرفان فأكثر) أو الضغط على <b>عرض قائمة الطلاب</b>.<br/>
-          • زر <b>كشف A4</b> يطبع كشف الشعبة (40 صف) مع باركود رقم الهوية/الرقم المتوفر في البيانات.
+        <div class="actions" style="margin-top:10px">
+          <button class="btn ghost" id="toggleListBtn" type="button" disabled>عرض النتائج</button>
+          <button class="btn secondary" id="selectAllBtn" type="button" disabled>تحديد الكل (حسب البحث/الفلتر)</button>
+          <button class="btn ghost" id="clearSelBtn" type="button" disabled>إلغاء التحديد</button>
+          <button class="btn" id="reportBtn" type="button">تقارير اليوم (A4)</button>
         </div>
+
       </div>
 
       <div class="listWrap" id="listWrap">
@@ -221,15 +233,21 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 
     <section class="card">
       <div class="head">
-        <div class="h">الباركود والتقارير</div>
+        <div class="h">تصفية اختيارية</div>
         <div class="pill" id="todayPill">اليوم</div>
       </div>
       <div class="pad">
-        <div class="actions">
-          <button class="btn secondary" id="scanBtn" type="button" disabled>جلسة باركود (غياب/تأخر)</button>
-          <button class="btn ghost" id="reportBtn" type="button">تقرير اليوم</button>
+        <div class="seg" id="stageSeg" aria-label="المراحل"></div>
+        <div class="row" style="margin-top:10px">
+          <select class="sel" id="sectionSelect" disabled>
+            <option value="">اختر الشعبة…</option>
+          </select>
+          <button class="btn" id="sheetA4Btn" type="button" disabled>كشف شعبة A4 (40)</button>
+          <button class="btn secondary" id="scanBtn" type="button" disabled>جلسة باركود (تأخر/غياب)</button>
         </div>
-        <div class="help">• ابدأ جلسة باركود ثم مرّر القارئ: سيتم تسجيل الاسم فورًا وحفظه في أرشيف اليوم.</div>
+        <div class="help">
+          • هذه التصفية <b>اختيارية</b> لتسهيل (كشف شعبة / جلسة باركود). البحث يعمل حتى بدون اختيار الصف والشعبة.
+        </div>
       </div>
     </section>
 
@@ -245,9 +263,10 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
         <div class="pill" id="selPill">0</div>
       </div>
 
-      <button class="btn" id="btnAttendance" type="button">مواظبة</button>
-      <button class="btn secondary" id="btnBehavior" type="button">سلوك</button>
-      <button class="btn secondary" id="btnPermit" type="button">إذن</button>
+      <button class="btn" id="bulkLate" type="button">تأخر</button>
+      <button class="btn secondary" id="bulkAbsent" type="button">غياب</button>
+      <button class="btn secondary" id="bulkBehavior" type="button">مخالفة</button>
+      <button class="btn secondary" id="bulkPermit" type="button">إذن</button>
     </div>
   </div>
 
@@ -261,6 +280,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 
       <input type="hidden" id="sheetKind" value="" />
       <input type="hidden" id="sheetMode" value="" />
+      <input type="hidden" id="defaultSubtype" value="" />
 
       <div class="form">
 
@@ -290,7 +310,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
         <div class="field" id="recipientsBox" style="display:none">
           <label>الجهة المستهدفة</label>
           <div class="chips" id="recipientChips"></div>
-          <div class="small" style="margin-top:6px">في “إذن”: يمكن إرسال إشعار للمعلم أو لولي الأمر أو لكليهما.</div>
+          <div class="small" style="margin-top:6px">في “الإذن”: يمكن إرسال إشعار للمعلم أو لولي الأمر أو لكليهما.</div>
         </div>
 
         <div class="field" id="teacherBox" style="display:none">
@@ -383,13 +403,19 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
         <div id="reportBox" style="display:none">
           <hr/>
           <div class="field">
-            <label>تقرير اليوم</label>
+            <label>تقارير اليوم</label>
             <div class="preview" id="reportText"></div>
+          </div>
+          <div class="actions">
+            <button class="btn ghost" id="printLateBtn" type="button">طباعة المتأخرين (A4)</button>
+            <button class="btn ghost" id="printAbsentBtn" type="button">طباعة الغياب (A4)</button>
+            <button class="btn ghost" id="printBehaviorBtn" type="button">طباعة المخالفات (A4)</button>
           </div>
           <div class="inlineBtns">
             <button class="secondaryBtn" id="reportCopyBtn" type="button">نسخ</button>
-            <button class="primary" id="reportWaBtn" type="button">واتساب للكل (متتابع)</button>
+            <button class="primary" id="reportWaBtn" type="button">واتساب لليوم (متتابع)</button>
           </div>
+          <div class="small">ملاحظة: “الإجراء المقترح” للاستئناس، ويُرجع للدليل عند الحاجة.</div>
         </div>
 
       </div>
@@ -417,21 +443,23 @@ const GRADE_MAP = {
   "1516": { label: "ثالث ثانوي", regular: 5, elearning: 6 },
 };
 
-/* ========== قوائم جاهزة ========== */
-const DEFAULT_ATTENDANCE = [
+/* ========== قوائم جاهزة (يمكن تعديلها) ========== */
+const ATTENDANCE_LATE = [
   "تأخر صباحي",
+  "تكرر التأخر/الغياب",
+  "تنبيه لزيارة المدرسة (مواظبة)",
+  "انقطاع عن الحصص"
+];
+const ATTENDANCE_ABSENT = [
   "غياب (بدون عذر)",
   "غياب (بعذر)",
-  "خروج مبكر",
-  "انقطاع عن الحصص",
   "تكرر التأخر/الغياب",
   "تنبيه لزيارة المدرسة (مواظبة)"
 ];
-
-const DEFAULT_BEHAVIOR = [
+const BEHAVIOR_LIST = [
   "تنبيه سلوكي داخل الحصة",
-  "عدم الالتزام بالزي/المظهر",
   "استخدام الجوال أثناء اليوم الدراسي",
+  "عدم الالتزام بالزي/المظهر",
   "تلفظ غير لائق",
   "إتلاف ممتلكات",
   "مشاجرة/اعتداء",
@@ -439,8 +467,7 @@ const DEFAULT_BEHAVIOR = [
   "سلوك جسيم (وفق الدليل)",
   "تنبيه لزيارة المدرسة (سلوك)"
 ];
-
-const DEFAULT_PERMIT = [
+const PERMIT_LIST = [
   "إذن دخول الفصل",
   "إذن خروج من المدرسة",
   "إذن خروج للعيادة/التوجيه الطلابي",
@@ -450,21 +477,17 @@ const DEFAULT_PERMIT = [
 
 /* ========== التخزين المحلي ========== */
 const KEYS = {
-  students: "ms_students_v9",
-  records: "ms_records_v9",
-  settings: "ms_settings_v9",
-  teachers: "ms_teachers_v9"
+  students: "ms_students_v10",
+  records: "ms_records_v10",
+  settings: "ms_settings_v10",
+  teachers: "ms_teachers_v10"
 };
-
 const store = {
   get(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw === null || raw === undefined) return fallback;
-      return JSON.parse(raw);
-    } catch(e) { return fallback; }
+    try { const raw = localStorage.getItem(key); return raw?JSON.parse(raw):fallback; }
+    catch(e){ return fallback; }
   },
-  set(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+  set(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
 };
 
 /* ========== حالة التطبيق ========== */
@@ -473,13 +496,16 @@ const state = {
   records: [],
   teachers: [],
   settings: { schoolName: "ثانوية اليعقوبي الثانوية بالخبر" },
-  stage: "", section: "", q: "", listVisible: false,
-  selectedSids: new Set(), profileSid: "",
-  scanType: "late"
+  stage: "", section: "", q: "",
+  listVisible: false,
+  selectedSids: new Set(),
+  profileSid: "",
+  scanType: "late",
+  quickAction: "late" // late | absent | behavior | permit
 };
 
-function $(id) { return document.getElementById(id); }
-function icon(name) {
+function $(id){ return document.getElementById(id); }
+function icon(name){
   const icons={
     dots:`<svg viewBox="0 0 24 24" fill="none"><path d="M6 12a1.6 1.6 0 1 1-3.2 0A1.6 1.6 0 0 1 6 12Zm7.6 0A1.6 1.6 0 1 1 10.4 12a1.6 1.6 0 0 1 3.2 0ZM21.2 12A1.6 1.6 0 1 1 18 12a1.6 1.6 0 0 1 3.2 0Z" fill="currentColor"/></svg>`,
     search:`<svg viewBox="0 0 24 24" fill="none"><path d="M10.5 18.2a7.7 7.7 0 1 1 0-15.4 7.7 7.7 0 0 1 0 15.4Zm6.7-1.1 4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`,
@@ -489,19 +515,13 @@ function icon(name) {
   return icons[name]||"";
 }
 
-function toast(msg) {
+function toast(msg){
   const t=$("toast"); $("toastInner").textContent=msg;
   t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2400);
 }
 
 function safeText(s){ return String(s||"").replace(/\s+/g," ").trim(); }
-function uid(prefix="X") { return prefix + Math.random().toString(16).slice(2) + Date.now().toString(16); }
-
-const GRADE_MAP2 = GRADE_MAP; // alias
-function stageLabel(code) {
-  const g=GRADE_MAP2[String(code)];
-  return g?g.label:String(code||"");
-}
+function uid(prefix="X"){ return prefix + Math.random().toString(16).slice(2) + Date.now().toString(16); }
 
 function nowInfo(){
   const d=new Date();
@@ -539,14 +559,19 @@ function normalizeStudents(arr){
       phone:safeText(it.phone||it["الجوال"]||it["رقم الجوال"]||""),
       gradeCode:safeText(it.gradeCode||it["رقم الصف"]||it["الصف"]||""),
       section:safeText(it.section||it["الفصل"]||it["الشعبة"]||""),
-      nid: nid
+      nid
     });
   }
   return out;
 }
 
+function stageLabel(code){
+  const g=GRADE_MAP[String(code)];
+  return g?g.label:String(code||"");
+}
+
 function describeStudent(st){
-  const g=GRADE_MAP2[String(st.gradeCode)]||{label:String(st.gradeCode||"")};
+  const g=GRADE_MAP[String(st.gradeCode)]||{label:String(st.gradeCode||"")};
   const sec=String(st.section||"");
   const isEL=(g.elearning && sec===String(g.elearning));
   const track=isEL?"تعليم إلكتروني":"منتظم";
@@ -560,157 +585,207 @@ function barcodeValue(st){
   return v;
 }
 
-function getSectionsForStage(stageCode) {
-  const secs = new Set();
-  for(const s of state.students) {
+function getSectionsForStage(stageCode){
+  const secs=new Set();
+  for(const s of state.students){
     if(String(s.gradeCode)===String(stageCode) && safeText(s.section)) secs.add(String(s.section));
   }
   return Array.from(secs).sort((a,b)=>Number(a)-Number(b));
 }
 
-function ensureReady() {
-  const ready = !!state.stage && !!state.section;
-  $("toggleListBtn").disabled = !ready;
-  $("selectAllBtn").disabled = !ready;
+function ensureReady(){
+  const haveStudents = Array.isArray(state.students) && state.students.length>0;
+  $("q").disabled = !haveStudents;
+  $("toggleListBtn").disabled = !haveStudents;
+  $("selectAllBtn").disabled = !(haveStudents && safeText(state.q).length>=2);
   $("clearSelBtn").disabled = state.selectedSids.size===0;
-  $("q").disabled = !ready;
-  $("sheetA4Btn").disabled = !ready;
-  $("scanBtn").disabled = !ready;
+  $("sheetA4Btn").disabled = !(haveStudents && state.stage && state.section);
+  $("scanBtn").disabled = !(haveStudents && state.stage && state.section);
 }
 
-function setListVisible(v) {
-  state.listVisible = v;
-  $("listWrap").style.display = v ? "block" : "none";
+function setListVisible(v){
+  state.listVisible=v;
+  $("listWrap").style.display = v?"block":"none";
   if(v) renderList();
 }
 
-function filteredStudents() {
-  if(!state.stage || !state.section) return [];
-  let arr = state.students.filter(s=>String(s.gradeCode)===String(state.stage));
-  if(state.section !== "ALL") arr = arr.filter(s=>String(s.section)===String(state.section));
-  const q = safeText(state.q).toLowerCase();
-  if(q) {
-    arr = arr.filter(s =>
-      (s.name||"").toLowerCase().includes(q) ||
-      (s.sid||"").includes(q) ||
-      (s.nid||"").includes(q) ||
-      (s.phone||"").includes(q)
-    );
-  }
-  arr.sort((a,b)=> (a.name||"").localeCompare((b.name||""), "ar"));
-  return arr;
+/* ===== بحث متقدم بسيط (ترتيب النتائج) ===== */
+function tokenize(q){
+  return safeText(q).toLowerCase().split(/\s+/).filter(Boolean);
 }
 
-function shouldAutoShowList() { return safeText(state.q).length >= 2; }
+function scoreStudent(st, q){
+  const qq=safeText(q).toLowerCase();
+  if(!qq) return 0;
+  const name=(st.name||"").toLowerCase();
+  const sid=String(st.sid||"");
+  const nid=String(st.nid||"");
+  const phone=String(st.phone||"");
 
-function renderStageSeg() {
-  const wrap=$("stageSeg");
-  const stages=[["1314","أول ثانوي"],["1416","ثاني ثانوي"],["1516","ثالث ثانوي"]];
-  wrap.innerHTML = stages.map(([code,label]) =>
-    `<button class="${state.stage===code?'active':''}" data-stage="${code}" type="button">${label}</button>`
-  ).join("");
-  wrap.querySelectorAll("button").forEach(btn=>btn.addEventListener("click",()=>{
-    state.stage = btn.getAttribute("data-stage");
-    const secs = getSectionsForStage(state.stage);
-    const sel = $("sectionSelect");
-    sel.disabled = false;
-    sel.innerHTML = `<option value="">اختر الشعبة…</option><option value="ALL">كل الشعب</option>` + secs.map(s=>`<option value="${s}">شعبة ${s}</option>`).join("");
-    sel.value = "";
-    state.section = "";
-    state.q = ""; $("q").value="";
-    state.selectedSids = new Set();
-    updateSelectionUI();
-    ensureReady();
-    setListVisible(false);
-    toast("اختر الشعبة للمتابعة.");
+  let s=0;
+  if(name.startsWith(qq)) s+=120;
+  if(name.includes(qq)) s+=60;
+  if(sid.startsWith(qq)) s+=120;
+  if(sid.includes(qq)) s+=80;
+  if(nid.startsWith(qq)) s+=120;
+  if(nid.includes(qq)) s+=80;
+  if(phone.includes(qq)) s+=40;
+
+  const toks=tokenize(qq);
+  for(const t of toks){
+    if(t.length<2) continue;
+    if(name.includes(t)) s+=18;
+    if(sid.includes(t) || nid.includes(t)) s+=24;
+  }
+  return s;
+}
+
+function filteredStudents(){
+  const q = safeText(state.q);
+  if(q.length<2) return [];
+  let arr = state.students.slice();
+  if(state.stage) arr = arr.filter(s=>String(s.gradeCode)===String(state.stage));
+  if(state.section) arr = arr.filter(s=>String(s.section)===String(state.section));
+
+  const scored = arr.map(st=>({st, sc: scoreStudent(st, q)})).filter(x=>x.sc>0);
+  scored.sort((a,b)=>b.sc-a.sc);
+  return scored.map(x=>x.st);
+}
+
+function updateSelectionUI(){
+  const c=state.selectedSids.size;
+  $("countPill").textContent = "محدد: "+c;
+  $("selPill").textContent = String(c);
+  if(c>0){
+    const f = [];
+    if(state.stage) f.push(stageLabel(state.stage));
+    if(state.section) f.push("شعبة "+state.section);
+    $("selTitle").textContent = f.length?f.join(" — "):"تحديد من نتائج البحث";
+    $("selSub").textContent = "إرسال متتابع + أرشفة تلقائية";
+    $("actionbar").style.display="block";
+  } else {
+    $("actionbar").style.display="none";
+  }
+  ensureReady();
+}
+
+function renderQuickSeg(){
+  const wrap=$("quickSeg");
+  const opts=[
+    ["late","تأخر"],
+    ["absent","غياب"],
+    ["behavior","مخالفة"],
+    ["permit","إذن"],
+  ];
+  wrap.innerHTML = opts.map(([k,l])=>`<button type="button" class="${state.quickAction===k?'active':''}" data-qk="${k}">${l}</button>`).join("");
+  wrap.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    state.quickAction=b.getAttribute('data-qk');
+    renderQuickSeg();
+    toast("تم اختيار: " + b.textContent);
+    if(state.listVisible) renderList();
   }));
 }
 
-function updateSelectionUI() {
-  const c = state.selectedSids.size;
-  $("countPill").textContent = "محدد: " + c;
-  $("selPill").textContent = String(c);
-  if(c>0) {
-    const stg = stageLabel(state.stage);
-    const sec = state.section==="ALL" ? "كل الشعب" : ("شعبة "+state.section);
-    $("selTitle").textContent = stg + " — " + sec;
-    $("selSub").textContent = "جاهز للرصد + واتساب + أرشفة لكل طالب";
-    $("actionbar").style.display = "block";
-  } else {
-    $("actionbar").style.display = "none";
-  }
-  $("clearSelBtn").disabled = c===0;
+function renderStageSeg(){
+  const wrap=$("stageSeg");
+  const stages=[["1314","أول ثانوي"],["1416","ثاني ثانوي"],["1516","ثالث ثانوي"]];
+  wrap.innerHTML = stages.map(([code,label])=>
+    `<button class="${state.stage===code?'active':''}" data-stage="${code}" type="button">${label}</button>`
+  ).join("");
+  wrap.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
+    state.stage = btn.getAttribute('data-stage');
+    const secs = getSectionsForStage(state.stage);
+    const sel=$("sectionSelect");
+    sel.disabled=false;
+    sel.innerHTML = `<option value="">اختر الشعبة…</option>` + secs.map(s=>`<option value="${s}">شعبة ${s}</option>`).join("");
+    sel.value="";
+    state.section="";
+    toast("اختر الشعبة لاستخدام كشف الشعبة/الباركود. البحث يظل متاحًا.");
+    ensureReady();
+    if(state.listVisible) renderList();
+  }));
 }
 
-function renderList() {
+function renderList(){
   const list=$("list");
   const arr=filteredStudents();
-  const labelParts=[stageLabel(state.stage), (state.section==="ALL"?"كل الشعب":"شعبة "+state.section)];
   const q=safeText(state.q);
-  if(q) labelParts.push("بحث: "+q);
-  $("listPill").textContent = labelParts.filter(Boolean).join(" • ");
+  const pills=[];
+  pills.push("بحث: "+q);
+  if(state.stage) pills.push(stageLabel(state.stage));
+  if(state.section) pills.push("شعبة "+state.section);
+  $("listPill").textContent = pills.join(" • ");
 
-  if(!arr.length) {
-    list.innerHTML = `<div class="empty">لا توجد نتائج. جرّب تغيير الشعبة أو كتابة جزء من الاسم/الهوية/الرقم.</div>`;
+  if(!arr.length){
+    list.innerHTML = `<div class="empty">لا توجد نتائج. اكتب حرفين فأكثر أو جرّب رقم الهوية/الرقم.</div>`;
     return;
   }
 
-  const max = 220;
-  const show = arr.slice(0,max);
+  const max=220;
+  const show=arr.slice(0,max);
   list.innerHTML = show.map(st=>{
     const d=describeStudent(st);
     const checked = state.selectedSids.has(st.sid);
     const idText = barcodeValue(st);
     return `
       <div class="item" data-sid="${st.sid}">
-        <div class="ck ${checked?'checked':''}" aria-hidden="true">${checked?icon('check'):''}</div>
-        <div class="main">
+        <button class="ckbtn ${checked?'checked':''}" type="button" data-ck="1" aria-label="تحديد">${checked?icon('check'):''}</button>
+        <div class="main" data-open="1" title="فتح رصد سريع">
           <div class="name">${st.name}</div>
           <div class="meta">
-            <span>${d.section}</span>
-            <span>${d.track}</span>
+            <span>${d.stage || '—'}</span>
+            <span>${d.section || '—'}</span>
+            <span>${d.track || '—'}</span>
             <span>هوية/رقم: ${idText}</span>
           </div>
         </div>
         <div class="mini">
-          <button class="btn ghost" type="button" data-open="1">الأرشيف</button>
+          <button class="btn ghost" type="button" data-arc="1">الأرشيف</button>
         </div>
       </div>`;
-  }).join("") + (arr.length>max ? `<div class="empty">تم عرض ${max} من ${arr.length}. اكتب بحثًا لتضييق النتائج.</div>`:"");
+  }).join("") + (arr.length>max?`<div class="empty">تم عرض ${max} من ${arr.length}. ضيّق البحث للحصول على نتائج أدق.</div>`:"");
 
-  list.querySelectorAll(".item").forEach(row=>{
-    row.addEventListener("click",(e)=>{
-      const sid=row.getAttribute("data-sid");
-      if(e.target && e.target.getAttribute && e.target.getAttribute("data-open")==="1") {
-        e.stopPropagation(); openProfile(sid); return;
+  list.querySelectorAll('.item').forEach(row=>{
+    const sid=row.getAttribute('data-sid');
+    row.addEventListener('click',(e)=>{
+      const t=e.target;
+      if(t && t.getAttribute){
+        if(t.getAttribute('data-ck')==='1'){
+          e.preventDefault();
+          if(state.selectedSids.has(sid)) state.selectedSids.delete(sid);
+          else state.selectedSids.add(sid);
+          updateSelectionUI();
+          renderList();
+          return;
+        }
+        if(t.getAttribute('data-arc')==='1'){
+          e.preventDefault();
+          openProfile(sid);
+          return;
+        }
       }
-      if(state.selectedSids.has(sid)) state.selectedSids.delete(sid);
-      else state.selectedSids.add(sid);
-      updateSelectionUI();
-      ensureReady();
-      renderList();
-    });
+      // فتح الرصد السريع
+      openQuickForStudent(sid);
+    }, {passive:false});
   });
 }
 
-function selectAllCurrent() {
+function selectAllCurrent(){
   const arr=filteredStudents();
-  if(!arr.length) return toast("لا توجد نتائج للتحديد.");
+  if(!arr.length) return toast('لا توجد نتائج للتحديد.');
   arr.forEach(s=>state.selectedSids.add(s.sid));
   updateSelectionUI();
-  ensureReady();
   if(state.listVisible) renderList();
-  toast("تم تحديد "+arr.length+" طالب/طلاب حسب الفلتر.");
+  toast('تم تحديد '+arr.length+' طالب/طلاب حسب النتائج.');
 }
 
-function clearSelection() {
+function clearSelection(){
   state.selectedSids = new Set();
   updateSelectionUI();
-  ensureReady();
   if(state.listVisible) renderList();
 }
 
-/* ===== Code39 SVG generator ===== */
+/* ===== Code39 SVG generator (barcode) ===== */
 const CODE39 = {
   "0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn",
   "A":"wnnnnwnnw","B":"nnwnnwnnw","C":"wnwnnwnnn","D":"nnnnwwnnw","E":"wnnnwwnnn","F":"nnwnwwnnn","G":"nnnnnwwnw","H":"wnnnnwwnn","I":"nnwnnwwnn","J":"nnnnwwwnn",
@@ -720,557 +795,703 @@ const CODE39 = {
 };
 
 function toCode39Text(val){
-  let t = safeText(val).toUpperCase();
-  t = t.replace(/[^0-9A-Z\-\.\ \$\/\+\%]/g,"");
-  if(!t) t = "0";
-  return "*" + t + "*";
+  let t=safeText(val).toUpperCase();
+  t=t.replace(/[^0-9A-Z\-\.\ \$\/\+\%]/g,"");
+  if(!t) t='0';
+  return '*'+t+'*';
 }
 
 function code39SVG(val, height=34){
   const txt = toCode39Text(val);
   const narrow=1, wide=3, gap=1;
-  let x=5;
-  let bars=[];
+  let x=5; let bars=[];
   for(let i=0;i<txt.length;i++){
     const ch=txt[i];
-    const pattern = CODE39[ch] || CODE39["0"];
+    const pattern=CODE39[ch]||CODE39['0'];
     for(let j=0;j<9;j++){
-      const isBar = (j%2===0);
-      const bw = (pattern[j]==="w"?wide:narrow)*2;
+      const isBar=(j%2===0);
+      const bw=(pattern[j]==='w'?wide:narrow)*2;
       if(isBar) bars.push(`<rect x="${x}" y="0" width="${bw}" height="${height}" fill="#000"/>`);
       x += bw + (gap*2);
     }
     x += 2;
   }
-  const w = x + 5;
-  return `<svg class="barSvg" viewBox="0 0 ${w} ${height}" xmlns="http://www.w3.org/2000/svg" aria-label="barcode">${bars.join("")}</svg>`;
+  const w=x+5;
+  return `<svg class="barSvg" viewBox="0 0 ${w} ${height}" xmlns="http://www.w3.org/2000/svg">${bars.join('')}</svg>`;
 }
 
-/* ===== A4 Sheet ===== */
-function buildA4Sheet(mode){
-  const arr = filteredStudents().slice(0,40);
-  const info = nowInfo();
-  const stg = stageLabel(state.stage);
-  const sec = (state.section==="ALL"?"كل الشعب":"شعبة "+state.section);
-  const title = (mode==="absent") ? "كشف متابعة غياب" : "كشف متابعة تأخر";
-  const days = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس"];
-
-  const rows = arr.map((st, i)=>{
-    const b = code39SVG(barcodeValue(st));
-    const tdsDays = days.map(()=>`<td class="colDay"></td>`).join("");
-    return `<tr>
-      <td class="colNum">${i+1}</td>
-      <td class="colName">${st.name}</td>
-      ${tdsDays}
-      <td class="colBar">${b}</td>
-    </tr>`;
-  }).join("");
-
-  const html = `
-  <div class="printWrap">
-    <div class="printHead">
-      <div>
-        <div class="printTitle">${title}</div>
-        <div class="printMeta">${state.settings.schoolName} • ${stg} • ${sec}</div>
-      </div>
-      <div class="printMeta">${info.day} • ${info.date}</div>
-    </div>
-    <table class="printTable">
-      <thead>
-        <tr>
-          <th class="colNum">م</th>
-          <th class="colName">اسم الطالب</th>
-          ${days.map(d=>`<th class="colDay">${d}</th>`).join("")}
-          <th class="colBar">الباركود (هوية/رقم)</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows || `<tr><td colspan="8" style="text-align:center">لا يوجد طلاب ضمن الفلتر</td></tr>`}
-      </tbody>
-    </table>
-    <div class="printMeta" style="margin-top:6px">
-      ملاحظة: يُستخدم هذا الكشف لتتبع ${mode==="absent"?"الغياب":"التأخر"}.
-    </div>
-  </div>`;
-  $("printArea").innerHTML = html;
-  window.print();
+/* ===== إجراءات مقترحة (استرشادية) ===== */
+function suggestAction(kind, subtype){
+  const s = safeText(subtype);
+  if(kind==='attendance'){
+    if(s.includes('تأخر')) return 'إشعار ولي الأمر + توثيق التأخر + متابعة التكرار وإحالة للتوجيه الطلابي عند الحاجة.';
+    if(s.includes('غياب')) return 'إشعار ولي الأمر + توثيق الغياب + تطبيق إجراءات الدليل عند التكرر.';
+    if(s.includes('انقطاع')) return 'تنبيه الطالب + إشعار ولي الأمر + توثيق ومتابعة الانقطاع.';
+    return 'توثيق الحالة + إشعار ولي الأمر عند الحاجة.';
+  }
+  if(kind==='behavior'){
+    if(s.includes('مشاجرة')||s.includes('اعتداء')||s.includes('جسيم')) return 'إشعار ولي الأمر فورًا + اتخاذ الإجراء النظامي المناسب + توثيق ورفع للجنة المختصة عند الحاجة.';
+    if(s.includes('الجوال')) return 'تنبيه وتوثيق + إجراء المدرسة المتبع للجوال + إشعار ولي الأمر عند التكرر.';
+    if(s.includes('ممتلكات')||s.includes('إتلاف')) return 'توثيق + معالجة الأثر + إشعار ولي الأمر + تعهد عند الحاجة.';
+    return 'جلسة تربوية/إرشادية + توثيق + إشعار ولي الأمر عند التكرر.';
+  }
+  if(kind==='permit'){
+    if(s.includes('زيارة')||s.includes('دعوة')) return 'تحديد موعد مناسب + توثيق سبب الدعوة + إشعار ولي الأمر.';
+    return 'توثيق الإذن وتحديد الجهة المعنية (معلم/ولي أمر) عند الحاجة.';
+  }
+  return '';
 }
 
-/* ===== Messages & records ===== */
-function buildMessageParent(st, kind, subtype, when, note) {
+/* ===== رسائل ===== */
+function buildMessageParent(st, kind, subtype, when, note){
   const d=describeStudent(st);
   const lines=[];
-  lines.push("السلام عليكم ورحمة الله وبركاته،");
-  lines.push("");
-  lines.push("نحيطكم علمًا بشأن الطالب/ " + st.name);
-  lines.push("الصف/ " + d.stage + " – " + d.section + " (" + d.track + ")");
-  lines.push("");
-  if(kind==="attendance") lines.push("المواظبة: " + subtype);
-  else if(kind==="behavior") lines.push("السلوك: " + subtype);
+  lines.push('السلام عليكم ورحمة الله وبركاته،');
+  lines.push('');
+  lines.push('نحيطكم علمًا بشأن الطالب/ ' + st.name);
+  lines.push('الصف/ ' + (d.stage||'—') + ' – ' + (d.section||'—') + ' (' + (d.track||'—') + ')');
+  lines.push('');
+  if(kind==='attendance') lines.push('المواظبة: ' + subtype);
+  else if(kind==='behavior') lines.push('السلوك: ' + subtype);
   else {
-    if(subtype.includes("زيارة") || subtype.includes("دعوة")) {
-      lines.push("نأمل تكرمكم بمراجعة المدرسة لمناقشة الأمر التالي:");
-      lines.push("السبب: " + (note||"—"));
+    if(subtype.includes('زيارة') || subtype.includes('دعوة')){
+      lines.push('نأمل تكرمكم بمراجعة المدرسة لمناقشة الأمر التالي:');
+      lines.push('السبب: ' + (note||'—'));
     } else {
-      lines.push("الإذن: " + subtype);
-      if(note) lines.push("السبب: " + note);
+      lines.push('الإذن: ' + subtype);
+      if(note) lines.push('السبب: ' + note);
     }
   }
-  lines.push("الوقت: " + when);
-  lines.push("");
-  lines.push("نأمل المتابعة والتعاون بما يدعم انضباط الطالب واستقراره الدراسي، شاكرين لكم.");
-  lines.push("— " + state.settings.schoolName);
-  return lines.join("\n");
+  lines.push('الوقت: ' + when);
+  lines.push('');
+  lines.push('نأمل المتابعة والتعاون بما يدعم انضباط الطالب واستقراره الدراسي، شاكرين لكم.');
+  lines.push('— ' + state.settings.schoolName);
+  return lines.join('\n');
 }
 
-function buildMessageTeacher(st, subtype, when, note) {
+function buildMessageTeacher(st, subtype, when, note){
   const d=describeStudent(st);
   const lines=[];
-  lines.push("السلام عليكم ورحمة الله وبركاته،");
-  lines.push("");
-  if(subtype.includes("دخول")) lines.push("يرجى التكرم بالسماح للطالب/ " + st.name + " بالدخول إلى الفصل.");
-  else if(subtype.includes("خروج")) lines.push("يرجى التكرم بالسماح للطالب/ " + st.name + " بالخروج وفق الإذن.");
-  else lines.push("تنبيه بخصوص الطالب/ " + st.name + " (إذن).");
-  lines.push("الصف/ " + d.stage + " – " + d.section + " (" + d.track + ")");
-  if(note) lines.push("ملاحظة: " + note);
-  lines.push("الوقت: " + when);
-  lines.push("");
-  lines.push("شكرًا لتعاونكم.");
-  lines.push("— " + state.settings.schoolName);
-  return lines.join("\n");
+  lines.push('السلام عليكم ورحمة الله وبركاته،');
+  lines.push('');
+  if(subtype.includes('دخول')) lines.push('يرجى التكرم بالسماح للطالب/ ' + st.name + ' بالدخول إلى الفصل.');
+  else if(subtype.includes('خروج')) lines.push('يرجى التكرم بالسماح للطالب/ ' + st.name + ' بالخروج وفق الإذن.');
+  else lines.push('تنبيه بخصوص الطالب/ ' + st.name + ' (إذن).');
+  lines.push('الصف/ ' + (d.stage||'—') + ' – ' + (d.section||'—') + ' (' + (d.track||'—') + ')');
+  if(note) lines.push('ملاحظة: ' + note);
+  lines.push('الوقت: ' + when);
+  lines.push('');
+  lines.push('شكرًا لتعاونكم.');
+  lines.push('— ' + state.settings.schoolName);
+  return lines.join('\n');
 }
 
-function openWhatsApp(phone, text) {
-  const p = normalizePhone(phone);
-  const msg = encodeURIComponent(text);
-  const url = p ? ("https://wa.me/"+p+"?text="+msg) : ("https://wa.me/?text="+msg);
-  window.open(url,"_blank","noopener,noreferrer");
+function openWhatsApp(phone, text){
+  const p=normalizePhone(phone);
+  const msg=encodeURIComponent(text);
+  const url=p?('https://wa.me/'+p+'?text='+msg):('https://wa.me/?text='+msg);
+  window.open(url,'_blank','noopener,noreferrer');
 }
 
-function copyText(text) {
-  navigator.clipboard.writeText(text).then(()=>toast("تم النسخ.")).catch(()=>toast("تعذر النسخ تلقائياً."));
+function copyText(text){
+  navigator.clipboard.writeText(text).then(()=>toast('تم النسخ.')).catch(()=>toast('تعذر النسخ تلقائيًا.'));
 }
 
-function makeEntry(st, kind, subtype, when, note, to, toName, toPhone, msg) {
-  const entry = {
-    id: uid("R"),
+function makeEntry(st, kind, subtype, when, note, to, toName, toPhone, msg){
+  const entry={
+    id: uid('R'),
     sid: st.sid,
     kind, subtype, when, note,
-    to, toName: toName||"", toPhone: normalizePhone(toPhone||""),
+    suggested: suggestAction(kind, subtype),
+    to, toName: toName||'', toPhone: normalizePhone(toPhone||''),
     msg,
     createdAt: new Date().toISOString(),
     dayISO: new Date().toISOString().slice(0,10),
-    stage: String(st.gradeCode||""), section: String(st.section||"")
+    stage: String(st.gradeCode||''), section: String(st.section||'')
   };
   state.records.unshift(entry);
   return entry;
 }
 
-function openSheet(kind, mode="bulk", sid="") {
+/* ===== Sheet logic ===== */
+function closeSheet(){ $("backdrop").classList.remove('show'); }
+
+function openSheet(kind, mode='profile', sid='', presetSubtype=''){
   $("sheetKind").value = kind;
   $("sheetMode").value = mode;
-  state.profileSid = sid || "";
+  $("defaultSubtype").value = presetSubtype || '';
+  state.profileSid = sid || '';
 
-  $("scanBox").style.display = "none";
-  $("reportBox").style.display = "none";
-  $("afterSave").style.display = "none";
-  $("archiveBox").style.display = "none";
-  $("saveBtn").style.display = "block";
-  $("typeBox").style.display = "block";
-  $("whenRow").style.display = "grid";
-  $("noteBox").style.display = "block";
-  $("chipsBox").style.display = "block";
-  $("recipientsBox").style.display = "none";
-  $("teacherBox").style.display = "none";
-  $("editStudentBox").style.display = "none";
-  $("profileBox").style.display = (mode==="profile") ? "block" : "none";
-  $("openArchiveBtn").style.display = (mode==="profile") ? "block" : "none";
+  $("scanBox").style.display='none';
+  $("reportBox").style.display='none';
+  $("afterSave").style.display='none';
+  $("archiveBox").style.display='none';
+  $("saveBtn").style.display='block';
+  $("typeBox").style.display='block';
+  $("whenRow").style.display='grid';
+  $("noteBox").style.display='block';
+  $("chipsBox").style.display='block';
+  $("recipientsBox").style.display='none';
+  $("teacherBox").style.display='none';
+  $("editStudentBox").style.display='none';
+  $("profileBox").style.display = (mode==='profile')?'block':'none';
+  $("openArchiveBtn").style.display = (mode==='profile')?'block':'none';
 
   const info=nowInfo();
-  $("when").value = info.day + " - " + info.date + " - " + info.time;
-  $("note").value = "";
-  $("phone").value = "";
-  $("teacherName").value = "";
-  $("teacherPhone").value = "";
+  $("when").value = info.day + ' - ' + info.date + ' - ' + info.time;
+  $("note").value='';
+  $("phone").value='';
+  $("teacherName").value='';
+  $("teacherPhone").value='';
 
-  let items = (kind==="attendance"?DEFAULT_ATTENDANCE:(kind==="behavior"?DEFAULT_BEHAVIOR:DEFAULT_PERMIT));
-  $("sheetTitle").textContent =
-    (mode==="profile" ? "سجل + واتساب + أرشيف" : "إرسال متتابع للمحددين") +
-    " — " + (kind==="attendance"?"مواظبة":(kind==="behavior"?"سلوك":"إذن"));
+  let items=[];
+  if(kind==='attendance'){
+    items = (presetSubtype && presetSubtype.includes('غياب')) ? ATTENDANCE_ABSENT : ATTENDANCE_LATE;
+  } else if(kind==='behavior') items = BEHAVIOR_LIST;
+  else items = PERMIT_LIST;
 
-  $("typeSelect").innerHTML = items.map(x=>`<option value="${x}">${x}</option>`).join("");
+  const title = (kind==='attendance')?"مواظبة":(kind==='behavior'?"سلوك":"إذن");
+  $("sheetTitle").textContent = (mode==='profile'?'رصد سريع':'إرسال متتابع للمحددين') + ' — ' + title;
 
-  $("chips").innerHTML = items.slice(0,6).map(x=>`<button class="chip" type="button" data-v="${x}">${x}</button>`).join("");
-  $("chips").querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
-    $("chips").querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-    ch.classList.add("active");
-    $("typeSelect").value = ch.getAttribute("data-v");
+  $("typeSelect").innerHTML = items.map(x=>`<option value="${x}">${x}</option>`).join('');
+  $("chips").innerHTML = items.slice(0,6).map(x=>`<button class="chip" type="button" data-v="${x}">${x}</button>`).join('');
+  $("chips").querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
+    $("chips").querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    ch.classList.add('active');
+    $("typeSelect").value = ch.getAttribute('data-v');
   }));
 
-  if(kind==="permit") {
-    $("recipientsBox").style.display = "block";
+  // preset
+  if(presetSubtype){
+    $("typeSelect").value = presetSubtype;
+    // highlight if exists
+    $("chips").querySelectorAll('.chip').forEach(ch=>{
+      if(ch.getAttribute('data-v')===presetSubtype) ch.classList.add('active');
+    });
+  }
+
+  if(kind==='permit'){
+    $("recipientsBox").style.display='block';
     const chips=$("recipientChips");
     chips.innerHTML = `
       <button class="chip active" type="button" data-v="parent">ولي الأمر</button>
       <button class="chip" type="button" data-v="teacher">المعلم</button>
       <button class="chip" type="button" data-v="both">كلاهما</button>
     `;
-    const setRecipients = (val)=> {
-      chips.setAttribute("data-recips", val);
-      $("teacherBox").style.display = (val==="teacher" || val==="both") ? "block" : "none";
-      $("phoneBox").style.display = (val==="teacher") ? "none" : "block";
+    const setR=(val)=>{
+      chips.setAttribute('data-recips', val);
+      $("teacherBox").style.display = (val==='teacher'||val==='both')?'block':'none';
+      $("phoneBox").style.display = (val==='teacher')?'none':'block';
     };
-    chips.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
-      chips.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-      ch.classList.add("active");
-      setRecipients(ch.getAttribute("data-v"));
+    chips.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
+      chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+      ch.classList.add('active');
+      setR(ch.getAttribute('data-v'));
     }));
-    setRecipients("parent");
+    setR('parent');
   }
 
-  if(mode==="profile") {
-    const st = state.students.find(x=>x.sid===sid);
-    if(st) {
+  if(mode==='profile'){
+    const st=state.students.find(x=>x.sid===sid);
+    if(st){
       const d=describeStudent(st);
       $("profileInfo").textContent = `${st.name}\n${d.full}\nهوية/رقم: ${barcodeValue(st)}`;
-      $("editStudentBox").style.display="block";
-      $("stPhone").value = st.phone||"";
+      $("editStudentBox").style.display='block';
+      $("stPhone").value = st.phone||'';
       $("stId").value = barcodeValue(st);
       $("saveStudentBtn").onclick = ()=>{
         st.phone = safeText($("stPhone").value);
         st.nid = safeText($("stId").value);
         store.set(KEYS.students, state.students);
-        toast("تم حفظ التعديل.");
+        toast('تم حفظ التعديل.');
         $("profileInfo").textContent = `${st.name}\n${d.full}\nهوية/رقم: ${barcodeValue(st)}`;
         if(state.listVisible) renderList();
       };
     }
   }
 
-  $("backdrop").classList.add("show");
+  $("backdrop").classList.add('show');
 }
 
-function openScanSession() {
-  if(!state.stage || !state.section) return toast("اختر المرحلة والشعبة أولاً.");
-  $("sheetTitle").textContent = "جلسة باركود — غياب/تأخر";
-
-  $("profileBox").style.display="none";
-  $("editStudentBox").style.display="none";
-  $("recipientsBox").style.display="none";
-  $("teacherBox").style.display="none";
-  $("chipsBox").style.display="none";
-  $("typeBox").style.display="none";
-  $("whenRow").style.display="none";
-  $("noteBox").style.display="none";
-  $("afterSave").style.display="none";
-  $("archiveBox").style.display="none";
-  $("reportBox").style.display="none";
-  $("saveBtn").style.display="none";
-
-  $("scanBox").style.display="block";
-  const chips=$("scanTypeChips");
-  chips.innerHTML = `
-    <button class="chip ${state.scanType==='late'?'active':''}" type="button" data-v="late">تأخر</button>
-    <button class="chip ${state.scanType==='absent'?'active':''}" type="button" data-v="absent">غياب</button>
-  `;
-  chips.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click",()=>{
-    chips.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-    ch.classList.add("active");
-    state.scanType = ch.getAttribute("data-v");
-    toast("نوع الجلسة: " + (state.scanType==="absent"?"غياب":"تأخر"));
-    focusScan();
-  }));
-
-  $("scanLast").textContent = "—";
-  $("scanStopBtn").onclick = ()=>closeSheet();
-  $("scanFocusBtn").onclick = ()=>focusScan();
-
-  const inp=$("scanInput");
-  inp.value="";
-  inp.onkeydown = (e)=>{
-    if(e.key==="Enter"){
-      e.preventDefault();
-      const raw = safeText(inp.value);
-      inp.value="";
-      if(!raw) return;
-      handleScan(raw);
-    }
-  };
-
-  $("backdrop").classList.add("show");
-  setTimeout(()=>focusScan(), 150);
+function openProfile(sid){
+  // فتح كمواظبة افتراضيًا مع الأرشيف
+  openSheet('attendance','profile',sid, '');
+  $("openArchiveBtn").onclick = ()=>showArchive(sid);
+  setTimeout(()=>showArchive(sid), 0);
 }
 
-function focusScan(){ $("scanInput").focus(); }
+function openQuickForStudent(sid){
+  const st=state.students.find(x=>x.sid===sid);
+  if(!st) return;
+  if(state.quickAction==='late') openSheet('attendance','profile',sid,'تأخر صباحي');
+  else if(state.quickAction==='absent') openSheet('attendance','profile',sid,'غياب (بدون عذر)');
+  else if(state.quickAction==='behavior') openSheet('behavior','profile',sid,'تنبيه سلوكي داخل الحصة');
+  else openSheet('permit','profile',sid,'إذن دخول الفصل');
 
-function findStudentByBarcode(code){
-  let c = safeText(code).replace(/\*/g,"");
-  const map={"٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"};
-  c=c.replace(/[٠-٩]/g,(d)=>map[d]||d);
-  return state.students.find(s => safeText(s.nid)===c || safeText(s.sid)===c);
+  $("openArchiveBtn").onclick = ()=>showArchive(sid);
+  setTimeout(()=>showArchive(sid), 0);
 }
 
-function handleScan(code){
-  const st = findStudentByBarcode(code);
-  const info = nowInfo();
-  if(!st){
-    $("scanLast").textContent = "لم يتم العثور على الطالب: " + code;
-    return toast("باركود غير مطابق.");
-  }
-  const subtype = (state.scanType==="absent") ? "غياب (تسجيل بالباركود)" : "تأخر صباحي (تسجيل بالباركود)";
-  const when = info.day + " - " + info.date + " - " + info.time;
-  const msg = buildMessageParent(st, "attendance", subtype, when, "");
-  makeEntry(st, "attendance", subtype, when, "", "parent", "ولي الأمر", st.phone||"", msg);
-  store.set(KEYS.records, state.records);
-
-  $("scanLast").textContent = `${st.name}\n${describeStudent(st).full}\nتم تسجيل: ${state.scanType==="absent"?"غياب":"تأخر"}\n${info.time}`;
-  toast("تم التسجيل: " + st.name);
-}
-
-function closeSheet(){ $("backdrop").classList.remove("show"); }
-
-function saveRecordsAndPreview() {
+function saveRecordsAndPreview(){
   const kind=$("sheetKind").value;
   const mode=$("sheetMode").value;
   const subtype=$("typeSelect").value;
   const when=$("when").value;
   const note=safeText($("note").value);
 
-  let recips="parent";
-  if(kind==="permit") recips = $("recipientChips").getAttribute("data-recips") || "parent";
+  let recips='parent';
+  if(kind==='permit') recips = $("recipientChips").getAttribute('data-recips') || 'parent';
 
   const commonParentPhone = safeText($("phone").value);
-  const tName = safeText($("teacherName").value);
-  const tPhone = safeText($("teacherPhone").value);
+  const tName=safeText($("teacherName").value);
+  const tPhone=safeText($("teacherPhone").value);
 
   let targets=[];
-  if(mode==="profile") {
+  if(mode==='profile'){
     const st=state.students.find(x=>x.sid===state.profileSid);
     if(st) targets=[st];
   } else {
     targets = state.students.filter(s=>state.selectedSids.has(s.sid));
   }
-  if(!targets.length) return toast("لا يوجد طلاب محددون.");
+  if(!targets.length) return toast('لا يوجد طلاب محددون.');
 
   const saved=[];
   const previews=[];
 
-  for(const st of targets) {
-    if(kind!=="permit" || recips==="parent" || recips==="both") {
+  for(const st of targets){
+    if(kind!=='permit' || recips==='parent' || recips==='both'){
       const msgP = buildMessageParent(st, kind, subtype, when, note);
-      const phoneP = normalizePhone(commonParentPhone || st.phone || "");
+      const phoneP = normalizePhone(commonParentPhone || st.phone || '');
       saved.push({toPhone:phoneP, msg:msgP});
-      makeEntry(st, kind, subtype, when, note, "parent", "ولي الأمر", phoneP, msgP);
-      previews.push("— — —\n" + msgP);
+      makeEntry(st, kind, subtype, when, note, 'parent','ولي الأمر', phoneP, msgP);
+      previews.push('— — —\n'+msgP);
     }
-    if(kind==="permit" && (recips==="teacher" || recips==="both")) {
+    if(kind==='permit' && (recips==='teacher' || recips==='both')){
       const msgT = buildMessageTeacher(st, subtype, when, note);
       const phoneT = normalizePhone(tPhone);
       saved.push({toPhone:phoneT, msg:msgT});
-      makeEntry(st, kind, subtype, when, note, "teacher", (tName||"المعلم"), phoneT, msgT);
-      previews.push("— — —\n" + msgT);
+      makeEntry(st, kind, subtype, when, note, 'teacher', (tName||'المعلم'), phoneT, msgT);
+      previews.push('— — —\n'+msgT);
     }
   }
 
   store.set(KEYS.records, state.records);
 
-  $("preview").textContent = previews.join("\n");
-  $("afterSave").style.display="block";
-  $("saveBtn").style.display="none";
+  $("preview").textContent = previews.join('\n');
+  $("afterSave").style.display='block';
+  $("saveBtn").style.display='none';
 
   let idx=0;
-  $("waBtn").onclick = () => {
-    const item = saved[idx];
-    if(!item) return toast("انتهى الإرسال المتتابع.");
-    openWhatsApp(item.toPhone||"", item.msg);
+  $("waBtn").onclick = ()=>{
+    const item=saved[idx];
+    if(!item) return toast('انتهى الإرسال المتتابع.');
+    openWhatsApp(item.toPhone||'', item.msg);
     idx++;
-    toast(idx < saved.length ? "التالي..." : "تم فتح آخر رسالة.");
+    toast(idx<saved.length?'التالي...':'تم فتح آخر رسالة.');
   };
-
-  $("copyBtn").onclick = ()=>copyText(previews.join("\n\n"));
-  toast("تم الحفظ في الأرشيف (" + saved.length + ").");
+  $("copyBtn").onclick = ()=>copyText(previews.join('\n\n'));
+  toast('تم الحفظ في الأرشيف ('+saved.length+').');
 }
 
-function showArchive(sid) {
+function showArchive(sid){
   const st=state.students.find(x=>x.sid===sid);
   if(!st) return;
-  const rows = state.records.filter(r=>r.sid===sid).slice(0,120);
+  const rows=state.records.filter(r=>r.sid===sid).slice(0,140);
   const d=describeStudent(st);
   const lines=[];
-  lines.push("الطالب/ "+st.name);
+  lines.push('الطالب/ '+st.name);
   lines.push(d.full);
-  lines.push("—");
-  if(!rows.length) lines.push("لا يوجد سجلات بعد.");
+  lines.push('—');
+  if(!rows.length) lines.push('لا يوجد سجلات بعد.');
   else {
-    for(const r of rows) {
-      const when = r.when || "";
-      const tag = (r.kind==="attendance"?"مواظبة":(r.kind==="behavior"?"سلوك":"إذن"));
-      const to = (r.to==="teacher"?"معلم":"ولي أمر");
-      lines.push("• "+tag+" — "+r.subtype+" — ("+to+")");
-      lines.push("  "+when);
+    for(const r of rows){
+      const tag = (r.kind==='attendance'?'مواظبة':(r.kind==='behavior'?'سلوك':'إذن'));
+      const to = (r.to==='teacher'?'معلم':'ولي أمر');
+      lines.push('• '+tag+' — '+r.subtype+' — ('+to+')');
+      lines.push('  '+(r.when||''));
     }
   }
-  $("archiveList").textContent = lines.join("\n");
-  $("archiveBox").style.display="block";
+  $("archiveList").textContent = lines.join('\n');
+  $("archiveBox").style.display='block';
 }
 
-function openProfile(sid) {
-  openSheet("attendance","profile",sid);
-  $("openArchiveBtn").onclick = ()=>showArchive(sid);
-  setTimeout(()=>showArchive(sid), 0);
+/* ===== Barcode session ===== */
+function openScanSession(){
+  if(!state.stage || !state.section) return toast('اختر المرحلة والشعبة أولاً.');
+  $("sheetTitle").textContent='جلسة باركود — تأخر/غياب';
+
+  $("scanBox").style.display='block';
+  $("reportBox").style.display='none';
+  $("afterSave").style.display='none';
+  $("archiveBox").style.display='none';
+  $("saveBtn").style.display='none';
+  $("typeBox").style.display='none';
+  $("whenRow").style.display='none';
+  $("noteBox").style.display='none';
+  $("chipsBox").style.display='none';
+  $("profileBox").style.display='none';
+  $("editStudentBox").style.display='none';
+  $("recipientsBox").style.display='none';
+  $("teacherBox").style.display='none';
+
+  const chips=$("scanTypeChips");
+  chips.innerHTML = `
+    <button class="chip ${state.scanType==='late'?'active':''}" type="button" data-v="late">تأخر</button>
+    <button class="chip ${state.scanType==='absent'?'active':''}" type="button" data-v="absent">غياب</button>
+  `;
+  chips.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
+    chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    ch.classList.add('active');
+    state.scanType = ch.getAttribute('data-v');
+    toast('نوع الجلسة: '+(state.scanType==='absent'?'غياب':'تأخر'));
+    focusScan();
+  }));
+
+  $("scanLast").textContent='—';
+  $("scanStopBtn").onclick = ()=>closeSheet();
+  $("scanFocusBtn").onclick = ()=>focusScan();
+
+  const inp=$("scanInput");
+  inp.value='';
+  inp.onkeydown = (e)=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const raw=safeText(inp.value);
+      inp.value='';
+      if(!raw) return;
+      handleScan(raw);
+    }
+  };
+
+  $("backdrop").classList.add('show');
+  setTimeout(()=>focusScan(), 150);
 }
 
-/* ===== Report ===== */
-function buildTodayReport(){
-  const info = nowInfo();
-  const today = info.iso;
-  const rows = state.records.filter(r=>r.dayISO===today);
-  const late = rows.filter(r=>r.kind==="attendance" && (r.subtype||"").includes("تأخر"));
-  const absent = rows.filter(r=>r.kind==="attendance" && (r.subtype||"").includes("غياب"));
-  const behavior = rows.filter(r=>r.kind==="behavior");
-  const permit = rows.filter(r=>r.kind==="permit");
+function focusScan(){ $("scanInput").focus(); }
 
-  const fmtList = (arr, label)=> {
+function findStudentByBarcode(code){
+  let c=safeText(code).replace(/\*/g,'');
+  const map={"٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9"};
+  c=c.replace(/[٠-٩]/g,(d)=>map[d]||d);
+  return state.students.find(s => safeText(s.nid)===c || safeText(s.sid)===c);
+}
+
+function handleScan(code){
+  const st=findStudentByBarcode(code);
+  const info=nowInfo();
+  if(!st){
+    $("scanLast").textContent='لم يتم العثور على الطالب: '+code;
+    return toast('باركود غير مطابق.');
+  }
+  const subtype = (state.scanType==='absent') ? 'غياب (تسجيل بالباركود)' : 'تأخر صباحي (تسجيل بالباركود)';
+  const when = info.day + ' - ' + info.date + ' - ' + info.time;
+  const msg = buildMessageParent(st, 'attendance', subtype, when, '');
+  makeEntry(st, 'attendance', subtype, when, '', 'parent', 'ولي الأمر', st.phone||'', msg);
+  store.set(KEYS.records, state.records);
+
+  $("scanLast").textContent = `${st.name}\n${describeStudent(st).full}\nتم تسجيل: ${state.scanType==='absent'?'غياب':'تأخر'}\n${info.time}`;
+  toast('تم التسجيل: '+st.name);
+}
+
+/* ===== Reports + Print ===== */
+function uniqBySid(records){
+  const seen=new Set();
+  const out=[];
+  for(const r of records){
+    if(seen.has(r.sid)) continue;
+    seen.add(r.sid);
+    out.push(r);
+  }
+  return out;
+}
+
+function todayRecords(){
+  const today = nowInfo().iso;
+  return state.records.filter(r=>r.dayISO===today);
+}
+
+function buildTodayReportText(){
+  const info=nowInfo();
+  const rows=todayRecords();
+  const late = uniqBySid(rows.filter(r=>r.kind==='attendance' && (r.subtype||'').includes('تأخر')));
+  const absent = uniqBySid(rows.filter(r=>r.kind==='attendance' && (r.subtype||'').includes('غياب')));
+  const behavior = rows.filter(r=>r.kind==='behavior');
+  const permit = rows.filter(r=>r.kind==='permit');
+
+  const fmt=(arr,label)=>{
     if(!arr.length) return `${label}: لا يوجد`;
     const names = arr.map(r=>{
-      const st = state.students.find(s=>s.sid===r.sid);
-      return st ? st.name : r.sid;
+      const st=state.students.find(s=>s.sid===r.sid);
+      return st?st.name:r.sid;
     });
-    const uniq = Array.from(new Set(names));
-    return `${label} (${uniq.length}):\n- ` + uniq.join("\n- ");
+    const uniq=Array.from(new Set(names));
+    return `${label} (${uniq.length}):\n- `+uniq.join('\n- ');
   };
 
   const lines=[];
-  lines.push("تقرير اليوم: " + info.day + " - " + info.date);
-  lines.push("—");
-  lines.push(fmtList(absent, "الغياب"));
-  lines.push("—");
-  lines.push(fmtList(late, "التأخر"));
-  lines.push("—");
-  lines.push(fmtList(behavior, "مخالفات سلوكية/تنبيهات"));
-  lines.push("—");
-  lines.push(fmtList(permit, "أذونات"));
-  return {text: lines.join("\n")};
+  lines.push('تقارير اليوم: '+info.day+' - '+info.date);
+  lines.push('—');
+  lines.push(fmt(absent,'الغياب'));
+  lines.push('—');
+  lines.push(fmt(late,'التأخر'));
+  lines.push('—');
+  lines.push(fmt(behavior,'مخالفات/تنبيهات سلوكية'));
+  lines.push('—');
+  lines.push(fmt(permit,'أذونات'));
+  return lines.join('\n');
 }
 
-function openTodayReport(){
-  $("sheetTitle").textContent="تقرير اليوم";
+function openTodayReportSheet(){
+  $("sheetTitle").textContent='تقارير اليوم (A4)';
 
-  $("scanBox").style.display="none";
-  $("profileBox").style.display="none";
-  $("editStudentBox").style.display="none";
-  $("recipientsBox").style.display="none";
-  $("teacherBox").style.display="none";
-  $("chipsBox").style.display="none";
-  $("typeBox").style.display="none";
-  $("whenRow").style.display="none";
-  $("noteBox").style.display="none";
-  $("afterSave").style.display="none";
-  $("archiveBox").style.display="none";
-  $("saveBtn").style.display="none";
+  $("scanBox").style.display='none';
+  $("profileBox").style.display='none';
+  $("editStudentBox").style.display='none';
+  $("recipientsBox").style.display='none';
+  $("teacherBox").style.display='none';
+  $("chipsBox").style.display='none';
+  $("typeBox").style.display='none';
+  $("whenRow").style.display='none';
+  $("noteBox").style.display='none';
+  $("afterSave").style.display='none';
+  $("archiveBox").style.display='none';
+  $("saveBtn").style.display='none';
 
-  const rep = buildTodayReport();
-  $("reportText").textContent = rep.text;
-  $("reportBox").style.display="block";
+  $("reportText").textContent = buildTodayReportText();
+  $("reportBox").style.display='block';
 
-  $("reportCopyBtn").onclick = ()=>copyText(rep.text);
+  $("reportCopyBtn").onclick = ()=>copyText($("reportText").textContent||'');
 
-  const today = nowInfo().iso;
-  const items = state.records.filter(r=>r.dayISO===today && r.to==="parent").slice().reverse();
+  const items = todayRecords().filter(r=>r.to==='parent').slice().reverse();
   let i=0;
   $("reportWaBtn").onclick = ()=>{
-    const it = items[i];
-    if(!it) return toast("لا توجد رسائل اليوم للإرسال.");
-    openWhatsApp(it.toPhone||"", it.msg);
+    const it=items[i];
+    if(!it) return toast('لا توجد رسائل اليوم للإرسال.');
+    openWhatsApp(it.toPhone||'', it.msg);
     i++;
-    toast(i<items.length ? "التالي..." : "تم فتح آخر رسالة.");
+    toast(i<items.length?'التالي...':'تم فتح آخر رسالة.');
   };
 
-  $("backdrop").classList.add("show");
+  $("printLateBtn").onclick = ()=>printDaily('late');
+  $("printAbsentBtn").onclick = ()=>printDaily('absent');
+  $("printBehaviorBtn").onclick = ()=>printDaily('behavior');
+
+  $("backdrop").classList.add('show');
 }
 
+function chunks(arr, size){
+  const out=[];
+  for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size));
+  return out;
+}
+
+function printDaily(kind){
+  const info=nowInfo();
+  const rows=todayRecords();
+
+  let data=[];
+  let title='';
+  if(kind==='late'){
+    title='كشف المتأخرين اليوم';
+    data = uniqBySid(rows.filter(r=>r.kind==='attendance' && (r.subtype||'').includes('تأخر')));
+  } else if(kind==='absent'){
+    title='كشف الغياب اليوم';
+    data = uniqBySid(rows.filter(r=>r.kind==='attendance' && (r.subtype||'').includes('غياب')));
+  } else {
+    title='كشف المخالفات اليومية';
+    data = rows.filter(r=>r.kind==='behavior');
+  }
+
+  const pages = chunks(data, 32); // مناسب لـ A4
+  const htmlPages = pages.map((page, pi)=>{
+    const bodyRows = page.map((r, idx)=>{
+      const st = state.students.find(s=>s.sid===r.sid) || {name:r.sid, sid:r.sid, gradeCode:r.stage, section:r.section, nid:''};
+      const d = describeStudent(st);
+      const bc = code39SVG(barcodeValue(st));
+      const k = (r.kind==='attendance'?'مواظبة':(r.kind==='behavior'?'سلوك':'إذن'));
+      const subtype = r.subtype || '';
+      const act = r.suggested || suggestAction(r.kind, subtype);
+      return `
+        <tr>
+          <td class="colNum">${(pi*32)+idx+1}</td>
+          <td class="colName">${st.name}</td>
+          <td class="colSec">${d.section||'—'}</td>
+          <td class="colKind">${kind==='behavior'?subtype:k+' - '+subtype}</td>
+          <td class="colAct">${act}</td>
+          <td class="colBar">${bc}</td>
+        </tr>`;
+    }).join('') || `<tr><td colspan="6" style="text-align:center">لا يوجد بيانات</td></tr>`;
+
+    return `
+    <div class="printWrap">
+      <div class="printTitle">${title}</div>
+      <div class="printMeta">${state.settings.schoolName} • ${info.day} • ${info.date}</div>
+      <table class="printTable">
+        <thead>
+          <tr>
+            <th class="colNum">م</th>
+            <th class="colName">اسم الطالب</th>
+            <th class="colSec">الشعبة</th>
+            <th class="colKind">الحالة</th>
+            <th class="colAct">إجراء مقترح</th>
+            <th class="colBar">الباركود</th>
+          </tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+    ${pi<pages.length-1?'<div class="pageBreak"></div>':''}`;
+  }).join('');
+
+  $("printArea").innerHTML = htmlPages;
+  window.print();
+}
+
+/* ===== A4 class sheet for section (40 rows, days + barcode) ===== */
+function buildA4SectionSheet(mode){
+  const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس"];
+  const info=nowInfo();
+  const stg=stageLabel(state.stage);
+  const sec="شعبة "+state.section;
+  const title = (mode==='absent')?'كشف متابعة غياب':'كشف متابعة تأخر';
+
+  let arr = state.students.filter(s=>String(s.gradeCode)===String(state.stage) && String(s.section)===String(state.section));
+  arr.sort((a,b)=>(a.name||'').localeCompare((b.name||''),'ar'));
+  arr = arr.slice(0,40);
+
+  const rows = arr.map((st,i)=>{
+    const bc=code39SVG(barcodeValue(st));
+    const tdsDays = days.map(()=>`<td style="text-align:center"></td>`).join('');
+    return `<tr>
+      <td class="colNum">${i+1}</td>
+      <td class="colName">${st.name}</td>
+      ${tdsDays}
+      <td class="colBar">${bc}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="8" style="text-align:center">لا يوجد طلاب ضمن هذه الشعبة</td></tr>`;
+
+  const html = `
+  <div class="printWrap">
+    <div class="printTitle">${title}</div>
+    <div class="printMeta">${state.settings.schoolName} • ${stg} • ${sec} • ${info.day} • ${info.date}</div>
+    <table class="printTable">
+      <thead>
+        <tr>
+          <th class="colNum">م</th>
+          <th class="colName">اسم الطالب</th>
+          ${days.map(d=>`<th style="width:60px;text-align:center">${d}</th>`).join('')}
+          <th class="colBar">الباركود</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+
+  $("printArea").innerHTML = html;
+  window.print();
+}
+
+/* ===== Import / Export ===== */
 async function readTextFile(file){ return await file.text(); }
 async function readJSONFile(file){ return JSON.parse(await readTextFile(file)); }
 
-async function readCSVStudents(file) {
+async function readCSVStudents(file){
   const txt = await readTextFile(file);
   const lines = txt.split(/\r?\n/).filter(l=>l.trim().length);
   if(!lines.length) return [];
   const sample=lines[0];
-  const delim = (sample.split(";").length > sample.split(",").length) ? ";" : (sample.split("\t").length > sample.split(",").length ? "\t" : ",");
+  const delim = (sample.split(';').length > sample.split(',').length) ? ';' : (sample.split('\t').length > sample.split(',').length ? '\t' : ',');
+
   const parseLine=(line)=>{
-    const out=[]; let cur=""; let q=false;
+    const out=[]; let cur=''; let q=false;
     for(let i=0;i<line.length;i++){
       const ch=line[i];
       if(ch=='"'){ if(q && line[i+1]=='"'){cur+='"';i++;continue;} q=!q; continue; }
-      if(!q && ch===delim){ out.push(cur); cur=""; continue; }
+      if(!q && ch===delim){ out.push(cur); cur=''; continue; }
       cur+=ch;
     }
     out.push(cur);
     return out.map(s=>safeText(s));
   };
-  const hdr=parseLine(lines[0]).map(h=>h.replace(/\s+/g," ").trim());
+
+  const hdr=parseLine(lines[0]).map(h=>h.replace(/\s+/g,' ').trim());
   const idx=(names)=>{ for(const n of names){ const i=hdr.findIndex(h=>h===n); if(i>=0) return i; } return -1; };
-  const iName=idx(["اسم الطالب","الاسم","اسم"]);
-  const iSid=idx(["رقم الطالب","StudentID","id"]);
-  const iNid=idx(["رقم الهوية","الهوية","الهوية الوطنية","nid","nationalId"]);
-  const iPhone=idx(["الجوال","رقم الجوال","phone"]);
-  const iGrade=idx(["رقم الصف","الصف","gradeCode"]);
-  const iSec=idx(["الفصل","الشعبة","section"]);
-  if(iName<0 || iSid<0) throw new Error("CSV لا يحتوي أعمدة (اسم الطالب) و(رقم الطالب).");
+  const iName=idx(['اسم الطالب','الاسم','اسم']);
+  const iSid=idx(['رقم الطالب','StudentID','id']);
+  const iNid=idx(['رقم الهوية','الهوية','الهوية الوطنية','nid','nationalId']);
+  const iPhone=idx(['الجوال','رقم الجوال','phone']);
+  const iGrade=idx(['رقم الصف','الصف','gradeCode']);
+  const iSec=idx(['الفصل','الشعبة','section']);
+  if(iName<0 || iSid<0) throw new Error('CSV لا يحتوي أعمدة (اسم الطالب) و(رقم الطالب).');
+
   const out=[];
-  for(let li=1; li<lines.length; li++) {
+  for(let li=1; li<lines.length; li++){
     const cells=parseLine(lines[li]);
-    const st={ sid:safeText(cells[iSid]), name:safeText(cells[iName]),
-      nid:safeText(iNid>=0?cells[iNid]:""),
-      phone:safeText(iPhone>=0?cells[iPhone]:""),
-      gradeCode:safeText(iGrade>=0?cells[iGrade]:""),
-      section:safeText(iSec>=0?cells[iSec]:"") };
+    const st={
+      sid:safeText(cells[iSid]),
+      name:safeText(cells[iName]),
+      nid:safeText(iNid>=0?cells[iNid]:''),
+      phone:safeText(iPhone>=0?cells[iPhone]:''),
+      gradeCode:safeText(iGrade>=0?cells[iGrade]:''),
+      section:safeText(iSec>=0?cells[iSec]:'')
+    };
     if(st.sid && st.name) out.push(st);
   }
   return out;
 }
 
-function importStudents() {
-  const inp = document.createElement("input");
-  inp.type="file";
-  inp.accept=".csv,.json,text/csv,application/json";
+function importStudents(){
+  const inp=document.createElement('input');
+  inp.type='file';
+  inp.accept='.csv,.json,text/csv,application/json';
   inp.onchange = async ()=>{
     try{
       const f=inp.files && inp.files[0];
       if(!f) return;
       let imported=[];
-      if(String(f.name||"").toLowerCase().endsWith(".csv")) imported = await readCSVStudents(f);
+      if(String(f.name||'').toLowerCase().endsWith('.csv')) imported = await readCSVStudents(f);
       else {
         const obj = await readJSONFile(f);
         imported = Array.isArray(obj) ? obj : (obj.students || obj.data || []);
       }
-      if(!Array.isArray(imported) || !imported.length) throw new Error("لا توجد بيانات صالحة.");
+      if(!Array.isArray(imported) || !imported.length) throw new Error('لا توجد بيانات صالحة.');
       state.students = normalizeStudents(imported);
       store.set(KEYS.students, state.students);
-      $("firstRun").style.display="none";
-      resetFilters();
-      toast("تم الاستيراد: "+state.students.length);
-    } catch(e) { toast("تعذر الاستيراد: "+(e&&e.message?e.message:e)); }
+      $("firstRun").style.display='none';
+      toast('تم الاستيراد: '+state.students.length);
+      ensureReady();
+    }catch(e){ toast('تعذر الاستيراد: '+(e&&e.message?e.message:e)); }
   };
   inp.click();
 }
 
-function exportBackup() {
+function exportBackup(){
   const pack={ exportedAt:new Date().toISOString(), students:state.students, records:state.records, teachers:state.teachers, settings:state.settings };
   const stamp=new Date().toISOString().slice(0,10);
-  const blob=new Blob([JSON.stringify(pack,null,2)],{type:"application/json;charset=utf-8"});
+  const blob=new Blob([JSON.stringify(pack,null,2)],{type:'application/json;charset=utf-8'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement("a"); a.href=url; a.download="نسخة-احتياطية-المواظبة-والسلوك-"+stamp+".json";
+  const a=document.createElement('a'); a.href=url; a.download='نسخة-احتياطية-المواظبة-والسلوك-'+stamp+'.json';
   document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },400);
-  toast("تم تنزيل نسخة احتياطية.");
+  toast('تم تنزيل نسخة احتياطية.');
 }
 
-function restoreBackup() {
-  const inp = document.createElement("input");
-  inp.type="file";
-  inp.accept=".json,application/json";
+function shareBackup(){
+  const pack={ exportedAt:new Date().toISOString(), students:state.students, records:state.records, teachers:state.teachers, settings:state.settings };
+  const stamp=new Date().toISOString().slice(0,10);
+  const blob=new Blob([JSON.stringify(pack,null,2)],{type:'application/json;charset=utf-8'});
+  const file = new File([blob], 'نسخة-احتياطية-المواظبة-والسلوك-'+stamp+'.json', {type:'application/json'});
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({ title:'نسخة احتياطية - المواظبة والسلوك', files:[file] }).then(()=>toast('تمت المشاركة.')).catch(()=>toast('تم الإلغاء.'));
+  } else {
+    exportBackup();
+  }
+}
+
+function restoreBackup(){
+  const inp=document.createElement('input');
+  inp.type='file';
+  inp.accept='.json,application/json';
   inp.onchange = async ()=>{
     try{
       const f=inp.files && inp.files[0];
@@ -1280,118 +1501,106 @@ function restoreBackup() {
       if(obj.records) state.records = Array.isArray(obj.records)?obj.records:state.records;
       if(obj.teachers) state.teachers = Array.isArray(obj.teachers)?obj.teachers:state.teachers;
       if(obj.settings) state.settings = obj.settings;
-      store.set(KEYS.students,state.students);
-      store.set(KEYS.records,state.records);
-      store.set(KEYS.teachers,state.teachers);
-      store.set(KEYS.settings,state.settings);
-      $("firstRun").style.display="none";
-      resetFilters();
-      toast("تم الاستيراد من النسخة الاحتياطية.");
-    } catch(e) { toast("تعذر استيراد النسخة: "+(e&&e.message?e.message:e)); }
+      store.set(KEYS.students, state.students);
+      store.set(KEYS.records, state.records);
+      store.set(KEYS.teachers, state.teachers);
+      store.set(KEYS.settings, state.settings);
+      $("firstRun").style.display='none';
+      toast('تم استيراد النسخة الاحتياطية.');
+      ensureReady();
+    }catch(e){ toast('تعذر استيراد النسخة: '+(e&&e.message?e.message:e)); }
   };
   inp.click();
 }
 
-function pickTeacher() {
-  const q = safeText($("teacherName").value);
-  const qq = q.toLowerCase();
-  if(!q) return toast("اكتب جزءًا من اسم المعلم للبحث.");
-  const candidates = state.teachers.filter(t => (t.name||"").toLowerCase().includes(qq));
-  if(!candidates.length) return toast("لا يوجد معلم مطابق. يمكنك حفظه.");
-  const t=candidates[0];
-  $("teacherName").value = t.name || "";
-  $("teacherPhone").value = t.phone || "";
-  toast("تم اختيار: " + (t.name||""));
+function pickTeacher(){
+  const q=safeText($("teacherName").value).toLowerCase();
+  if(!q) return toast('اكتب جزءًا من اسم المعلم للبحث.');
+  const c=state.teachers.filter(t=>(t.name||'').toLowerCase().includes(q));
+  if(!c.length) return toast('لا يوجد معلم مطابق. يمكنك حفظه.');
+  $("teacherName").value = c[0].name || '';
+  $("teacherPhone").value = c[0].phone || '';
+  toast('تم اختيار: '+(c[0].name||''));
 }
 
-function saveTeacher() {
-  const name = safeText($("teacherName").value);
-  const phone = normalizePhone($("teacherPhone").value);
-  if(!name || !phone) return toast("أدخل اسم المعلم ورقم واتساب صحيح.");
-  const existing = state.teachers.find(t => (t.name||"").trim()===name);
-  if(existing) existing.phone = phone;
-  else state.teachers.push({ id: uid("T"), name, phone });
+function saveTeacher(){
+  const name=safeText($("teacherName").value);
+  const phone=normalizePhone($("teacherPhone").value);
+  if(!name || !phone) return toast('أدخل اسم المعلم ورقم واتساب صحيح.');
+  const ex=state.teachers.find(t=>(t.name||'').trim()===name);
+  if(ex) ex.phone=phone; else state.teachers.push({id:uid('T'), name, phone});
   store.set(KEYS.teachers, state.teachers);
-  toast("تم حفظ المعلم.");
+  toast('تم حفظ المعلم.');
 }
 
-function resetFilters() {
-  state.stage = "";
-  state.section = "";
-  state.q = "";
-  state.selectedSids = new Set();
-  $("q").value="";
-  $("q").disabled=true;
-  $("sectionSelect").disabled=true;
-  $("sectionSelect").innerHTML = '<option value="">اختر الشعبة…</option>';
-  setListVisible(false);
-  renderStageSeg();
-  updateSelectionUI();
-  ensureReady();
-}
+/* ===== Menu sheet ===== */
+function openMenuSheet(){
+  $("sheetTitle").textContent='القائمة';
 
-function openMenuSheet() {
-  $("sheetTitle").textContent="القائمة";
-  $("scanBox").style.display="none";
-  $("profileBox").style.display="none";
-  $("editStudentBox").style.display="none";
-  $("recipientsBox").style.display="none";
-  $("teacherBox").style.display="none";
-  $("typeBox").style.display="none";
-  $("whenRow").style.display="none";
-  $("noteBox").style.display="none";
-  $("afterSave").style.display="none";
-  $("archiveBox").style.display="none";
-  $("reportBox").style.display="none";
-  $("saveBtn").style.display="none";
+  $("scanBox").style.display='none';
+  $("reportBox").style.display='none';
+  $("afterSave").style.display='none';
+  $("archiveBox").style.display='none';
+  $("saveBtn").style.display='none';
+  $("typeBox").style.display='none';
+  $("whenRow").style.display='none';
+  $("noteBox").style.display='none';
+  $("profileBox").style.display='none';
+  $("editStudentBox").style.display='none';
+  $("recipientsBox").style.display='none';
+  $("teacherBox").style.display='none';
 
-  $("chipsBox").style.display="block";
-  $("chipsLabel").textContent="خيارات";
+  $("chipsBox").style.display='block';
+  $("chipsLabel").textContent='خيارات';
   $("chips").innerHTML = `
     <button class="chip" type="button" id="mLoad">تحميل بيانات الطلاب</button>
     <button class="chip" type="button" id="mImport">استيراد بيانات</button>
     <button class="chip" type="button" id="mBackup">تنزيل نسخة احتياطية</button>
+    <button class="chip" type="button" id="mShare">مشاركة النسخة الاحتياطية</button>
     <button class="chip" type="button" id="mRestore">استيراد نسخة احتياطية</button>
   `;
-  $("backdrop").classList.add("show");
+  $("backdrop").classList.add('show');
+
   $("mLoad").onclick = ()=>{
     state.students = normalizeStudents(EMBEDDED_STUDENTS);
     store.set(KEYS.students, state.students);
-    $("firstRun").style.display="none";
-    resetFilters();
-    toast("تم تحميل البيانات: "+state.students.length);
+    $("firstRun").style.display='none';
+    toast('تم تحميل البيانات: '+state.students.length);
+    ensureReady();
     closeSheet();
   };
-  $("mImport").onclick = ()=>{ importStudents(); };
-  $("mBackup").onclick = ()=>{ exportBackup(); };
-  $("mRestore").onclick = ()=>{ restoreBackup(); };
+  $("mImport").onclick = ()=>importStudents();
+  $("mBackup").onclick = ()=>exportBackup();
+  $("mShare").onclick = ()=>shareBackup();
+  $("mRestore").onclick = ()=>restoreBackup();
 }
 
-function wire() {
-  $("menuBtn").innerHTML = icon("dots");
-  $("searchIcon").innerHTML = icon("search");
-  $("closeBtn").innerHTML = icon("close");
+/* ===== Wire ===== */
+function wire(){
+  $("menuBtn").innerHTML = icon('dots');
+  $("searchIcon").innerHTML = icon('search');
+  $("closeBtn").innerHTML = icon('close');
+
   $("menuBtn").onclick = openMenuSheet;
+  $("closeBtn").onclick = closeSheet;
+  $("backdrop").addEventListener('click',(e)=>{ if(e.target.id==='backdrop') closeSheet(); });
+  document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeSheet(); });
 
-  $("sectionSelect").addEventListener("change",(e)=>{
-    state.section = e.target.value || "";
-    state.q = ""; $("q").value="";
-    state.selectedSids = new Set();
-    ensureReady();
-    updateSelectionUI();
-    setListVisible(false);
-    if(state.section) toast("اكتب للبحث أو اضغط (عرض قائمة الطلاب).");
-  });
-
-  $("q").addEventListener("input",(e)=>{
+  $("q").addEventListener('input',(e)=>{
     state.q = e.target.value;
-    const auto = shouldAutoShowList();
-    if(auto && !state.listVisible) setListVisible(true);
-    if(state.listVisible) renderList();
+    if(safeText(state.q).length>=2){
+      setListVisible(true);
+      renderList();
+    } else {
+      setListVisible(false);
+      state.selectedSids=new Set();
+      updateSelectionUI();
+    }
+    ensureReady();
   });
 
   $("toggleListBtn").onclick = ()=>{
-    if(!state.stage || !state.section) return toast("اختر المرحلة ثم الشعبة.");
+    if(safeText(state.q).length<2) return toast('اكتب حرفين فأكثر لعرض النتائج.');
     setListVisible(!state.listVisible);
   };
   $("hideListBtn").onclick = ()=>setListVisible(false);
@@ -1399,58 +1608,83 @@ function wire() {
   $("selectAllBtn").onclick = ()=>selectAllCurrent();
   $("clearSelBtn").onclick = ()=>clearSelection();
 
-  $("btnAttendance").onclick = ()=>openSheet("attendance","bulk");
-  $("btnBehavior").onclick = ()=>openSheet("behavior","bulk");
-  $("btnPermit").onclick = ()=>openSheet("permit","bulk");
+  $("reportBtn").onclick = ()=>openTodayReportSheet();
+
+  // stage/section optional
+  $("sectionSelect").addEventListener('change',(e)=>{
+    state.section = e.target.value || '';
+    if(state.listVisible) renderList();
+    ensureReady();
+  });
 
   $("sheetA4Btn").onclick = ()=>{
-    const choice = confirm("طباعة كشف الغياب؟ اضغط (موافق) للغياب، أو (إلغاء) لكشف التأخر.");
-    buildA4Sheet(choice ? "absent" : "late");
+    const choice = confirm('طباعة كشف الغياب؟ اضغط (موافق) للغياب، أو (إلغاء) لكشف التأخر.');
+    buildA4SectionSheet(choice?'absent':'late');
   };
 
   $("scanBtn").onclick = ()=>openScanSession();
-  $("reportBtn").onclick = ()=>openTodayReport();
 
-  $("closeBtn").onclick = ()=>closeSheet();
-  $("backdrop").addEventListener("click",(e)=>{ if(e.target.id==="backdrop") closeSheet(); });
-  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSheet(); });
+  // bulk actionbar
+  $("bulkLate").onclick = ()=>openBulkAction('late');
+  $("bulkAbsent").onclick = ()=>openBulkAction('absent');
+  $("bulkBehavior").onclick = ()=>openBulkAction('behavior');
+  $("bulkPermit").onclick = ()=>openBulkAction('permit');
 
+  // save in sheet
   $("saveBtn").onclick = ()=>saveRecordsAndPreview();
-  $("copyBtn").onclick = ()=>copyText($("preview").textContent||"");
-
   $("pickTeacherBtn").onclick = ()=>pickTeacher();
   $("saveTeacherBtn").onclick = ()=>saveTeacher();
 
+  // first run buttons
   $("loadEmbeddedBtn").onclick = ()=>{
     state.students = normalizeStudents(EMBEDDED_STUDENTS);
     store.set(KEYS.students, state.students);
-    $("firstRun").style.display="none";
-    resetFilters();
-    toast("تم تحميل البيانات: "+state.students.length);
+    $("firstRun").style.display='none';
+    toast('تم تحميل البيانات: '+state.students.length);
+    ensureReady();
   };
   $("importBtn").onclick = ()=>importStudents();
+
+  renderQuickSeg();
+  renderStageSeg();
 }
 
-function init() {
+function openBulkAction(kind){
+  if(state.selectedSids.size===0) return toast('اختر طلابًا أولاً.');
+  // فتح sheet في وضع bulk
+  let k='attendance', preset='';
+  if(kind==='late'){ k='attendance'; preset='تأخر صباحي'; }
+  else if(kind==='absent'){ k='attendance'; preset='غياب (بدون عذر)'; }
+  else if(kind==='behavior'){ k='behavior'; preset='تنبيه سلوكي داخل الحصة'; }
+  else { k='permit'; preset='إذن دخول الفصل'; }
+
+  $("sheetKind").value='';
+  state.profileSid='';
+  // bulk mode
+  openSheet(k, 'bulk', '', preset);
+}
+
+function init(){
   state.students = store.get(KEYS.students, []);
   state.records  = store.get(KEYS.records, []);
   state.teachers = store.get(KEYS.teachers, []);
   state.settings = store.get(KEYS.settings, state.settings);
 
   const info=nowInfo();
-  $("todayPill").textContent = info.day + " • " + info.date;
+  $("todayPill").textContent = info.day + ' • ' + info.date;
 
-  if(!Array.isArray(state.students) || state.students.length===0) $("firstRun").style.display="block";
-  else $("firstRun").style.display="none";
+  const have = Array.isArray(state.students) && state.students.length>0;
+  $("firstRun").style.display = have? 'none':'block';
 
-  renderStageSeg();
-  updateSelectionUI();
   ensureReady();
+  updateSelectionUI();
 
-  if("serviceWorker" in navigator) window.addEventListener("load",()=>{ navigator.serviceWorker.register("./sw.js").catch(()=>{}); });
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
+  }
 }
 
-document.addEventListener("DOMContentLoaded",()=>{ wire(); init(); });
+document.addEventListener('DOMContentLoaded',()=>{ wire(); init(); });
 </script>
 </body>
 </html>
