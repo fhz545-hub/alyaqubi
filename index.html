@@ -18,8 +18,7 @@
   --line:#e6f1ee; --shadow:0 12px 28px rgba(0,0,0,.08); --r:18px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Tajawal,system-ui,-apple-system,Segoe UI,Roboto,Arial;overflow-x:hidden;overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y}
-body{overscroll-behavior-x:none;touch-action:pan-y;}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Tajawal,system-ui,-apple-system,Segoe UI,Roboto,Arial;overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y}
 button,input,select,textarea{font-family:inherit}
 #app{min-height:100%;width:100%;display:flex;flex-direction:column}
 
@@ -253,7 +252,11 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
         <div class="subtitle">بحث سريع (قبل اختيار الصف) • تحديد جماعي • تقارير A4 يومية مع باركود</div>
       </div>
     </div>
-    <button class="iconbtn" id="menuBtn" type="button" aria-label="القائمة"></button>
+<button class="iconbtn" id="menuBtn" type="button" aria-label="القائمة">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M4 6h16M4 12h16M4 18h16"></path>
+  </svg>
+</button>
   </header>
 
   <main class="content">
@@ -283,7 +286,13 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 
         <div class="row" style="margin-top:10px">
           <div class="search" role="search">
-            <span id="searchIcon" aria-hidden="true"></span>
+<span id="searchIcon" aria-hidden="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"></circle>
+    <path d="M20 20l-3.5-3.5"></path>
+  </svg>
+</span>
             <input id="q" type="search" placeholder="ابحث (اسم/هوية/رقم/جوال)… ولن تظهر الأسماء إلا عند البحث" autocomplete="off" disabled/>
           </div>
         </div>
@@ -355,7 +364,11 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
     <div class="sheet" role="dialog" aria-modal="true">
       <div class="sheetHead">
         <div class="sheetTitle" id="sheetTitle">—</div>
-        <button class="close" id="closeBtn" type="button" aria-label="إغلاق"></button>
+<button class="close" id="closeBtn" type="button" aria-label="إغلاق">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M18 6L6 18M6 6l12 12"></path>
+  </svg>
+</button>
       </div>
 
       <input type="hidden" id="sheetKind" value="" />
