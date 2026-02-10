@@ -1442,7 +1442,7 @@ function copyText(text){
 function makeEntry(st, kind, subtype, when, note, to, toName, toPhone, msg, meta){
   const entry={
     id:uid('R'),
-    sid:st.sid,
+sid:String(st.sid),
     kind,
     subtype,
     when: when || nowInfo().date+' '+nowInfo().time,
@@ -1700,7 +1700,7 @@ function saveRecordsAndPreview(){
 function showArchive(sid){
   const st=state.students.find(x=>x.sid===sid);
   if(!st) return;
-  const rows=state.records.filter(r=>r.sid===sid).slice(0,200);
+const rows=state.records.filter(r=>String(r.sid)===String(sid)).slice(0,200);
   const d=describeStudent(st);
   const info=nowInfo();
 
@@ -2304,7 +2304,7 @@ function wire(){
   $("selectAllBtn").onclick = ()=>selectAllCurrent();
   $("clearSelBtn").onclick = ()=>clearSelection();
 
-  $("reportBtn").onclick = ()=>openTodayReportSheet();
+$("reportBtn").onclick = ()=>{ openSheet('attendance','bulk','',''); openTodayReportSheet(); };
 
   // stage/section optional
   $("sectionSelect").addEventListener('change',(e)=>{
