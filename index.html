@@ -208,6 +208,38 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 #quickSeg button.active[data-qk="behavior"]{background:var(--behavior);border-color:var(--behavior);color:#fff}
 #quickSeg button.active[data-qk="permit"]{background:var(--permit);border-color:var(--permit);color:#fff}
 
+
+
+/* ===== تحسينات مطلوبة حسب الطلب ===== */
+
+/* ألوان المراحل (أول/ثاني/ثالث) */
+#stageSeg button[data-stage="1314"]{border-color:rgba(37,99,235,.35);background:rgba(37,99,235,.08);color:#1e40af}
+#stageSeg button[data-stage="1416"]{border-color:rgba(13,148,136,.35);background:rgba(13,148,136,.08);color:#115e59}
+#stageSeg button[data-stage="1516"]{border-color:rgba(124,58,237,.35);background:rgba(124,58,237,.08);color:#5b21b6}
+#stageSeg button.active[data-stage="1314"]{background:#1e40af;color:#fff;border-color:#1e40af}
+#stageSeg button.active[data-stage="1416"]{background:#0f766e;color:#fff;border-color:#0f766e}
+#stageSeg button.active[data-stage="1516"]{background:#6d28d9;color:#fff;border-color:#6d28d9}
+
+/* شارة المرحلة داخل الرصد السريع/الأرشيف */
+.stagePill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-weight:800;font-size:12px;white-space:nowrap}
+.stagePill.stage-1314{border-color:rgba(37,99,235,.35);background:rgba(37,99,235,.08);color:#1e40af}
+.stagePill.stage-1416{border-color:rgba(13,148,136,.35);background:rgba(13,148,136,.08);color:#115e59}
+.stagePill.stage-1516{border-color:rgba(124,58,237,.35);background:rgba(124,58,237,.08);color:#5b21b6}
+
+/* الرصد السريع: بيانات الطالب في صف واحد */
+.profileRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.profileRow .cell{padding:6px 10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.profileRow .cell strong{font-weight:900}
+.profileRow .muted{opacity:.85}
+
+/* الأرشيف: جدول رسمي للطباعة */
+.archiveWrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+.archiveWrap .archiveHead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--line);background:#fbfdfc}
+.archiveWrap .archiveHead .title{font-weight:900}
+.archiveWrap .archiveHead .meta{opacity:.85;font-size:12px}
+.archiveWrap table{width:100%;border-collapse:collapse;font-size:13px}
+.archiveWrap th,.archiveWrap td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:right}
+.archiveWrap th{background:#f5fbf9;font-weight:900;white-space:nowrap}
 </style>
 </head>
 
@@ -361,11 +393,15 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
           <div class="small" style="margin-top:6px">في “الإذن”: يمكن إرسال إشعار للمعلم أو لولي الأمر أو لكليهما.</div>
         </div>
 
+        
         <div class="field" id="teacherBox" style="display:none">
           <label>بيانات المعلم (للواتساب)</label>
+
           <div class="grid2">
             <div class="field">
-              <label for="teacherName">اسم المعلم</label>
+              <label for="teacherSelect">اختيار المعلم (قائمة منسدلـة)</label>
+              <select id="teacherSelect"></select>
+              <div class="small" style="margin-top:6px">يمكن التعديل يدويًا عند الحاجة:</div>
               <input id="teacherName" type="text" placeholder="ابحث/اكتب اسم المعلم…"/>
             </div>
             <div class="field">
@@ -373,6 +409,7 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
               <input id="teacherPhone" type="tel" inputmode="tel" placeholder="05xxxxxxxx أو 9665xxxxxxx"/>
             </div>
           </div>
+
           <div class="actions">
             <button class="btn ghost" id="pickTeacherBtn" type="button">بحث</button>
             <button class="btn secondary" id="saveTeacherBtn" type="button">حفظ/تحديث</button>
@@ -410,6 +447,33 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
           <select id="typeSelect"></select>
         </div>
 
+        
+        <div class="field" id="behaviorDetailBox" style="display:none">
+          <label>تفاصيل المخالفة</label>
+          <div class="grid2">
+            <div class="field">
+              <label for="behDegree">الدرجة</label>
+              <select id="behDegree"></select>
+            </div>
+            <div class="field">
+              <label for="behInfraction">المخالفة (منسدلة حسب الدرجة)</label>
+              <select id="behInfraction"></select>
+            </div>
+          </div>
+          <div class="grid2" style="margin-top:8px">
+            <div class="field" id="behRepeatBox" style="display:none">
+              <label class="small" style="display:flex;gap:10px;align-items:center">
+                <input id="behRepeat" type="checkbox"/>
+                <span>الدرجة الأولى: الحسم <b>عند التكرار</b> فقط</span>
+              </label>
+            </div>
+            <div class="field">
+              <label>مقدار الحسم من درجات السلوك</label>
+              <div class="preview" id="behDeductHint">—</div>
+            </div>
+          </div>
+        </div>
+
         <div class="grid2" id="whenRow">
           <div class="field">
             <label for="when">اليوم/التاريخ/الوقت</label>
@@ -437,14 +501,24 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
             <button class="secondaryBtn" id="copyBtn" type="button">نسخ</button>
             <button class="primary" id="waBtn" type="button">إرسال واتساب (متتابع)</button>
           </div>
+          
+          <div class="inlineBtns" id="behaviorPrintBox" style="display:none">
+            <button class="secondaryBtn" id="printSlipBtn" type="button">طباعة ورقة طالب (صغير)</button>
+            <button class="secondaryBtn" id="printBehaviorA4Btn" type="button">طباعة نموذج رسمي (A4)</button>
+          </div>
           <button class="secondaryBtn" id="openArchiveBtn" type="button" style="display:none">فتح أرشيف الطالب</button>
         </div>
 
+        
         <div id="archiveBox" style="display:none">
           <hr/>
           <div class="field">
             <label>أرشيف الطالب</label>
-            <div class="preview" id="archiveList"></div>
+            <div id="archiveList" class="archiveWrap"></div>
+          </div>
+          <div class="inlineBtns">
+            <button class="secondaryBtn" id="printArchiveBtn" type="button">طباعة الأرشيف (A4)</button>
+            <button class="secondaryBtn" id="copyArchiveBtn" type="button">نسخ</button>
           </div>
         </div>
 
@@ -520,6 +594,243 @@ const PERMIT_LIST = [
   "دعوة ولي الأمر لزيارة المدرسة"
 ];
 
+
+/* ===== دليل المعلمين (مضمّن) ===== */
+const PRELOADED_TEACHERS = [
+  {
+    "name": "ابراهيم بن أحمد بن ابراهيم العجلان",
+    "phone": "966559999808"
+  },
+  {
+    "name": "ابراهيم بن محمد بن ابراهيم الربيع",
+    "phone": "966548638056"
+  },
+  {
+    "name": "ابراهيم حبيب عبدالغني الميمني",
+    "phone": "966530163027"
+  },
+  {
+    "name": "احمد عبدالرحيم عبدالحميد ابوعصيده",
+    "phone": "966546623431"
+  },
+  {
+    "name": "بشير بن أحمد بن عبدالله آل سليم",
+    "phone": "966500126925"
+  },
+  {
+    "name": "بندر عبدالعزيز محمد الغامدي",
+    "phone": "966546135135"
+  },
+  {
+    "name": "تقي عبد الهادي تقي العلي",
+    "phone": "966543219321"
+  },
+  {
+    "name": "جميل عبدالمجيد جواد العلي",
+    "phone": "966566712113"
+  },
+  {
+    "name": "حسن بن عامربن احمد الشهري",
+    "phone": "966598893731"
+  },
+  {
+    "name": "حسن عبدالله علي العبدالله",
+    "phone": "966543705512"
+  },
+  {
+    "name": "حسن علي حسن الشهري",
+    "phone": "966500677015"
+  },
+  {
+    "name": "حسن يوسف حسين الخليفة",
+    "phone": "966506907431"
+  },
+  {
+    "name": "حسين بن سعيد سلمان المدن",
+    "phone": "966556336875"
+  },
+  {
+    "name": "حسين بن محمد بن حسين الأحمد",
+    "phone": "966563740777"
+  },
+  {
+    "name": "حسين بن محمد بن فهد القحطاني",
+    "phone": "966504988086"
+  },
+  {
+    "name": "خالد أحمد محمد الشهري",
+    "phone": "966560687900"
+  },
+  {
+    "name": "خالد سعد راشد المرضي",
+    "phone": "966505877238"
+  },
+  {
+    "name": "زياد عواض ابن عيضه العمري",
+    "phone": "966557530102"
+  },
+  {
+    "name": "عادل بن علي بن سليمان السبعان",
+    "phone": "966504836200"
+  },
+  {
+    "name": "عادل بن علي بن ناصر البارقي",
+    "phone": "966530667666"
+  },
+  {
+    "name": "عبد الله حسن عمر الادريسي",
+    "phone": "966533025505"
+  },
+  {
+    "name": "عبدالرحمن عبدالجبار حمود العتيبي",
+    "phone": "966555741488"
+  },
+  {
+    "name": "عبدالله بن خلوفة بن عبدالله ال مرعي",
+    "phone": "966533225515"
+  },
+  {
+    "name": "عبدالله بن عبدالعزيز بن سيف السهلي",
+    "phone": "966546221133"
+  },
+  {
+    "name": "عبدالله فيصل بن فطيس الهذلي",
+    "phone": "966591585407"
+  },
+  {
+    "name": "عبدالمجيد عبدالرحمن عبدالله السالمي",
+    "phone": "966558151033"
+  },
+  {
+    "name": "عبدالمجيد عبدالله سالم آل حبشان",
+    "phone": "966500223640"
+  },
+  {
+    "name": "عدنان علي حسين الزريق",
+    "phone": "966505808451"
+  },
+  {
+    "name": "علي بن حسن بن علي آل قمبر",
+    "phone": "966502085389"
+  },
+  {
+    "name": "علي سعد سعيد الاصلعي الاحمري",
+    "phone": "966590986464"
+  },
+  {
+    "name": "عماد محمد جمعان الزهراني",
+    "phone": "966542203039"
+  },
+  {
+    "name": "فرج عبدالعلي يوسف ال سيف",
+    "phone": "966504113707"
+  },
+  {
+    "name": "فهد حامد علي الزهراني",
+    "phone": "966504532489"
+  },
+  {
+    "name": "فيصل فهد علي الزهراني",
+    "phone": "966508448455"
+  },
+  {
+    "name": "محمد حمد عبدالرحمن التويجري",
+    "phone": "966541381105"
+  },
+  {
+    "name": "منذر عامر حمود زميع",
+    "phone": "966541188974"
+  },
+  {
+    "name": "موسى صلبان عبده عسيري",
+    "phone": "966507058931"
+  },
+  {
+    "name": "ناصر علي ناصر الراشد",
+    "phone": "966542933888"
+  },
+  {
+    "name": "نبيل بن محسن محمد القلاف",
+    "phone": "966562962766"
+  },
+  {
+    "name": "ياسر عبدالله محمد النمر",
+    "phone": "966543705512"
+  },
+  {
+    "name": "يحيى بن محمد بن سعيد القحطاني",
+    "phone": "966555751385"
+  },
+  {
+    "name": "يوسف عيسى عيسى العيد",
+    "phone": "966592038351"
+  }
+];
+
+/* ===== كتالوج المخالفات حسب الدرجات (مضمّن) ===== */
+const BEHAVIOR_CATALOG = {
+  "1": {
+    "level": "بسيطة",
+    "deduct": 1,
+    "repeatOnly": true,
+    "examples": [
+      "التأخر الصباحي",
+      "النوم في الفصل",
+      "عدم الالتزام بالزي",
+      "العبث أثناء الاصطفاف"
+    ]
+  },
+  "2": {
+    "level": "متوسطة",
+    "deduct": 2,
+    "repeatOnly": false,
+    "examples": [
+      "الشجار",
+      "إثارة الفوضى",
+      "الكتابة على الجدران",
+      "استخدام الجوال دون إذن",
+      "التلفظ بكلمات نابية"
+    ]
+  },
+  "3": {
+    "level": "عالية الخطورة",
+    "deduct": 3,
+    "repeatOnly": false,
+    "examples": [
+      "الهروب من المدرسة",
+      "حيازة أدوات حادة",
+      "تصوير الآخرين",
+      "إتلاف ممتلكات المدرسة عمداً"
+    ]
+  },
+  "4": {
+    "level": "جسيمة",
+    "deduct": 10,
+    "repeatOnly": false,
+    "examples": [
+      "التدخين",
+      "التنمر",
+      "العبث بوسائل الأمن (إطفاء الحريق)",
+      "تهديد المعلمين",
+      "التحرش"
+    ]
+  },
+  "5": {
+    "level": "فائقة الخطورة",
+    "deduct": 15,
+    "repeatOnly": false,
+    "examples": [
+      "الاعتداء الجسدي العنيف",
+      "حيازة مخدرات",
+      "إشعال نار",
+      "قضايا أمنية أو فكرية",
+      "ابتزاز إلكتروني"
+    ]
+  }
+};
+const BEHAVIOR_DEGREE_LABEL = {"1": "الأولى", "2": "الثانية", "3": "الثالثة", "4": "الرابعة", "5": "الخامسة"};
+
+
 /* ========== التخزين المحلي ========== */
 const KEYS = {
   students: "ms_students_v10",
@@ -590,6 +901,137 @@ function normalizePhone(raw){
   return p;
 }
 
+/* ===== دليل المعلمين: دمج + قائمة منسدلة ===== */
+function seedTeachersFromPreloaded(){
+  // دمج "المضمّن" مع المحفوظ محليًا (بدون تكرار)
+  const byName = new Map((state.teachers||[]).map(t=>[safeText(t.name), t]));
+  for(const t of (PRELOADED_TEACHERS||[])){
+    const n=safeText(t.name);
+    const p=normalizePhone(t.phone);
+    if(!n || !p) continue;
+    if(!byName.has(n)){
+      const obj={id:uid('T'), name:n, phone:p};
+      state.teachers.push(obj);
+      byName.set(n,obj);
+    }
+  }
+  // حفظ بعد الدمج حتى لا يحتاج المستخدم لإعادة دمج كل مرة
+  store.set(KEYS.teachers, state.teachers);
+}
+
+function refreshTeacherSelect(){
+  const sel=$("teacherSelect");
+  if(!sel) return;
+  const opts = ['<option value="">اختر المعلم…</option>']
+    .concat((state.teachers||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ar'))
+      .map(t=>`<option value="${safeText(t.name)}" data-phone="${safeText(t.phone||'')}">${safeText(t.name)}</option>`));
+  sel.innerHTML = opts.join('');
+}
+
+function fillTeacherFromSelect(){
+  const sel=$("teacherSelect");
+  if(!sel) return;
+  const name = safeText(sel.value);
+  if(!name){ $("teacherName").value=''; $("teacherPhone").value=''; return; }
+  const t = (state.teachers||[]).find(x=>safeText(x.name)===name);
+  if(t){
+    $("teacherName").value = t.name||'';
+    $("teacherPhone").value = t.phone||'';
+  } else {
+    // fallback من data
+    const opt = sel.options[sel.selectedIndex];
+    $("teacherName").value = name;
+    $("teacherPhone").value = normalizePhone(opt?.getAttribute('data-phone')||'');
+  }
+}
+
+/* ===== السلوك: درجات + مخالفات منسدلة + حسم ===== */
+function isBehaviorDegreeSubtype(subtype){
+  return /^مخالفة سلوكية\s*\(الدرجة\s+(الأولى|الثانية|الثالثة|الرابعة|الخامسة)\)/.test(String(subtype||''));
+}
+function behaviorDegreeFromSubtype(subtype){
+  const s=String(subtype||'');
+  if(s.includes('الأولى')) return 1;
+  if(s.includes('الثانية')) return 2;
+  if(s.includes('الثالثة')) return 3;
+  if(s.includes('الرابعة')) return 4;
+  if(s.includes('الخامسة')) return 5;
+  return 0;
+}
+function populateBehaviorDegree(){
+  const degSel=$("behDegree");
+  if(!degSel) return;
+  degSel.innerHTML = [1,2,3,4,5].map(n=>`<option value="${n}">الدرجة ${BEHAVIOR_DEGREE_LABEL[String(n)]||n}</option>`).join('');
+}
+function populateBehaviorInfractions(deg){
+  const infSel=$("behInfraction");
+  if(!infSel) return;
+  const cat = BEHAVIOR_CATALOG[String(deg)] || BEHAVIOR_CATALOG[deg] || null;
+  const list = (cat?.examples||[]).map(x=>safeText(x)).filter(Boolean);
+  infSel.innerHTML = list.map(x=>`<option value="${x}">${x}</option>`).join('');
+}
+function updateBehaviorDeductUI(){
+  const deg = Number($("behDegree")?.value||0);
+  const cat = BEHAVIOR_CATALOG[String(deg)] || BEHAVIOR_CATALOG[deg] || null;
+  const hint=$("behDeductHint");
+  if(!cat || !hint) return;
+  const level = safeText(cat.level);
+  let deduct = Number(cat.deduct||0);
+  const repeatOnly = !!cat.repeatOnly;
+  const repeat = !!$("behRepeat")?.checked;
+  const showRepeat = (deg===1 && repeatOnly);
+  $("behRepeatBox").style.display = showRepeat ? 'block' : 'none';
+  if(showRepeat && !repeat) deduct = 0; // الدرجة الأولى: الحسم عند التكرار فقط
+  hint.textContent = (deduct>0)
+    ? `(${deduct}) ${deduct===1?'درجة واحدة':'درجات'} — مستوى: ${level}`
+    : `لا يوجد حسم (أول مرة) — مستوى: ${level}`;
+}
+function syncBehaviorDetailBox(){
+  const kind=$("sheetKind")?.value||'';
+  const subtype=$("typeSelect")?.value||'';
+  const box=$("behaviorDetailBox");
+  if(!box) return;
+
+  if(kind!=='behavior' || !isBehaviorDegreeSubtype(subtype)){
+    box.style.display='none';
+    return;
+  }
+
+  box.style.display='block';
+  populateBehaviorDegree();
+  const deg = behaviorDegreeFromSubtype(subtype) || 1;
+  $("behDegree").value = String(deg);
+  populateBehaviorInfractions(deg);
+  // تهيئة الافتراضي
+  $("behRepeat").checked = false;
+  updateBehaviorDeductUI();
+}
+function getBehaviorMeta(){
+  const subtype=$("typeSelect")?.value||'';
+  if(!isBehaviorDegreeSubtype(subtype)) return null;
+  const deg = Number($("behDegree")?.value||behaviorDegreeFromSubtype(subtype)||0);
+  const cat = BEHAVIOR_CATALOG[String(deg)] || BEHAVIOR_CATALOG[deg] || null;
+  if(!cat) return null;
+  const inf = safeText($("behInfraction")?.value||'');
+  const repeat = !!$("behRepeat")?.checked;
+  let deduct = Number(cat.deduct||0);
+  if(deg===1 && cat.repeatOnly && !repeat) deduct = 0;
+  return {
+    degree: deg,
+    level: safeText(cat.level),
+    infraction: inf,
+    deduct: deduct,
+    repeat: repeat
+  };
+}
+function behaviorSubtypeForRecord(meta){
+  if(!meta) return $("typeSelect")?.value||'';
+  const dLabel = BEHAVIOR_DEGREE_LABEL[String(meta.degree)] || meta.degree;
+  const inf = meta.infraction ? ` — ${meta.infraction}` : '';
+  return `مخالفة سلوكية (الدرجة ${dLabel}) — مستوى: ${meta.level}${inf}`;
+}
+
+
 function normalizeStudents(arr){
   const out=[]; const seen=new Set();
   for(const it of arr){
@@ -624,6 +1066,25 @@ function describeStudent(st){
   const section=sec?("شعبة "+sec):"";
   return {stage,section,track,full:[stage,section,track].filter(Boolean).join(" - ")};
 }
+
+function profileRowHTML(st){
+  const d=describeStudent(st);
+  const code=String(st.gradeCode||'');
+  const cls = (code==='1314')?'stage-1314':(code==='1416')?'stage-1416':(code==='1516')?'stage-1516':'';
+  const stagePill = `<span class="stagePill ${cls}">${safeText(d.stage||'—')}</span>`;
+  const section = safeText(d.section||'—');
+  const phone = safeText(st.phone||'—');
+  const nid = safeText(barcodeValue(st)||'—');
+  return `
+    <div class="profileRow">
+      <div class="cell"><strong>الطالب:</strong> ${safeText(st.name||'—')}</div>
+      <div class="cell"><strong>الهوية:</strong> ${nid}</div>
+      <div class="cell"><strong>الصف:</strong> ${stagePill} <span class="muted">${section}</span></div>
+      <div class="cell"><strong>ولي الأمر:</strong> ${phone}</div>
+    </div>
+  `;
+}
+
 
 function barcodeValue(st){
   const v = safeText(st.nid||"") || safeText(st.sid||"");
@@ -910,31 +1371,45 @@ function suggestAction(kind, subtype){
 }
 
 /* ===== رسائل ===== */
-function buildMessageParent(st, kind, subtype, when, note){
+function buildMessageParent(st, kind, subtype, when, note, meta){
   const d=describeStudent(st);
-  const lines=[];
-  lines.push('السلام عليكم ورحمة الله وبركاته،');
-  lines.push('');
-  lines.push('نحيطكم علمًا بشأن الطالب/ ' + st.name);
-  lines.push('الصف/ ' + (d.stage||'—') + ' – ' + (d.section||'—') + ' (' + (d.track||'—') + ')');
-  lines.push('');
-  if(kind==='attendance') lines.push('المواظبة: ' + subtype);
-  else if(kind==='behavior') lines.push('السلوك: ' + subtype);
-  else {
-    if(subtype.includes('زيارة') || subtype.includes('دعوة')){
-      lines.push('نأمل تكرمكم بمراجعة المدرسة لمناقشة الأمر التالي:');
-      lines.push('السبب: ' + (note||'—'));
-    } else {
-      lines.push('الإذن: ' + subtype);
-      if(note) lines.push('السبب: ' + note);
-    }
+
+  if(kind==='attendance'){
+    const hdr='السلام عليكم ورحمة الله وبركاته،';
+    const body = `نفيدكم بأن حالة الطالب/ ${st.name} (${d.full}) هي: ${subtype}.`;
+    const t = when?`الوقت: ${when}.`:'';
+    const n = note?`ملاحظة: ${note}.`:'';
+    const end='شاكرين تعاونكم، مع خالص التقدير.';
+    return [hdr, body, t, n, end].filter(Boolean).join('\n');
   }
-  lines.push('الوقت: ' + when);
-  lines.push('');
-  lines.push('نأمل المتابعة والتعاون بما يدعم انضباط الطالب واستقراره الدراسي، شاكرين لكم.');
-  lines.push('— ' + state.settings.schoolName);
-  return lines.join('\n');
+
+  // تحديث تفاصيل السلوك بعد التهيئة/الاختيار المسبق
+  syncBehaviorDetailBox();
+
+  if(kind==='permit'){
+    const hdr='السلام عليكم ورحمة الله وبركاته،';
+    const body = `إشعار بخصوص الطالب/ ${st.name} (${d.full}): ${subtype}.`;
+    const t = when?`الوقت: ${when}.`:'';
+    const n = note?`ملاحظة: ${note}.`:'';
+    const end='شاكرين تعاونكم، مع خالص التقدير.';
+    return [hdr, body, t, n, end].filter(Boolean).join('\n');
+  }
+
+  // behavior
+  const hdr='السلام عليكم ورحمة الله وبركاته،';
+  const inf = meta?.infraction ? `المخالفة: ${meta.infraction}.` : `المخالفة: ${subtype}.`;
+  const degLabel = meta?.degree ? (BEHAVIOR_DEGREE_LABEL[String(meta.degree)]||meta.degree) : '';
+  const lvl = meta?.level ? `المستوى: ${meta.level}${degLabel?` (الدرجة ${degLabel})`:''}.` : '';
+  const deduct = (meta && typeof meta.deduct==='number')
+    ? (meta.deduct>0 ? `الحسم المقدر من درجات السلوك: (${meta.deduct}).` : `الحسم: لا يوجد (أول مرة/بدون تكرار).`)
+    : '';
+  const t = when?`الوقت: ${when}.`:'';
+  const n = note?`ملاحظة: ${note}.`:'';
+  const end='نأمل التعاون والمتابعة، مع خالص التقدير.';
+  return [hdr, `تم رصد مخالفة سلوكية على الطالب/ ${st.name} (${d.full}).`, inf, lvl, deduct, t, n, end].filter(Boolean).join('\n');
 }
+
+
 
 function buildMessageTeacher(st, subtype, when, note){
   const d=describeStudent(st);
@@ -964,21 +1439,25 @@ function copyText(text){
   navigator.clipboard.writeText(text).then(()=>toast('تم النسخ.')).catch(()=>toast('تعذر النسخ تلقائيًا.'));
 }
 
-function makeEntry(st, kind, subtype, when, note, to, toName, toPhone, msg){
+function makeEntry(st, kind, subtype, when, note, to, toName, toPhone, msg, meta){
   const entry={
-    id: uid('R'),
-    sid: st.sid,
-    kind, subtype, when, note,
-    suggested: suggestAction(kind, subtype),
-    to, toName: toName||'', toPhone: normalizePhone(toPhone||''),
-    msg,
-    createdAt: new Date().toISOString(),
-    dayISO: new Date().toISOString().slice(0,10),
-    stage: String(st.gradeCode||''), section: String(st.section||'')
+    id:uid('R'),
+    sid:st.sid,
+    kind,
+    subtype,
+    when: when || nowInfo().date+' '+nowInfo().time,
+    note: note || '',
+    to,
+    toName: toName || '',
+    toPhone: toPhone || '',
+    msg: msg || '',
+    meta: meta || null
   };
   state.records.unshift(entry);
   return entry;
 }
+
+
 
 /* ===== Sheet logic ===== */
 function closeSheet(){ $("backdrop").classList.remove('show'); }
@@ -1026,9 +1505,35 @@ function openSheet(kind, mode='profile', sid='', presetSubtype=''){
     $("chips").querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
     ch.classList.add('active');
     $("typeSelect").value = ch.getAttribute('data-v');
+    syncBehaviorDetailBox();
   }));
 
-  // preset
+
+  $("typeSelect").onchange = ()=>{
+    // مزامنة شارة الاختيار السريع
+    $("chips").querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    $("chips").querySelectorAll('.chip').forEach(ch=>{
+      if(ch.getAttribute('data-v')===$("typeSelect").value) ch.classList.add('active');
+    });
+    syncBehaviorDetailBox();
+  };
+
+  // ربط حقول المخالفة (إن وجدت)
+  if($("behDegree")){
+    $("behDegree").onchange = ()=>{
+      const deg=Number($("behDegree").value||1);
+      populateBehaviorInfractions(deg);
+      $("behRepeat").checked=false;
+      updateBehaviorDeductUI();
+    };
+    $("behInfraction").onchange = updateBehaviorDeductUI;
+    $("behRepeat").onchange = updateBehaviorDeductUI;
+  }
+
+  // تهيئة صندوق المخالفة حسب النوع المختار
+  syncBehaviorDetailBox();
+
+    // preset
   if(presetSubtype){
     $("typeSelect").value = presetSubtype;
     // highlight if exists
@@ -1062,7 +1567,7 @@ function openSheet(kind, mode='profile', sid='', presetSubtype=''){
     const st=state.students.find(x=>x.sid===sid);
     if(st){
       const d=describeStudent(st);
-      $("profileInfo").textContent = `${st.name}\n${d.full}\nهوية/رقم: ${barcodeValue(st)}`;
+      $("profileInfo").innerHTML = profileRowHTML(st);
       $("editStudentBox").style.display='block';
       $("stPhone").value = st.phone||'';
       $("stId").value = barcodeValue(st);
@@ -1071,7 +1576,7 @@ function openSheet(kind, mode='profile', sid='', presetSubtype=''){
         st.nid = safeText($("stId").value);
         store.set(KEYS.students, state.students);
         toast('تم حفظ التعديل.');
-        $("profileInfo").textContent = `${st.name}\n${d.full}\nهوية/رقم: ${barcodeValue(st)}`;
+        $("profileInfo").innerHTML = profileRowHTML(st);
         if(state.listVisible) renderList();
       };
     }
@@ -1102,9 +1607,19 @@ function openQuickForStudent(sid){
 function saveRecordsAndPreview(){
   const kind=$("sheetKind").value;
   const mode=$("sheetMode").value;
-  const subtype=$("typeSelect").value;
   const when=$("when").value;
   const note=safeText($("note").value);
+
+  const subtypeRaw=$("typeSelect").value;
+  let subtype=subtypeRaw;
+  let meta=null;
+
+  // السلوك: تفعيل الدرجة + المخالفة + الحسم
+  if(kind==='behavior'){
+    syncBehaviorDetailBox();
+    meta = getBehaviorMeta();
+    if(meta) subtype = behaviorSubtypeForRecord(meta);
+  }
 
   let recips='parent';
   if(kind==='permit') recips = $("recipientChips").getAttribute('data-recips') || 'parent';
@@ -1115,7 +1630,7 @@ function saveRecordsAndPreview(){
 
   let targets=[];
   if(mode==='profile'){
-    const st=state.students.find(x=>x.sid===state.profileSid);
+    const st = state.students.find(x=>x.sid===state.activeSid);
     if(st) targets=[st];
   } else {
     targets = state.students.filter(s=>state.selectedSids.has(s.sid));
@@ -1127,17 +1642,17 @@ function saveRecordsAndPreview(){
 
   for(const st of targets){
     if(kind!=='permit' || recips==='parent' || recips==='both'){
-      const msgP = buildMessageParent(st, kind, subtype, when, note);
+      const msgP = buildMessageParent(st, kind, subtype, when, note, meta);
       const phoneP = normalizePhone(commonParentPhone || st.phone || '');
       saved.push({toPhone:phoneP, msg:msgP});
-      makeEntry(st, kind, subtype, when, note, 'parent','ولي الأمر', phoneP, msgP);
+      makeEntry(st, kind, subtype, when, note, 'parent','ولي الأمر', phoneP, msgP, meta);
       previews.push('— — —\n'+msgP);
     }
     if(kind==='permit' && (recips==='teacher' || recips==='both')){
       const msgT = buildMessageTeacher(st, subtype, when, note);
       const phoneT = normalizePhone(tPhone);
       saved.push({toPhone:phoneT, msg:msgT});
-      makeEntry(st, kind, subtype, when, note, 'teacher', (tName||'المعلم'), phoneT, msgT);
+      makeEntry(st, kind, subtype, when, note, 'teacher', (tName||'المعلم'), phoneT, msgT, null);
       previews.push('— — —\n'+msgT);
     }
   }
@@ -1147,6 +1662,24 @@ function saveRecordsAndPreview(){
   $("preview").textContent = previews.join('\n');
   $("afterSave").style.display='block';
   $("saveBtn").style.display='none';
+
+  // أزرار طباعة المخالفة (فقط عند رصد طالب واحد)
+  const canPrintBehavior = (kind==='behavior' && mode==='profile' && targets.length===1 && !!meta);
+  $("behaviorPrintBox").style.display = canPrintBehavior ? 'grid' : 'none';
+  // طباعة المخالفة
+  if(canPrintBehavior){
+    const st=targets[0];
+    $("printSlipBtn").onclick = ()=>printBehaviorSlip(st, when, note, meta);
+    $("printBehaviorA4Btn").onclick = ()=>printBehaviorA4(st, when, note, meta);
+  }
+
+  // فتح الأرشيف (لطالب واحد)
+  const canOpenArchive = (mode==='profile' && targets.length===1);
+  $("openArchiveBtn").style.display = canOpenArchive ? 'block' : 'none';
+  if(canOpenArchive){
+    const st=targets[0];
+    $("openArchiveBtn").onclick = ()=>showArchive(st.sid);
+  }
 
   let idx=0;
   $("waBtn").onclick = ()=>{
@@ -1160,29 +1693,88 @@ function saveRecordsAndPreview(){
   toast('تم الحفظ في الأرشيف ('+saved.length+').');
 }
 
+
+
 function showArchive(sid){
   const st=state.students.find(x=>x.sid===sid);
   if(!st) return;
-  const rows=state.records.filter(r=>r.sid===sid).slice(0,140);
+  const rows=state.records.filter(r=>r.sid===sid).slice(0,200);
   const d=describeStudent(st);
-  const lines=[];
-  lines.push('الطالب/ '+st.name);
-  lines.push(d.full);
-  lines.push('—');
-  if(!rows.length) lines.push('لا يوجد سجلات بعد.');
-  else {
-    for(const r of rows){
+  const info=nowInfo();
+
+  // واجهة الأرشيف داخل النافذة
+  const code=String(st.gradeCode||'');
+  const cls = (code==='1314')?'stage-1314':(code==='1416')?'stage-1416':(code==='1516')?'stage-1516':'';
+  const head = `
+    <div class="archiveHead">
+      <div>
+        <div class="title">أرشيف الطالب — ${safeText(st.name||'—')}</div>
+        <div class="meta">${safeText(d.full||'')} • الهوية: ${safeText(barcodeValue(st)||'—')} • ولي الأمر: ${safeText(st.phone||'—')}</div>
+      </div>
+      <div class="meta">${info.day} • ${info.date} • ${info.time}</div>
+    </div>
+  `;
+  let body='';
+  if(!rows.length){
+    body = `<tr><td colspan="6">لا يوجد سجلات بعد.</td></tr>`;
+  } else {
+    body = rows.map((r,i)=>{
       const tag = (r.kind==='attendance'?'مواظبة':(r.kind==='behavior'?'سلوك':'إذن'));
       const to = (r.to==='teacher'?'معلم':'ولي أمر');
-      lines.push('• '+tag+' — '+r.subtype+' — ('+to+')');
-      lines.push('  '+(r.when||''));
-    }
+      const deduct = (r.meta && typeof r.meta.deduct==='number' && r.kind==='behavior') ? (r.meta.deduct||0) : '';
+      return `
+        <tr>
+          <td>${i+1}</td>
+          <td>${safeText(r.when||'')}</td>
+          <td>${tag}</td>
+          <td>${safeText(r.subtype||'')}</td>
+          <td>${to}</td>
+          <td>${deduct!=='' ? ('('+deduct+')') : '—'}</td>
+        </tr>
+      `;
+    }).join('');
   }
-  $("archiveList").textContent = lines.join('\n');
+
+  const tbl = `
+    <div class="archiveWrap">
+      ${head}
+      <table>
+        <thead>
+          <tr>
+            <th style="width:54px">#</th>
+            <th style="width:220px">التاريخ/الوقت</th>
+            <th style="width:110px">التصنيف</th>
+            <th>التفصيل</th>
+            <th style="width:90px">الجهة</th>
+            <th style="width:110px">الحسم</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+  $("archiveList").innerHTML = tbl;
   $("archiveBox").style.display='block';
+
+  // أزرار الأرشيف
+  $("printArchiveBtn").onclick = ()=>printArchiveA4(st, rows);
+  $("copyArchiveBtn").onclick = ()=>{
+    const lines=[];
+    lines.push('أرشيف الطالب: '+safeText(st.name||'—'));
+    lines.push(safeText(d.full||''));
+    lines.push('هوية: '+safeText(barcodeValue(st)||'—')+' | ولي الأمر: '+safeText(st.phone||'—'));
+    lines.push('—');
+    rows.forEach((r,i)=>{
+      const tag = (r.kind==='attendance'?'مواظبة':(r.kind==='behavior'?'سلوك':'إذن'));
+      const to = (r.to==='teacher'?'معلم':'ولي أمر');
+      const deduct = (r.meta && typeof r.meta.deduct==='number' && r.kind==='behavior') ? (r.meta.deduct||0) : '';
+      lines.push(`${i+1}) ${tag} — ${safeText(r.subtype||'')} — (${to}) — ${safeText(r.when||'')}` + (deduct!==''?` — حسم: (${deduct})`:''));
+    });
+    copyText(lines.join('\n'));
+  };
 }
 
-/* ===== Barcode session ===== */
+
 function openScanSession(){
   if(!state.stage || !state.section) return toast('اختر المرحلة والشعبة أولاً.');
   $("sheetTitle").textContent='جلسة باركود — تأخر/غياب';
@@ -1618,6 +2210,8 @@ function pickTeacher(){
   if(!c.length) return toast('لا يوجد معلم مطابق. يمكنك حفظه.');
   $("teacherName").value = c[0].name || '';
   $("teacherPhone").value = c[0].phone || '';
+  refreshTeacherSelect();
+  $("teacherSelect").value = c[0].name || '';
   toast('تم اختيار: '+(c[0].name||''));
 }
 
@@ -1628,6 +2222,8 @@ function saveTeacher(){
   const ex=state.teachers.find(t=>(t.name||'').trim()===name);
   if(ex) ex.phone=phone; else state.teachers.push({id:uid('T'), name, phone});
   store.set(KEYS.teachers, state.teachers);
+  refreshTeacherSelect();
+  $("teacherSelect").value = name;
   toast('تم حفظ المعلم.');
 }
 
@@ -1733,6 +2329,9 @@ function wire(){
   $("pickTeacherBtn").onclick = ()=>pickTeacher();
   $("saveTeacherBtn").onclick = ()=>saveTeacher();
 
+  $("teacherSelect").onchange = ()=>fillTeacherFromSelect();
+  refreshTeacherSelect();
+
   // first run buttons
   $("loadEmbeddedBtn").onclick = ()=>{
     state.students = normalizeStudents(EMBEDDED_STUDENTS);
@@ -1762,10 +2361,176 @@ function openBulkAction(kind){
   openSheet(k, 'bulk', '', preset);
 }
 
+/* ===== طباعة المخالفة: ورقة طالب صغيرة + نموذج رسمي (A4) ===== */
+function printBehaviorSlip(st, when, note, meta){
+  const d=describeStudent(st);
+  const info=nowInfo();
+  const school=safeText(state.settings?.schoolName||'');
+  const deg = meta?.degree ? (BEHAVIOR_DEGREE_LABEL[String(meta.degree)]||meta.degree) : '';
+  const deductTxt = (meta && typeof meta.deduct==='number') ? (meta.deduct>0?`(${meta.deduct})`:'—') : '—';
+
+  const html = `
+    <style>
+      @page{size:80mm 140mm; margin:4mm;}
+      .slip{font-family:Tajawal,system-ui; font-size:12px; line-height:1.55; direction:rtl}
+      .slip .h{font-weight:900; text-align:center; margin-bottom:6px}
+      .slip .sub{opacity:.85; text-align:center; margin-bottom:10px}
+      .slip .row{display:flex; justify-content:space-between; gap:8px; margin:4px 0}
+      .slip .k{opacity:.8}
+      .slip .box{border:1px solid #e6f1ee; border-radius:10px; padding:8px; margin-top:8px}
+      .slip .foot{margin-top:10px; font-size:11px; opacity:.85}
+    </style>
+    <div class="slip">
+      <div class="h">${school}</div>
+      <div class="sub">ورقة إشعار مخالفة سلوكية (للإطلاع)</div>
+
+      <div class="row"><span class="k">الطالب</span><span><b>${safeText(st.name||'—')}</b></span></div>
+      <div class="row"><span class="k">الصف/الشعبة</span><span>${safeText(d.full||'—')}</span></div>
+      <div class="row"><span class="k">الهوية</span><span>${safeText(barcodeValue(st)||'—')}</span></div>
+
+      <div class="box">
+        <div class="row"><span class="k">الدرجة</span><span>${deg||'—'} (${safeText(meta?.level||'—')})</span></div>
+        <div class="row"><span class="k">المخالفة</span><span>${safeText(meta?.infraction||'—')}</span></div>
+        <div class="row"><span class="k">الحسم</span><span><b>${deductTxt}</b></span></div>
+      </div>
+
+      <div class="foot">
+        <div>الوقت: ${safeText(when||info.date+' '+info.time)}</div>
+        ${note?`<div>ملاحظة: ${safeText(note)}</div>`:''}
+        <div style="margin-top:6px">ولي الأمر: ${safeText(st.phone||'—')}</div>
+      </div>
+    </div>
+  `;
+  $("printArea").innerHTML = html;
+  setTimeout(()=>window.print(), 80);
+}
+
+function printBehaviorA4(st, when, note, meta){
+  const d=describeStudent(st);
+  const info=nowInfo();
+  const school=safeText(state.settings?.schoolName||'');
+  const deg = meta?.degree ? (BEHAVIOR_DEGREE_LABEL[String(meta.degree)]||meta.degree) : '';
+  const deductTxt = (meta && typeof meta.deduct==='number')
+    ? (meta.deduct>0?`(${meta.deduct})`:'لا يوجد (أول مرة/بدون تكرار)')
+    : '—';
+
+  const html = `
+    <style>
+      @page{size:A4; margin:12mm;}
+      .a4{font-family:Tajawal,system-ui; direction:rtl; font-size:14px; line-height:1.7}
+      .a4 .h{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px}
+      .a4 .h .school{font-weight:900; font-size:16px}
+      .a4 .h .meta{opacity:.85; font-size:12px; text-align:left}
+      .a4 .title{font-weight:900; text-align:center; font-size:16px; margin:8px 0 12px}
+      .a4 table{width:100%; border-collapse:collapse}
+      .a4 td,.a4 th{border:1px solid #e6f1ee; padding:10px; vertical-align:top}
+      .a4 th{background:#f5fbf9; font-weight:900; white-space:nowrap; width:190px}
+      .a4 .sign{display:flex; justify-content:space-between; gap:20px; margin-top:18px}
+      .a4 .sign .box{border:1px solid #e6f1ee; border-radius:12px; padding:12px; width:48%}
+      .a4 .sign .lbl{font-weight:900; margin-bottom:22px}
+      .a4 .small{opacity:.85; font-size:12px}
+    </style>
+    <div class="a4">
+      <div class="h">
+        <div class="school">${school}</div>
+        <div class="meta">${info.day} • ${info.date} • ${info.time}</div>
+      </div>
+
+      <div class="title">نموذج رصد مخالفة سلوكية</div>
+
+      <table>
+        <tr><th>اسم الطالب</th><td><b>${safeText(st.name||'—')}</b></td></tr>
+        <tr><th>الصف/الشعبة</th><td>${safeText(d.full||'—')}</td></tr>
+        <tr><th>رقم الهوية</th><td>${safeText(barcodeValue(st)||'—')}</td></tr>
+        <tr><th>رقم جوال ولي الأمر</th><td>${safeText(st.phone||'—')}</td></tr>
+        <tr><th>الدرجة/المستوى</th><td>الدرجة ${deg||'—'} — ${safeText(meta?.level||'—')}</td></tr>
+        <tr><th>المخالفة</th><td>${safeText(meta?.infraction||'—')}</td></tr>
+        <tr><th>مقدار الحسم</th><td><b>${deductTxt}</b></td></tr>
+        <tr><th>الوقت</th><td>${safeText(when||info.date+' '+info.time)}</td></tr>
+        ${note?`<tr><th>ملاحظة</th><td>${safeText(note)}</td></tr>`:''}
+      </table>
+
+      <div class="sign">
+        <div class="box">
+          <div class="lbl">ولي الأمر</div>
+          <div class="small">الاسم/التوقيع:</div>
+        </div>
+        <div class="box">
+          <div class="lbl">إدارة المدرسة</div>
+          <div class="small">الاسم/التوقيع:</div>
+        </div>
+      </div>
+    </div>
+  `;
+  $("printArea").innerHTML = html;
+  setTimeout(()=>window.print(), 80);
+}
+
+function printArchiveA4(st, rows){
+  const d=describeStudent(st);
+  const info=nowInfo();
+  const school=safeText(state.settings?.schoolName||'');
+  const head = `
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px">
+      <div style="font-weight:900;font-size:16px">${school}</div>
+      <div style="opacity:.85;font-size:12px">${info.day} • ${info.date} • ${info.time}</div>
+    </div>
+    <div style="font-weight:900;text-align:center;font-size:16px;margin:6px 0 14px">أرشيف الطالب</div>
+    <div style="opacity:.9;margin-bottom:12px">
+      <b>${safeText(st.name||'—')}</b> — ${safeText(d.full||'')} • الهوية: ${safeText(barcodeValue(st)||'—')} • ولي الأمر: ${safeText(st.phone||'—')}
+    </div>
+  `;
+
+  const body = (rows||[]).length ? rows.map((r,i)=>{
+    const tag = (r.kind==='attendance'?'مواظبة':(r.kind==='behavior'?'سلوك':'إذن'));
+    const to = (r.to==='teacher'?'معلم':'ولي أمر');
+    const deduct = (r.meta && typeof r.meta.deduct==='number' && r.kind==='behavior') ? (r.meta.deduct||0) : '';
+    return `
+      <tr>
+        <td>${i+1}</td>
+        <td>${safeText(r.when||'')}</td>
+        <td>${tag}</td>
+        <td>${safeText(r.subtype||'')}</td>
+        <td>${to}</td>
+        <td>${deduct!=='' ? ('('+deduct+')') : '—'}</td>
+      </tr>
+    `;
+  }).join('') : `<tr><td colspan="6">لا يوجد سجلات بعد.</td></tr>`;
+
+  const html = `
+    <style>
+      @page{size:A4; margin:12mm;}
+      .a4{font-family:Tajawal,system-ui; direction:rtl; font-size:13px; line-height:1.7}
+      table{width:100%; border-collapse:collapse}
+      th,td{border:1px solid #e6f1ee; padding:8px 10px; vertical-align:top; text-align:right}
+      th{background:#f5fbf9; font-weight:900; white-space:nowrap}
+    </style>
+    <div class="a4">
+      ${head}
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px">#</th>
+            <th style="width:210px">التاريخ/الوقت</th>
+            <th style="width:100px">التصنيف</th>
+            <th>التفصيل</th>
+            <th style="width:90px">الجهة</th>
+            <th style="width:90px">الحسم</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+  $("printArea").innerHTML = html;
+  setTimeout(()=>window.print(), 80);
+}
+
 function init(){
   state.students = store.get(KEYS.students, []);
   state.records  = store.get(KEYS.records, []);
   state.teachers = store.get(KEYS.teachers, []);
+  seedTeachersFromPreloaded();
   state.settings = store.get(KEYS.settings, state.settings);
 
   const info=nowInfo();
