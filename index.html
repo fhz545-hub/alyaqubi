@@ -1630,7 +1630,7 @@ function saveRecordsAndPreview(){
 
   let targets=[];
   if(mode==='profile'){
-    const st = state.students.find(x=>x.sid===state.activeSid);
+    const st = state.students.find(x=>x.sid===state.profileSid);
     if(st) targets=[st];
   } else {
     targets = state.students.filter(s=>state.selectedSids.has(s.sid));
