@@ -1552,8 +1552,10 @@ function openSheet(kind, mode='profile', sid='', presetSubtype=''){
     `;
     const setR=(val)=>{
       chips.setAttribute('data-recips', val);
-      $("teacherBox").style.display = (val==='teacher'||val==='both')?'block':'none';
+      const showTeacher = (val==='teacher'||val==='both');
+      $("teacherBox").style.display = showTeacher?'block':'none';
       $("phoneBox").style.display = (val==='teacher')?'none':'block';
+      if(showTeacher){ refreshTeacherSelect(); fillTeacherFromSelect(); }
     };
     chips.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
       chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
@@ -2329,7 +2331,7 @@ function wire(){
   $("pickTeacherBtn").onclick = ()=>pickTeacher();
   $("saveTeacherBtn").onclick = ()=>saveTeacher();
 
-  $("teacherSelect").onchange = ()=>fillTeacherFromSelect();
+    const _ts=$("teacherSelect"); if(_ts) _ts.onchange = ()=>fillTeacherFromSelect();
   refreshTeacherSelect();
 
   // first run buttons
@@ -2528,11 +2530,14 @@ function printArchiveA4(st, rows){
 
 function init(){
   state.students = store.get(KEYS.students, []);
+  if(!Array.isArray(state.students)) state.students = [];
   state.records  = store.get(KEYS.records, []);
+  if(!Array.isArray(state.records)) state.records = [];
   state.teachers = store.get(KEYS.teachers, []);
+  if(!Array.isArray(state.teachers)) state.teachers = [];
   seedTeachersFromPreloaded();
+  refreshTeacherSelect();
   state.settings = store.get(KEYS.settings, state.settings);
-
   const info=nowInfo();
   $("todayPill").textContent = info.day + ' • ' + info.date;
 
