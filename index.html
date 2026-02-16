@@ -917,12 +917,12 @@ function uid(prefix="X"){ return prefix + Math.random().toString(16).slice(2) + 
 
 function nowInfo(){
   const d=new Date();
-  return {
-    day:d.toLocaleDateString("ar-SA",{weekday:"long"}),
-    date:d.toLocaleDateString("ar-SA"),
-    time:d.toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"}),
-    iso:d.toISOString().slice(0,10)
-  };
+  const pad = (n)=>String(n).padStart(2,'0');
+  // ✅ تاريخ محلي (بدون UTC) حتى لا يختل "تقارير اليوم" بسبب فرق التوقيت
+  const iso = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const time = d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+  const full = d.toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' • '+time;
+  return {iso,time,full};
 }
 
 function normalizePhone(raw){
@@ -1412,7 +1412,7 @@ function buildMessageParent(st, kind, subtype, when, note, meta){
 
   if(kind==='attendance'){
     const hdr='السلام عليكم ورحمة الله وبركاته،';
-    const body = `نفيدكم بأن الطالب/ ${st.name} (${d.full}) هي: ${subtype}.`;
+const body = `نفيدكم بأنه تم تسجيل (${subtype}) للطالب/ ${st.name} (${d.full}).`;
     const t = when?`الوقت: ${when}.`:'';
     const n = note?`ملاحظة: ${note}.`:'';
     const end='شاكرين تعاونكم، مع خالص التقدير.';
@@ -1903,9 +1903,18 @@ function uniqBySid(records){
 }
 
 function todayRecords(){
-  const today = nowInfo().iso;
-  return state.records.filter(r=>r.dayISO===today);
+  const iso = nowInfo().iso;
+  return (state.records||[]).filter(r=>{
+    // الصيغة المعتمدة عند حفظ السجل هي: when = "YYYY-MM-DD HH:MM"
+    const whenStr = (r?.when || r?.dateTime || '').toString();
+    if(whenStr) return whenStr.slice(0,10) === iso;
+
+    // احتياطًا لأي صيغ قديمة/مختلفة
+    const dateStr = (r?.dayISO || r?.dateISO || r?.date || r?.iso || '').toString();
+    return dateStr.slice(0,10) === iso;
+  });
 }
+
 
 function buildTodayReportText(){
   const info=nowInfo();
