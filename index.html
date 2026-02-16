@@ -1412,7 +1412,7 @@ function buildMessageParent(st, kind, subtype, when, note, meta){
 
   if(kind==='attendance'){
     const hdr='السلام عليكم ورحمة الله وبركاته،';
-    const body = `نفيدكم بأن حالة الطالب/ ${st.name} (${d.full}) هي: ${subtype}.`;
+    const body = `نفيدكم بأن الطالب/ ${st.name} (${d.full}) هي: ${subtype}.`;
     const t = when?`الوقت: ${when}.`:'';
     const n = note?`ملاحظة: ${note}.`:'';
     const end='شاكرين تعاونكم، مع خالص التقدير.';
