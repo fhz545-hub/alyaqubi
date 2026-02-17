@@ -1,72 +1,82 @@
 /* sw.js */
-"use strict";
+'use strict';
 
-const CACHE_VERSION = "v2026-02-17-01"; // غيّرها كل مرة تنشر تحديث
-const STATIC_CACHE = `static-${CACHE_VERSION}`;
+// ✅ غيّر هذا الرقم عند أي تحديث تريد فرضه فورًا
+const SW_VERSION = '2026-02-17';
+const CACHE_NAME = `moathaba-cache-${SW_VERSION}`;
 
-// عدّل القائمة حسب ملفات مشروعك الفعلية
-const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+// ملفات أساسية (عدّلها حسب هيكل مشروعك)
+const CORE_ASSETS = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(APP_SHELL))
-  );
+// استقبال رسالة تخطي الانتظار
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
-self.addEventListener("activate", (event) => {
+// تثبيت: خزّن الأساسيات
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => {})
+  );
+  // لا تعمل skipWaiting هنا تلقائيًا، نخليه برسالة حتى ما يقطع المستخدم فجأة
+});
+
+// تفعيل: امسح الكاشات القديمة + استلم التحكم فورًا
+self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(
-      keys
-        .filter((k) => k.startsWith("static-") && k !== STATIC_CACHE)
-        .map((k) => caches.delete(k))
+      keys.map((k) => (k.startsWith('moathaba-cache-') && k !== CACHE_NAME) ? caches.delete(k) : null)
     );
     await self.clients.claim();
   })());
 });
 
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});
-
-// للملاحة: Network-first حتى تظهر التحديثات
-self.addEventListener("fetch", (event) => {
+// استراتيجية: Network-first للـ HTML (عشان التغييرات تظهر بسرعة)
+// و Cache-first للباقي (أيقونات/ملفات ثابتة)
+self.addEventListener('fetch', (event) => {
   const req = event.request;
+  const url = new URL(req.url);
 
-  if (req.mode === "navigate") {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put("./", copy));
-          return res;
-        })
-        .catch(() => caches.match("./"))
-    );
+  // نفس النطاق فقط
+  if (url.origin !== self.location.origin) return;
+
+  // HTML: شبكة أولاً
+  if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put('./index.html', fresh.clone()).catch(() => {});
+        return fresh;
+      } catch {
+        const cached = await caches.match('./index.html');
+        return cached || Response.error();
+      }
+    })());
     return;
   }
 
-  // لباقي الملفات: Cache-first
-  const url = new URL(req.url);
-  if (url.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(req).then((cached) => {
-        if (cached) return cached;
-        return fetch(req).then((res) => {
-          const copy = res.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(req, copy));
-          return res;
-        });
-      })
-    );
-  }
+  // باقي الملفات: كاش أولاً ثم شبكة
+  event.respondWith((async () => {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+
+    try {
+      const fresh = await fetch(req);
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(req, fresh.clone()).catch(() => {});
+      return fresh;
+    } catch {
+      return cached || Response.error();
+    }
+  })());
 });
