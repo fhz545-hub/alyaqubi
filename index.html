@@ -917,13 +917,22 @@ function uid(prefix="X"){ return prefix + Math.random().toString(16).slice(2) + 
 
 function nowInfo(){
   const d=new Date();
-  const pad = (n)=>String(n).padStart(2,'0');
-  // ✅ تاريخ محلي (بدون UTC) حتى لا يختل "تقارير اليوم" بسبب فرق التوقيت
-  const iso = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  const time = d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
-  const full = d.toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' • '+time;
-  return {iso,time,full};
+
+  // تاريخ ميلادي ثابت بصيغة YYYY-MM-DD (مهم للفرز والتقارير)
+  const date=d.toLocaleDateString('en-CA'); // 2026-02-16
+
+  // اسم اليوم بالعربية
+  const day=d.toLocaleDateString('ar-SA',{weekday:'long'});
+
+  // الوقت بالعربية (أرقام عربية + ص/م)
+  const time=d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',hour12:true});
+
+  // صيغة عرض موحّدة داخل السجلات: "الاثنين - 2026-02-16 - ٠٩:٣٠ ص"
+  const full=`${day} - ${date} - ${time}`;
+
+  return {day,date,iso:date,time,full};
 }
+
 
 function normalizePhone(raw){
   let p=String(raw||"").trim();
@@ -1476,12 +1485,20 @@ function copyText(text){
 }
 
 function makeEntry(st, kind, subtype, when, note, to, toName, toPhone, msg, meta){
+  const info=nowInfo();
+  const whenText=(when && String(when).trim()) ? String(when).trim() : info.full;
+
+  // استخراج تاريخ ISO من نص "when" (للتقارير والفرز)
+  const m=whenText.match(/(\d{4}-\d{2}-\d{2})/);
+  const dateISO=m ? m[1] : info.iso;
+
   const entry={
     id:uid('R'),
-sid:String(st.sid),
+    sid:String(st.sid),
     kind,
     subtype,
-    when: when || nowInfo().date+' '+nowInfo().time,
+    when: whenText,
+    dateISO,
     note: note || '',
     to,
     toName: toName || '',
@@ -1492,6 +1509,7 @@ sid:String(st.sid),
   state.records.unshift(entry);
   return entry;
 }
+
 
 
 
@@ -1903,17 +1921,28 @@ function uniqBySid(records){
 }
 
 function todayRecords(){
-  const iso = nowInfo().iso;
-  return (state.records||[]).filter(r=>{
-    // الصيغة المعتمدة عند حفظ السجل هي: when = "YYYY-MM-DD HH:MM"
-    const whenStr = (r?.when || r?.dateTime || '').toString();
-    if(whenStr) return whenStr.slice(0,10) === iso;
+  const iso=nowInfo().iso;
 
-    // احتياطًا لأي صيغ قديمة/مختلفة
-    const dateStr = (r?.dayISO || r?.dateISO || r?.date || r?.iso || '').toString();
-    return dateStr.slice(0,10) === iso;
+  // يدعم أكثر من صيغة للتاريخ داخل الحقل (بسبب اختلاف طرق الإدخال)
+  return state.records.filter(r=>{
+    const whenStr=String(r.when||r.dateTime||'').trim();
+
+    // 1) تاريخ بصيغة ISO داخل النص بأي مكان: YYYY-MM-DD
+    const m=whenStr.match(/(\d{4}-\d{2}-\d{2})/);
+    if(m) return m[1]===iso;
+
+    // 2) صيغة قديمة: YYYY/MM/DD
+    const m2=whenStr.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+    if(m2) return (`${m2[1]}-${m2[2]}-${m2[3]}`)===iso;
+
+    // 3) حقول منفصلة إن وُجدت
+    if(r.dayISO) return String(r.dayISO)===iso;
+    if(r.dateISO) return String(r.dateISO)===iso;
+
+    return false;
   });
 }
+
 
 
 function buildTodayReportText(){
@@ -2349,7 +2378,10 @@ function wire(){
   $("selectAllBtn").onclick = ()=>selectAllCurrent();
   $("clearSelBtn").onclick = ()=>clearSelection();
 
-$("reportBtn").onclick = ()=>{ openSheet('attendance','bulk','',''); openTodayReportSheet(); };
+$("reportBtn").onclick = ()=>{
+  const choice = confirm('طباعة تقرير التأخر لليوم؟ اضغط (موافق) للتأخر، أو (إلغاء) للغياب.');
+  printDaily(choice ? "late" : "absent");
+};
 
   // stage/section optional
   $("sectionSelect").addEventListener('change',(e)=>{
