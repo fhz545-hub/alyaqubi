@@ -577,9 +577,10 @@ if ('serviceWorker' in navigator) {
       reg.update();
 
       // إذا فيه تحديث جاهز → حمّل الصفحة تلقائيًا
-      if (reg.waiting) {
-        reg.waiting.postMessage({ type: 'ذكرني_بالتحديث' });
-      }
+    if (reg.waiting) {
+  reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+}
+
 
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         // يضمن ظهور النسخة الجديدة مباشرة
