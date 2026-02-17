@@ -1,7 +1,7 @@
 // 1) تسجيل الـ Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
-    const reg = await navigator.serviceWorker.register('./sw.js');
+const reg = await navigator.serviceWorker.register('./sw.js?v=20260217-01');
 
     // 2) دالة ترسل رسالة للـ SW الجديد إذا كان "waiting"
     const اطلب_تفعيل_التحديث = () => {

@@ -86,7 +86,14 @@ button,input,select,textarea{font-family:inherit}
 .ckbtn svg{width:18px;height:18px;color:var(--moe-d)}
 
 .main{min-width:0;flex:1;cursor:pointer}
-.name{font-size:15.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.name{
+  font-size:15.5px;
+  font-weight:900;
+  white-space:normal;      /* يسمح بسطرين وأكثر */
+  overflow:visible;        /* يمنع القص */
+  text-overflow:clip;      /* يلغي ... */
+  line-height:1.35;
+}
 .meta{margin-top:2px;font-size:12.8px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
 .meta span{border:1px dashed rgba(90,108,104,.22);border-radius:999px;padding:2px 8px;background:rgba(247,251,250,.7)}
 .mini{display:flex;gap:8px;align-items:center;flex:0 0 auto}
@@ -172,7 +179,16 @@ hr{border:0;border-top:1px solid var(--line);margin:6px 0}
 .sectionSheet .colName{width:200px}
 .sectionSheet .colBar{width:260px}
 .printTable tr{page-break-inside:avoid;break-inside:avoid}
+/* ✅ منع ظهور شريط التمرير داخل الكشف عند التصدير */
+#printSheet{
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
 
+/* إخفاء شريط التمرير لو كان المتصفح يرسمه */
+#printSheet::-webkit-scrollbar{ width:0 !important; height:0 !important; }
+#printSheet{ scrollbar-width:none !important; }
 /* ===== تحسين الجوال: أشرطة أزرار في صف واحد بدون تمرير أفقي ===== */
 #app, .container {overflow-x:hidden}
 @media (max-width: 560px){
@@ -1104,8 +1120,10 @@ function normalizeStudents(arr){
   const out=[]; const seen=new Set();
   for(const it of arr){
     const sid=safeText(it.sid||it["رقم الطالب"]||it.id||it.student_id);
-    const name=safeText(it.name||it["اسم الطالب"]||it.fullName||it.studentName);
-    if(!sid||!name) continue;
+    let name=safeText(it.name||it["اسم الطالب"]||it.fullName||it.studentName);
+name = name.replace(/\s*-\s*/g,' ').replace(/\s+/g,' ').trim();
+if(!sid||!name) continue;
+
     if(seen.has(sid)) continue;
     seen.add(sid);
     const nid = safeText(it.nid||it.nationalId||it.national_id||it["رقم الهوية"]||it["الهوية"]||it["الهوية الوطنية"]||"");
@@ -2152,9 +2170,9 @@ function buildA4SectionSheet(mode){
       <td class="colName">${st.name}</td>
       ${tdsDays}
       <td class="colBar">
-        ${bc}
-        <div style="font-size:calc(var(--fs,11px) - 1.2px);letter-spacing:.6px;margin-top:2px;text-align:center">${barcodeValue(st)}</div>
-      </td>
+  ${bc}
+</td>
+
     </tr>`;
   }).join('')) || `<tr><td colspan="8" style="text-align:center">لا يوجد طلاب ضمن هذه الشعبة</td></tr>`;
 

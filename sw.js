@@ -2,7 +2,7 @@
 'use strict';
 
 // ✅ غيّر هذا الرقم عند أي تحديث تريد فرضه فورًا
-const SW_VERSION = '2026-02-17';
+const SW_VERSION = '2026-02-17-01';
 const CACHE_NAME = `moathaba-cache-${SW_VERSION}`;
 
 // ملفات أساسية (عدّلها حسب هيكل مشروعك)
