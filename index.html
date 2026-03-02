@@ -926,7 +926,19 @@ const state = {
   students: [],
   records: [],
   teachers: [],
-  settings: { schoolName: "ثانوية اليعقوبي الثانوية بالخبر" },
+  settings: {
+  schoolName: "ثانوية اليعقوبي الثانوية بالخبر",
+  wa: {
+    mode: "web",            // web | api
+    auth: "apiKey",         // apiKey | basic
+    apiKey: "",             // يُحفظ محليًا (لا تكتبه داخل الملف)
+    user: "",               // Basic Auth user (مثال: 9665xxxxxxx)
+    pass: "",               // Basic Auth password
+    baseUrl: "https://wa.smart-whats.com",
+    timeoutSec: 15,
+    stepDelayMs: 900
+  }
+},
   stage: "", section: "", q: "",
   listVisible: false,
   selectedSids: new Set(),
@@ -1520,8 +1532,126 @@ function openWhatsApp(phone, text){
   const url=p?('https://wa.me/'+p+'?text='+msg):('https://wa.me/?text='+msg);
   window.open(url,'_blank','noopener,noreferrer');
 }
+/* =========================
+   WhatsApp Provider (web | Smart-Whats API)
+   ========================= */
 
-function copyText(text){
+const DEFAULT_WA_CFG = {
+  mode: "web",          // web | api
+  auth: "apiKey",       // apiKey | basic
+  apiKey: "",
+  user: "",
+  pass: "",
+  baseUrl: "https://wa.smart-whats.com",
+  timeoutSec: 15,
+  stepDelayMs: 900
+};
+
+function ensureWaCfg(){
+  if(!state.settings) state.settings = {};
+  if(!state.settings.wa) state.settings.wa = {};
+  state.settings.wa = Object.assign({}, DEFAULT_WA_CFG, state.settings.wa);
+
+  // تطبيع baseUrl فقط
+  state.settings.wa.baseUrl = String(state.settings.wa.baseUrl || DEFAULT_WA_CFG.baseUrl)
+    .trim().replace(/\/+$/,'') || DEFAULT_WA_CFG.baseUrl;
+}
+
+async function smartWhatsSendMessage(phone, content, attachmentFile=null){
+  const cfg = (state.settings && state.settings.wa) ? state.settings.wa : DEFAULT_WA_CFG;
+  const base = String(cfg.baseUrl || DEFAULT_WA_CFG.baseUrl).replace(/\/+$/,'');
+  const url  = base + "/api/messages";
+
+  const p = normalizePhone(phone);
+  if(!p) throw new Error("رقم واتساب غير صحيح.");
+
+  const ctrl = new AbortController();
+  const timeoutMs = Math.max(5, Number(cfg.timeoutSec||15)) * 1000;
+  const timer = setTimeout(()=>ctrl.abort(), timeoutMs);
+
+  try{
+    const headers = {};
+
+    // مصادقة: X-API-Key أو Basic Auth
+    if(cfg.auth === "basic"){
+      if(!cfg.user || !cfg.pass) throw new Error("Basic Auth غير مكتمل.");
+      headers["Authorization"] = "Basic " + btoa(String(cfg.user) + ":" + String(cfg.pass));
+    } else {
+      if(!cfg.apiKey) throw new Error("API Key غير مضبوط.");
+      headers["X-API-Key"] = String(cfg.apiKey);
+    }
+
+    let res;
+    if(attachmentFile){
+      const fd = new FormData();
+      fd.append("phone", p);
+      fd.append("content", String(content||""));
+      fd.append("attachment", attachmentFile);
+
+      res = await fetch(url, { method:"POST", headers, body: fd, signal: ctrl.signal });
+    } else {
+      headers["Content-Type"] = "application/json";
+      res = await fetch(url, {
+        method:"POST",
+        headers,
+        body: JSON.stringify({ phone: p, content: String(content||"") }),
+        signal: ctrl.signal
+      });
+    }
+
+    const text = await res.text();
+    let json=null; try{ json = JSON.parse(text); } catch(_){}
+
+    if(!res.ok){
+      const msg = json?.message || json?.error || text || ("HTTP " + res.status);
+      throw new Error(msg);
+    }
+    return json || { ok:true, raw:text };
+
+  } catch(err){
+    if(err?.name === "AbortError") throw new Error("انتهت مهلة الاتصال (Timeout).");
+
+    // إن كان السيرفر لا يدعم CORS قد يظهر خطأ fetch عام
+    const s = String(err||"");
+    if(s.includes("TypeError") && s.includes("fetch")){
+      throw new Error("تعذر الاتصال من المتصفح (CORS). إن ظهر هذا، استخدم وسيط/سيرفر أو تأكد أن الخدمة تسمح بالطلبات من المتصفح.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function updateRecordDelivery(entryId, delivery){
+  if(!entryId) return;
+  const r = state.records.find(x=>x.id===entryId);
+  if(!r) return;
+  r.delivery = Object.assign({}, r.delivery, delivery);
+  store.set(KEYS.records, state.records);
+}
+
+// واجهة موحدة للإرسال (web أو api)
+async function sendWhats(item){
+  ensureWaCfg();
+  const cfg = state.settings.wa || DEFAULT_WA_CFG;
+
+  const phone = normalizePhone(item.toPhone||"");
+  if(!phone) throw new Error("رقم غير صحيح.");
+
+  if(cfg.mode === "api"){
+    const resp = await smartWhatsSendMessage(phone, item.msg);
+    updateRecordDelivery(item.entryId, {
+      provider: "smart-whats",
+      id: resp?.id || "",
+      status: resp?.status || "pending"
+    });
+    return resp;
+  } else {
+    openWhatsApp(phone, item.msg);
+    updateRecordDelivery(item.entryId, { provider: "wa.me", status: "opened" });
+    return { status:"opened" };
+  }
+}function copyText(text){
   navigator.clipboard.writeText(text).then(()=>toast('تم النسخ.')).catch(()=>toast('تعذر النسخ تلقائيًا.'));
 }
 
@@ -1741,16 +1871,16 @@ function saveRecordsAndPreview(){
     if(kind!=='permit' || recips==='parent' || recips==='both'){
       const msgP = buildMessageParent(st, kind, subtype, when, note, meta);
       const phoneP = normalizePhone(commonParentPhone || st.phone || '');
-      saved.push({toPhone:phoneP, msg:msgP});
-      makeEntry(st, kind, subtype, when, note, 'parent','ولي الأمر', phoneP, msgP, meta);
-      previews.push('— — —\n'+msgP);
+      const entryP = makeEntry(st, kind, subtype, when, note, 'parent','ولي الأمر', phoneP, msgP, meta);
+saved.push({toPhone:phoneP, msg:msgP, entryId: entryP.id});
+previews.push('— — —\n'+msgP);
     }
     if(kind==='permit' && (recips==='teacher' || recips==='both')){
       const msgT = buildMessageTeacher(st, subtype, when, note);
       const phoneT = normalizePhone(tPhone);
-      saved.push({toPhone:phoneT, msg:msgT});
-      makeEntry(st, kind, subtype, when, note, 'teacher', (tName||'المعلم'), phoneT, msgT, null);
-      previews.push('— — —\n'+msgT);
+    const entryT = makeEntry(st, kind, subtype, when, note, 'teacher', (tName||'المعلم'), phoneT, msgT, null);
+saved.push({toPhone:phoneT, msg:msgT, entryId: entryT.id});
+previews.push('— — —\n'+msgT);
     }
   }
 
@@ -1779,13 +1909,26 @@ function saveRecordsAndPreview(){
   }
 
   let idx=0;
-  $("waBtn").onclick = ()=>{
-    const item=saved[idx];
-    if(!item) return toast('انتهى الإرسال المتتابع.');
-    openWhatsApp(item.toPhone||'', item.msg);
+ $("waBtn").onclick = async ()=>{
+  const item = saved[idx];
+  if(!item) return toast('انتهى الإرسال المتتابع.');
+
+  try{
+    const resp = await sendWhats(item);
     idx++;
-    toast(idx<saved.length?'التالي...':'تم فتح آخر رسالة.');
-  };
+
+    if((state.settings.wa||{}).mode === 'api'){
+      toast(idx<saved.length
+        ? `تمت جدولة الرسالة (${resp?.status||'pending'}). التالي...`
+        : 'تمت جدولة آخر رسالة بنجاح.');
+    } else {
+      toast(idx<saved.length ? 'التالي...' : 'تم فتح آخر رسالة.');
+    }
+
+  }catch(e){
+    toast('تعذر الإرسال: ' + (e?.message || e));
+  }
+};
   $("copyBtn").onclick = ()=>copyText(previews.join('\n\n'));
   toast('تم الحفظ في الأرشيف ('+saved.length+').');
 }
@@ -2040,13 +2183,22 @@ function openTodayReportSheet(){
 
   const items = todayRecords().filter(r=>r.to==='parent').slice().reverse();
   let i=0;
-  $("reportWaBtn").onclick = ()=>{
-    const it=items[i];
-    if(!it) return toast('لا توجد رسائل اليوم للإرسال.');
-    openWhatsApp(it.toPhone||'', it.msg);
+  $("reportWaBtn").onclick = async ()=>{
+  const it = items[i];
+  if(!it) return toast('لا توجد رسائل اليوم للإرسال.');
+
+  try{
+    await sendWhats({ toPhone: it.toPhone||'', msg: it.msg||'', entryId: it.id });
     i++;
-    toast(i<items.length?'التالي...':'تم فتح آخر رسالة.');
-  };
+    if((state.settings.wa||{}).mode === 'api'){
+      toast(i<items.length ? 'تمت جدولة الرسالة. التالي...' : 'تمت جدولة آخر رسالة.');
+    } else {
+      toast(i<items.length ? 'التالي...' : 'تم فتح آخر رسالة.');
+    }
+  }catch(e){
+    toast('تعذر الإرسال: ' + (e?.message || e));
+  }
+};
 
   $("printLateBtn").onclick = ()=>printDaily('late');
   $("printAbsentBtn").onclick = ()=>printDaily('absent');
@@ -2369,6 +2521,9 @@ function openMenuSheet(){
     <button class="chip" type="button" id="mBackup">تنزيل نسخة احتياطية</button>
     <button class="chip" type="button" id="mShare">مشاركة النسخة الاحتياطية</button>
     <button class="chip" type="button" id="mRestore">استيراد نسخة احتياطية</button>
+
+    <!-- ✅ زر جديد -->
+    <button class="chip" type="button" id="mWaSettings">إعدادات واتساب</button>
   `;
   $("backdrop").classList.add('show');
 
@@ -2384,8 +2539,151 @@ function openMenuSheet(){
   $("mBackup").onclick = ()=>exportBackup();
   $("mShare").onclick = ()=>shareBackup();
   $("mRestore").onclick = ()=>restoreBackup();
-}
 
+  // ✅ ربط الزر الجديد
+  $("mWaSettings").onclick = ()=>openWhatsSettingsSheet();
+}
+function openWhatsSettingsSheet(){
+  $("sheetTitle").textContent='إعدادات واتساب';
+
+  // نفس أسلوب openMenuSheet: نخفي الباقي ونستخدم chipsBox كمنطقة عرض
+  $("scanBox").style.display='none';
+  $("reportBox").style.display='none';
+  $("afterSave").style.display='none';
+  $("archiveBox").style.display='none';
+  $("saveBtn").style.display='none';
+  $("typeBox").style.display='none';
+  $("whenRow").style.display='none';
+  $("noteBox").style.display='none';
+  $("profileBox").style.display='none';
+  $("editStudentBox").style.display='none';
+  $("recipientsBox").style.display='none';
+  $("teacherBox").style.display='none';
+
+  $("chipsBox").style.display='block';
+  $("chipsLabel").textContent='الإرسال';
+  $("backdrop").classList.add('show');
+
+  // مهم: لازم تكون added سابقًا ضمن كتلة WhatsApp Provider
+  // ensureWaCfg + DEFAULT_WA_CFG + smartWhatsSendMessage
+  ensureWaCfg();
+  const cfg = state.settings.wa;
+
+  $("chips").innerHTML = `
+    <div class="field">
+      <label for="waModeSel">طريقة الإرسال</label>
+      <select id="waModeSel">
+        <option value="web">فتح واتساب (wa.me)</option>
+        <option value="api">Smart-Whats API (Queue)</option>
+      </select>
+      <div class="small" style="margin-top:6px">
+        وضع API يضع الرسائل في الانتظار (pending) ويتطلب إضافة كروم متصلة بواتساب ويب.
+      </div>
+    </div>
+
+    <div id="waApiBox" style="display:none">
+      <div class="grid2">
+        <div class="field">
+          <label for="waAuthSel">المصادقة</label>
+          <select id="waAuthSel">
+            <option value="apiKey">API Key (X-API-Key)</option>
+            <option value="basic">Basic Auth (phone:password)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="waBaseUrl">Base URL</label>
+          <input id="waBaseUrl" type="text" placeholder="https://wa.smart-whats.com"/>
+        </div>
+      </div>
+
+      <div class="field" id="waApiKeyBox">
+        <label for="waApiKey">API Key</label>
+        <input id="waApiKey" type="password" autocomplete="off" placeholder="wsk_..."/>
+      </div>
+
+      <div class="grid2" id="waBasicBox" style="display:none">
+        <div class="field">
+          <label for="waUser">رقم الحساب</label>
+          <input id="waUser" type="tel" inputmode="tel" placeholder="9665xxxxxxx"/>
+        </div>
+        <div class="field">
+          <label for="waPass">كلمة المرور</label>
+          <input id="waPass" type="password" autocomplete="off" placeholder="••••••••"/>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="waTimeout">Timeout (sec)</label>
+          <input id="waTimeout" type="number" min="5" max="60"/>
+        </div>
+        <div class="field">
+          <label for="waDelay">فاصل التتابع (ms)</label>
+          <input id="waDelay" type="number" min="0" max="5000"/>
+        </div>
+      </div>
+
+      <div class="inlineBtns">
+        <button class="secondaryBtn" id="waTestBtn" type="button">اختبار</button>
+        <button class="primary" id="waSaveBtn" type="button">حفظ</button>
+      </div>
+      <div class="small" style="margin-top:8px">تنبيه: لا تحفظ المفتاح داخل الملف؛ استخدم هذه الصفحة فقط.</div>
+    </div>
+  `;
+
+  const modeSel = document.getElementById('waModeSel');
+  const apiBox  = document.getElementById('waApiBox');
+  const authSel = document.getElementById('waAuthSel');
+  const apiKeyBox = document.getElementById('waApiKeyBox');
+  const basicBox  = document.getElementById('waBasicBox');
+
+  modeSel.value = cfg.mode || 'web';
+  authSel.value = cfg.auth || 'apiKey';
+  document.getElementById('waBaseUrl').value = cfg.baseUrl || DEFAULT_WA_CFG.baseUrl;
+  document.getElementById('waApiKey').value  = cfg.apiKey || '';
+  document.getElementById('waUser').value    = cfg.user || '';
+  document.getElementById('waPass').value    = cfg.pass || '';
+  document.getElementById('waTimeout').value = Number(cfg.timeoutSec||15);
+  document.getElementById('waDelay').value   = Number(cfg.stepDelayMs||900);
+
+  const toggle = ()=>{
+    apiBox.style.display = (modeSel.value==='api') ? 'block' : 'none';
+    const isBasic = (authSel.value==='basic');
+    apiKeyBox.style.display = isBasic ? 'none' : 'block';
+    basicBox.style.display  = isBasic ? 'grid' : 'none';
+  };
+  modeSel.onchange = toggle;
+  authSel.onchange = toggle;
+  toggle();
+
+  document.getElementById('waSaveBtn').onclick = ()=>{
+    ensureWaCfg();
+    cfg.mode = modeSel.value;
+    cfg.auth = authSel.value;
+    cfg.baseUrl = String(document.getElementById('waBaseUrl').value||'').trim().replace(/\/+$/,'') || DEFAULT_WA_CFG.baseUrl;
+    cfg.apiKey = String(document.getElementById('waApiKey').value||'');
+    cfg.user   = normalizePhone(document.getElementById('waUser').value||'');
+    cfg.pass   = String(document.getElementById('waPass').value||'');
+    cfg.timeoutSec  = Number(document.getElementById('waTimeout').value||15);
+    cfg.stepDelayMs = Number(document.getElementById('waDelay').value||900);
+
+    store.set(KEYS.settings, state.settings);
+    toast('تم حفظ إعدادات الواتساب.');
+  };
+
+  document.getElementById('waTestBtn').onclick = async ()=>{
+    ensureWaCfg();
+    if((state.settings.wa||{}).mode!=='api') return toast('حوّل إلى وضع API ثم اختبر.');
+    const p = prompt('رقم الاختبار بصيغة 9665xxxxxxx:');
+    if(!p) return;
+    try{
+      const resp = await smartWhatsSendMessage(p, 'رسالة اختبار من نظام المواظبة والسلوك');
+      toast('نجح الاختبار: ' + (resp?.status||'pending'));
+    }catch(e){
+      toast('فشل الاختبار: ' + (e?.message || e));
+    }
+  };
+}
 /* ===== Wire ===== */
 function wire(){
   $("menuBtn").innerHTML = icon('dots');
@@ -2656,6 +2954,8 @@ function init(){
   seedTeachersFromPreloaded();
   refreshTeacherSelect();
   state.settings = store.get(KEYS.settings, state.settings);
+ensureWaCfg();
+store.set(KEYS.settings, state.settings);
   const info=nowInfo();
   $("todayPill").textContent = info.day + ' • ' + info.date;
 
