@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    --primary: 215 65% 28%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 38 85% 55%;
+    --secondary-foreground: 215 25% 15%;
+
+    --muted: 210 15% 93%;
+    --muted-foreground: 215 12% 50%;
+
+    --accent: 170 50% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 152 60% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 215 25% 15%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 215 65% 28%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar — مدرسة اليعقوبي · هوية بصرية فيروزية أنيقة */
+    --sidebar-background: 188 60% 14%;
+    --sidebar-foreground: 180 25% 92%;
+    --sidebar-primary: 174 70% 48%;
+    --sidebar-primary-foreground: 188 60% 10%;
+    --sidebar-accent: 188 50% 22%;
+    --sidebar-accent-foreground: 180 30% 96%;
+    --sidebar-border: 188 40% 22%;
+    --sidebar-ring: 174 70% 48%;
+    --sidebar-muted: 188 30% 28%;
+    --sidebar-gradient-from: 188 60% 14%;
+    --sidebar-gradient-to: 196 65% 9%;
+    --sidebar-glow: 174 70% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-cairo antialiased;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Prevent iOS zoom on inputs */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  @media (min-width: 768px) {
+    input, select, textarea {
+      font-size: inherit !important;
+    }
+  }
+
+  /* Sidebar: hide scrollbar visually while remaining scrollable */
+  .sidebar-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm;
+  }
+
+  .stat-card {
+    @apply bg-card rounded-xl border border-border/50 p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .sidebar-item {
+    @apply relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-sidebar-foreground/75 hover:text-sidebar-foreground hover:bg-sidebar-accent/80 transition-all duration-200 cursor-pointer overflow-hidden;
+  }
+
+  .sidebar-item-active {
+    @apply relative flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gradient-to-l from-[hsl(var(--sidebar-primary)/0.25)] via-[hsl(var(--sidebar-accent))] to-[hsl(var(--sidebar-accent)/0.6)] text-sidebar-accent-foreground font-bold shadow-[inset_0_0_0_1px_hsl(var(--sidebar-primary)/0.45),0_6px_18px_-8px_hsl(var(--sidebar-glow)/0.55)] overflow-hidden;
+  }
+
+  .sidebar-item-active::before,
+  .sidebar-item:hover::before {
+    content: "";
+    position: absolute;
+    right: 0; top: 14%; bottom: 14%;
+    width: 3px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, hsl(var(--sidebar-primary)), hsl(var(--sidebar-primary)/0.4));
+    box-shadow: 0 0 12px hsl(var(--sidebar-glow)/0.6);
+  }
+  .sidebar-item:hover::before { opacity: .5; }
+
+  .sidebar-group-trigger-active {
+    @apply bg-sidebar-accent/60 text-sidebar-foreground shadow-[inset_0_0_0_1px_hsl(var(--sidebar-primary)/0.35)];
+  }
+}
+
+/* ============================================================
+   Teacher tables — shared, creative, print-friendly styles.
+   Used across: LegacyArchive, TeacherNoticesArchive, monthly
+   summaries, and any tabular file in the teacher dossier.
+   ============================================================ */
+@layer components {
+  .teacher-table-wrap {
+    @apply rounded-xl border border-border overflow-hidden bg-card shadow-sm;
+  }
+  .teacher-table {
+    @apply w-full text-sm border-separate;
+    border-spacing: 0;
+    table-layout: fixed;
+  }
+  .teacher-table thead th {
+    @apply text-center font-extrabold text-[12.5px] tracking-wide;
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.12) 0%, hsl(var(--primary) / 0.04) 100%);
+    color: hsl(var(--primary));
+    padding: 12px 10px;
+    border-bottom: 1.5px solid hsl(var(--primary) / 0.35);
+    white-space: nowrap;
+    text-align: center;
+  }
+  .teacher-table tbody td {
+    @apply text-[13px] text-center;
+    padding: 11px 10px;
+    border-bottom: 1px solid hsl(var(--border));
+    vertical-align: middle;
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  .teacher-table tbody tr:nth-child(even) td {
+    background: hsl(var(--muted) / 0.35);
+  }
+  .teacher-table tbody tr:hover td {
+    background: hsl(var(--primary) / 0.06);
+  }
+  .teacher-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .teacher-table tfoot td {
+    @apply text-center text-xs font-extrabold;
+    padding: 12px 10px;
+    color: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.08);
+    border-top: 1.5px solid hsl(var(--primary) / 0.25);
+  }
+  .teacher-absence-detail-table {
+    min-width: 1100px;
+  }
+  .teacher-absence-detail-table tbody td {
+    padding-block: 12px;
+  }
+  .teacher-table .col-num {
+    @apply text-muted-foreground text-center font-mono text-xs;
+    width: 44px;
+  }
+  .teacher-table .col-actions {
+    @apply text-center;
+    width: 160px;
+  }
+
+  /* Print: maintain colors, remove hover/zebra noise, ensure full-width */
+  @media print {
+    .teacher-table-wrap { box-shadow: none !important; border-radius: 0 !important; border-color: #94a3b8 !important; }
+    .teacher-table { font-size: 11.5px !important; }
+    .teacher-table thead th {
+      background: #0b7e88 !important;
+      color: #fff !important;
+      border-bottom: 1.5px solid #064e55 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .teacher-table tbody tr:nth-child(even) td { background: #f1f5f9 !important; }
+    .teacher-table tbody tr:hover td { background: transparent !important; }
+    .teacher-table tbody td { border-bottom: 1px solid #94a3b8 !important; }
+    .teacher-table tfoot td { background: hsl(210 40% 92%) !important; color: hsl(222 47% 11%) !important; border-top: 1.5px solid hsl(215 16% 47%) !important; }
+    .teacher-table tr { page-break-inside: avoid; break-inside: avoid; }
+  }
+}

@@ -1,0 +1,7 @@
+project_id = "wqcxvpusxwtarfwkbfmj"
+
+[functions.verify-teacher-civil-id]
+verify_jwt = false
+
+[functions.request-password-reset]
+verify_jwt = false
