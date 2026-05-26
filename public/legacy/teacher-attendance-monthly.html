@@ -1,0 +1,3089 @@
+<!-- ===================== PART 1 / 7 ===================== -->
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b7e88" />
+  <title>كشف حضوري (شهري)</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- ✅ PDF Export -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <style>
+    :root{
+      --moe:#0b7e88;
+      --ink:#0b2f2b;
+      --muted:#5f7c80;
+      --bg:#f5fafb;
+      --card:#ffffff;
+      --line:#e5eff1;
+      --shadow:0 12px 30px rgba(7, 38, 43, .08);
+      --ok:#e9fff4;
+      --warn:#fff6ec;
+      --bad:#ffefef;
+      --r:18px;
+
+      /* ✅ صفوف الجدول */
+      --rowAbs: rgba(220, 38, 38, .10);   /* أحمر شفاف */
+      --rowOpen: rgba(245, 158, 11, .16); /* أصفر شفاف */
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Tajawal",system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    button,input,select,textarea{font-family:inherit}
+    a{color:inherit}
+/* شريط الأزرار (سطر واحد + تمرير أفقي) */
+.btns{
+  display:flex;
+  gap:8px;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:2px;
+  scrollbar-width:none;
+}
+.btns::-webkit-scrollbar{display:none}
+
+/* مهم: نخلي flex/nowrap فقط لأزرار الشريط العلوي */
+.btns .btn{flex:0 0 auto; white-space:nowrap;}
+
+.title{font-weight:1000; letter-spacing:.2px; font-size:18px}
+
+.btn{
+  border:1px solid var(--line);
+  background:#eef7f8;
+  padding:9px 12px;
+  border-radius:999px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 6px 16px rgba(7, 38, 43, .05);
+  user-select:none;
+  display:inline-flex; align-items:center; gap:8px;
+}
+
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:linear-gradient(180deg, #e8fbfb, #eaf6f6); border-color:#d9f0f0}
+    .btn.wa{background:linear-gradient(180deg,#eafff5,#e9fff4); border-color:#c9f2dd}
+    .btn.danger{background:linear-gradient(180deg,#fff0f0,#ffefef); border-color:#f4d3d3}
+
+    input[type="file"]{display:none}
+
+    .wrap{max-width:1200px;margin:14px auto 22px; padding:0 14px}
+    .notice{
+      background:#eef8f9;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:900;
+      color:#0b5660;
+      text-align:center;
+    }
+    .row{
+      margin-top:12px;
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:space-between;
+    }
+    .chips{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .chip{
+      background:#eef7f8;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:1000;
+      color:#0b5660;
+      display:inline-flex; align-items:center; gap:8px;
+      white-space:nowrap;
+    }
+    .chip b{color:var(--ink)}
+    .chip.warn{background:var(--warn);border-color:#f2dfc4;color:#7a4a00; cursor:pointer}
+    .controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-inline-start:auto}
+    .field{
+      display:flex; align-items:center; gap:8px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      box-shadow:0 8px 18px rgba(7, 38, 43, .05);
+      min-width:320px;
+    }
+    .field label{font-weight:900;color:var(--muted);font-size:12px}
+    select,input[type="text"]{
+      border:0; outline:0; background:transparent;
+      padding:8px 8px; width:100%;
+      font-weight:1000; color:var(--ink);
+    }
+    .field.small{min-width:260px}
+
+    .paper{margin:14px auto 0; max-width:1020px; padding:0 14px}
+    .page{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:22px 22px 18px;
+    }
+
+    /* ✅ الهيدر داخل الكشف: بنر فقط (بدون كتابة) */
+    .pageHeader{margin-bottom:12px}
+    .pageHeader .meta{display:none !important} /* نحافظ على العناصر للبرمجة لكن نخفيها */
+    .bannerWrap{
+      width:100%;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      box-shadow:0 10px 24px rgba(7, 38, 43, .08);
+      background:#0b5f66;
+    }
+    .bannerWrap img{
+      width:100%;
+      height:132px;
+      display:block;
+      object-fit:cover;
+    }
+    @media (max-width:560px){
+      .bannerWrap img{height:112px}
+    }
+
+    /* عنوان الكشف يبقى كما هو */
+    .headline{
+  text-align:center;
+  font-weight:900;
+  font-size:20px;
+  letter-spacing:0;
+  color:#0b5660;
+  margin:10px 0 6px;
+  line-height:1.25;
+}
+/* ✅ تصغير عنوان "احصائيات الحضور والانصراف لشهر..." فقط */
+#reportHeadline{
+  font-size:18px;      /* حجم العرض + PDF (html2canvas) */
+  line-height:1.25;
+}
+
+/* ✅ تصغير إضافي للطباعة فقط */
+@media print{
+  #reportHeadline{
+    font-size:16px;
+    line-height:1.2;
+  }
+}
+    table{width:100%; border-collapse:collapse}
+    th,td{border:1px solid #2a5f64; padding:10px 10px; text-align:center; vertical-align:middle}
+/* =========================================================
+   ✅ تصغير خطوط التقرير (بدون التأثير على باقي الجداول)
+   ضع هذا بعد قاعدة: th,td{...}
+========================================================= */
+
+/* 1) ✅ جدول بيانات المعلم */
+table[aria-label="بيانات المعلم"] th{
+  font-size:12px !important;
+  padding:8px 8px !important;
+}
+table[aria-label="بيانات المعلم"] td{
+  font-size:12px !important;
+  padding:8px 8px !important;
+}
+
+/* 2) ✅ عنوان: احصائيات الحضور والانصراف لشهر ... */
+#reportHeadline{
+  font-size:18px !important; /* كان 22px */
+  line-height:1.25 !important;
+  margin:8px 0 6px !important;
+}
+
+/* 3) ✅ شارات المؤشرات: نسبة الحضور / مؤشر الانضباط / المستوى */
+.metrics .badge{
+  font-size:12px !important;
+  padding:6px 9px !important;
+}
+
+/* 4) ✅ جدول سجل المتابعة اليومي */
+table[aria-label="تفصيل أيام الشهر"] th{
+  font-size:12px !important;
+  padding:8px 8px !important;
+}
+table[aria-label="تفصيل أيام الشهر"] td{
+  font-size:12px !important;
+  padding:8px 8px !important;
+}
+
+/* ✅ للجوال فقط */
+@media (max-width:560px){
+  table[aria-label="بيانات المعلم"] th,
+  table[aria-label="بيانات المعلم"] td,
+  table[aria-label="تفصيل أيام الشهر"] th,
+  table[aria-label="تفصيل أيام الشهر"] td,
+  .metrics .badge{
+    font-size:11px !important;
+    padding:7px 6px !important;
+  }
+
+  #reportHeadline{
+    font-size:16px !important;
+  }
+}
+
+/* ✅ للطباعة / PDF فقط */
+@media print{
+  table[aria-label="بيانات المعلم"] th,
+  table[aria-label="بيانات المعلم"] td,
+  table[aria-label="تفصيل أيام الشهر"] th,
+  table[aria-label="تفصيل أيام الشهر"] td{
+    font-size:11px !important;
+    padding:7px 7px !important;
+  }
+
+  .metrics .badge{
+    font-size:11px !important;
+    padding:6px 8px !important;
+  }
+
+  #reportHeadline{
+    font-size:17px !important;
+  }
+}
+/* ✅ تصغير خط جدول بيانات المعلم (الاسم/الهوية/الجوال/التخصص/المرتبة) فقط */
+table[aria-label="بيانات المعلم"] th{
+  font-size:12px;
+  padding:8px 8px;
+}
+table[aria-label="بيانات المعلم"] td{
+  font-size:12px;
+  padding:8px 8px;
+  line-height:1.6;
+}
+    th{background:#0b5f66; color:#fff; font-weight:1000; font-size:13px}
+    td{background:#fff; font-weight:900; color:#20383b}
+    .tight td{padding:9px 10px}
+
+    /* ✅ تلوين صفوف تفصيل الأيام */
+    #daysBody tr.absent td{background:var(--rowAbs) !important}
+    #daysBody tr.open td{background:var(--rowOpen) !important}
+/* ✅ مظهر الاستئذان داخل الخلية */
+.permCell{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  align-items:center;
+  justify-content:center;
+}
+.permCell b{
+  font-weight:1100;
+  color:#0b5660;
+}
+.permPills{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.permPill{
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:3px 8px;
+  font-weight:1000;
+  font-size:11px;
+  line-height:1.6;
+  white-space:nowrap;
+  background:#f3fbfb;
+  color:#0b5660;
+}
+.permPill.start{background:#eef7ff;border-color:#cfe0ff;color:#1b4d86}
+.permPill.end{background:#fff1f2;border-color:#fecdd3;color:#9f1239}
+.permPill.mid{background:#fffbeb;border-color:#fde68a;color:#854d0e}
+.permPill.none{background:#f6fafb;border-color:var(--line);color:var(--muted)}
+.sectionTitle{margin:18px 0 10px; font-weight:1100; color:#0b5660; font-size:16px; text-align:right}
+.sectionTitle.center{ text-align:center; }
+    .note{margin-top:10px; color:#5e7377; font-weight:900; font-size:12px}
+    .footerNote{margin-top:12px; color:#2f4f53; font-weight:1000; text-align:right}
+    .hint{color:#0b5660; font-weight:1000; text-align:center; padding:10px 10px 0}
+
+    .metrics{
+      margin-top:10px;
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-start;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px; border-radius:999px; font-weight:1000; border:1px solid var(--line);
+      background:#f3fbfb; color:#0b5660;
+      white-space:nowrap;
+    }
+    .badge.ok{background:var(--ok); border-color:#c8efd8; color:#0a5f3b}
+    .badge.warn{background:var(--warn); border-color:#f2dfc4; color:#7a4a00}
+    .badge.bad{background:var(--bad); border-color:#f0caca; color:#8a1d1d}
+/* ✅ (دقيق) تصغير مؤشرات: نسبة الحضور / مؤشر الانضباط / المستوى فقط */
+.metrics[aria-label="مؤشرات إضافية"] .badge{
+  font-size:12px;
+  padding:6px 10px;
+  line-height:1.6;
+}
+
+/* ✅ للجوال فقط */
+@media (max-width:560px){
+  .metrics[aria-label="مؤشرات إضافية"] .badge{
+    font-size:11px;
+    padding:5px 9px;
+  }
+}
+
+/* ✅ للطباعة/PDF فقط */
+@media print{
+  .metrics[aria-label="مؤشرات إضافية"] .badge{
+    font-size:11px;
+    padding:5px 9px;
+  }
+}
+    /* ===== WhatsApp Modal ===== */
+    .overlay{
+      position:fixed; inset:0; z-index:80;
+      background:rgba(0,0,0,.35);
+      display:none;
+    }
+    .overlay.show{display:block}
+    .modal{
+      position:fixed; inset:0; z-index:90;
+      display:none;
+      align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .modal.show{display:flex}
+    .modalCard{
+      width:min(820px, 100%);
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(10px);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:0 22px 60px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .modalHead{
+      padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,#f2fbfb,#ffffff);
+    }
+    .modalHead .h{
+      font-weight:1100; color:#0b5660; font-size:16px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .modalBody{padding:14px 16px}
+    .msgBox{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      padding:14px;
+      font-weight:1000;
+      color:#20383b;
+      line-height:2;
+      white-space:pre-wrap;
+      user-select:text;
+    }
+    .modalActions{
+      padding:12px 16px 16px;
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-start;
+    }
+    .small{font-size:12px;color:var(--muted);font-weight:900;margin-top:10px}
+
+    /* ===== Registry Issues Modal ===== */
+    .list{
+      margin:10px 0 0;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      overflow:hidden;
+    }
+    .list .it{
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      font-weight:900;
+      color:#20383b;
+    }
+    .list .it:last-child{border-bottom:0}
+    .muted{color:var(--muted);font-weight:900}
+
+    @media print{
+      .topbar,.wrap,.overlay,.modal{display:none !important}
+      body{background:#fff}
+      .paper{max-width:none;padding:0}
+      .page{border:0; box-shadow:none; border-radius:0; padding:18px}
+      @page{size:A4 portrait; margin:10mm}
+    }
+  </style>
+</head>
+<!-- ===================== PART 2 / 7 ===================== -->
+<body>
+  <header class="topbar">
+    <div class="btns">
+      <button class="btn primary" id="btnExport">تنزيل Excel</button>
+      <button class="btn primary" id="btnPDF">تنزيل PDF</button>
+      <button class="btn primary" id="btnPrint">طباعة</button>
+      <button class="btn wa" id="btnWA">رسالة واتساب</button>
+
+      <button class="btn" id="btnClose">إغلاق</button>
+
+      <label class="btn" for="fileInput">استيراد Excel</label>
+      <input id="fileInput" type="file" multiple accept=".xlsx,.xls,.csv" />
+
+      <label class="btn" for="folderInput">استيراد مجلد</label>
+      <input id="folderInput" type="file" webkitdirectory multiple />
+    </div>
+    <div class="title">كشف حضوري (شهري)</div>
+  </header>
+
+  <div class="wrap">
+    <div class="notice" id="notice">لم يتم استيراد ملفات بعد — اختر مجلد الشهر (مثل: ١١) ثم اختر معلماً لعرض كشفه الشهري.</div>
+
+    <div class="row">
+      <div class="chips">
+        <span class="chip">الشهر: <b id="monthChip">—</b></span>
+        <span class="chip">أيام مستوردة: <b id="daysImported">0</b></span>
+        <span class="chip">ملفات Excel مقروءة: <b id="excelRead">0</b></span>
+        <span class="chip">حالة: <b id="state">بانتظار الاستيراد</b></span>
+        <span class="chip warn" id="regWarn" style="display:none" title="اضغط لعرض التفاصيل">تنبيه السجل: <b id="regWarnCount">0</b></span>
+      </div>
+
+      <div class="controls">
+        <div class="field small" title="بحث سريع بالهوية/الرقم الوظيفي ثم Enter">
+          <label>الهوية</label>
+          <input id="idInput" type="text" inputmode="numeric" placeholder="اكتب رقم الهوية/الرقم الوظيفي ثم Enter للتحديد" />
+        </div>
+
+        <div class="field" title="اختيار المعلم (فريد حسب رقم الهوية/الرقم الوظيفي)">
+          <label>المعلم</label>
+          <select id="teacherSelect">
+            <option value="">— اختر —</option>
+          </select>
+        </div>
+
+        <div class="field small" title="الدوام الأساسي للأيام غير المشمولة بفترات خاصة">
+          <label>الدوام الأساسي</label>
+          <select id="shiftModeSelect">
+            <option value="summer">صيفي — 06:45</option>
+            <option value="winter" selected>شتوي — 07:00</option>
+            <option value="ramadan">رمضان — 09:30</option>
+          </select>
+        </div>
+
+        <div class="field small" title="بداية الفترة الخاصة">
+          <label>من</label>
+          <input id="shiftPeriodStart" type="date" />
+        </div>
+
+        <div class="field small" title="نهاية الفترة الخاصة">
+          <label>إلى</label>
+          <input id="shiftPeriodEnd" type="date" />
+        </div>
+
+        <div class="field small" title="نوع الدوام خلال هذه الفترة الخاصة">
+          <label>الفترة الخاصة</label>
+          <select id="shiftPeriodModeSelect">
+            <option value="summer">صيفي — 06:45</option>
+            <option value="winter">شتوي — 07:00</option>
+            <option value="ramadan" selected>رمضان — 09:30</option>
+          </select>
+        </div>
+
+        <button class="btn primary" id="btnAddShiftPeriod" type="button">إضافة فترة</button>
+        <button class="btn danger" id="btnClearShiftPeriods" type="button">مسح الفترات</button>
+      </div>
+    </div>
+
+    <div class="row" id="shiftPeriodsRow">
+      <div class="chips" id="shiftPeriodsChips" aria-label="فترات الدوام الخاصة">
+        <span class="chip">الفترات الخاصة: <b>لا توجد</b></span>
+      </div>
+    </div>
+  </div>
+
+  <main class="paper">
+    <section class="page" id="reportPage">
+
+      <!-- ✅ الهيدر داخل الكشف: بنر فقط -->
+      <div class="pageHeader">
+        <!-- نُبقي العناصر للبرمجة فقط بدون عرض -->
+        <div class="meta" aria-hidden="true">
+          <div class="dow" id="todayDow">—</div>
+          <div class="hijri" id="todayHijri">—</div>
+        </div>
+
+        <div class="bannerWrap" aria-label="بنر وزارة التعليم">
+          <img id="bannerImg" src="shree.png" alt="" crossorigin="anonymous" />
+        </div>
+      </div>
+
+      <!-- ✅ عنوان الكشف كما هو -->
+      <div class="headline" id="reportHeadline">احصائيات الحضور والانصراف</div>
+
+<table class="tight teacherTable" aria-label="بيانات المعلم">
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>رقم الهوية (الرقم الوظيفي)</th>
+            <th>الجوال</th>
+            <th>التخصص</th>
+            <th>المرتبة</th>
+            <th>الدوام الأساسي: <span id="shiftStartTxt">شتوي — 07:00</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="tName">—</td>
+            <td id="tId">—</td>
+            <td id="tPhone">—</td>
+            <td id="tSpec">—</td>
+            <td id="tRank">—</td>
+            <td id="tShift">—</td>
+          </tr>
+        </tbody>
+      </table>
+
+     <div class="sectionTitle">ملخص الشهر</div>
+<table class="tight" aria-label="ملخص الشهر">
+  <thead>
+    <tr>
+      <th>إجمالي ساعات الدوام</th>
+      <th>إجمالي التأخر</th>
+      <th>إجمالي الاستئذان</th>
+      <th>إجمالي الغياب</th>
+      <th>أيام لم يُغلق الدوام</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="sumWork">—</td>
+      <td id="sumLate">—</td>
+      <td id="sumExcuse">—</td>
+      <td id="sumAbs">—</td>
+      <td id="sumOpen">—</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="metrics" aria-label="مؤشرات إضافية">
+  <span class="badge" id="mAttendance">نسبة الحضور: —</span>
+  <span class="badge" id="mDiscipline">مؤشر الانضباط: —</span>
+  <span class="badge" id="mLevel">المستوى: —</span>
+</div>
+
+
+
+
+     
+
+      
+
+<div class="sectionTitle center" id="daysSectionTitle">سجل المتابعة اليومي للحضور والانصراف (أحدث الأيام أولاً)</div>
+<table class="tight" aria-label="تفصيل أيام الشهر">
+  <thead>
+    <tr>
+      <th>اليوم</th>
+      <th>الحضور</th>
+      <th>الانصراف</th>
+      <th>ساعات الدوام</th>
+      <th>التأخر</th>
+      <th>الاستئذان</th>
+      <th>الحالة</th>
+    </tr>
+  </thead>
+  <tbody id="daysBody">
+    <tr><td colspan="7" class="hint">اختر معلماً بعد الاستيراد لعرض تفاصيل الأيام.</td></tr>
+  </tbody>
+</table>
+
+
+      <div class="footerNote">وفق منصة حضوري الرسمية لتسهيل المتابعة</div>
+    </section>
+  </main>
+<!-- ===================== PART 3 / 7 ===================== -->
+  <!-- WhatsApp Modal -->
+  <div class="overlay" id="waOverlay"></div>
+  <div class="modal" id="waModal" aria-hidden="true">
+    <div class="modalCard" role="dialog" aria-modal="true" aria-label="رسالة واتساب">
+      <div class="modalHead">
+        <div class="h">
+          <span class="badge ok">واتساب</span>
+          <span>رسالة جاهزة (قابلة للنسخ/الإرسال/الطباعة)</span>
+        </div>
+        <button class="btn danger" id="btnWAClose">إغلاق</button>
+      </div>
+      <div class="modalBody">
+        <div class="msgBox" id="waText">—</div>
+        <div class="small" id="waHint">سيتم توجيه الرسالة لرقم الجوال المسجل للمعلم.</div>
+      </div>
+      <div class="modalActions">
+        <button class="btn primary" id="btnWACopy">نسخ الرسالة</button>
+        <button class="btn wa" id="btnWASend">فتح واتساب للإرسال</button>
+        <button class="btn" id="btnWAPrint">طباعة الرسالة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registry Issues Modal -->
+  <div class="overlay" id="regOverlay"></div>
+  <div class="modal" id="regModal" aria-hidden="true">
+    <div class="modalCard" role="dialog" aria-modal="true" aria-label="تنبيه السجل">
+      <div class="modalHead">
+        <div class="h">
+          <span class="badge warn">تنبيه</span>
+          <span>مشكلات في السجل المزروع (تكرار هوية/بيانات غير مكتملة)</span>
+        </div>
+        <button class="btn danger" id="btnRegClose">إغلاق</button>
+      </div>
+      <div class="modalBody">
+        <div class="muted">تم اعتماد أول سجل لكل رقم هوية لضمان عدم تكرار القائمة المنسدلة. يُستحسن تصحيح السجل المزروع عند الحاجة.</div>
+        <div class="list" id="regList"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ===== حماية من توقف صامت =====
+  window.addEventListener("error", (e) => {
+    const n = document.getElementById("notice");
+    const s = document.getElementById("state");
+    if (s) s.textContent = "خطأ برمجي";
+    if (n) n.textContent = "تعذر تشغيل الصفحة بسبب خطأ برمجي. انسخ الكود كما هو بالكامل ثم أعد التحميل.";
+    console.error(e?.error || e);
+  });
+
+  /* =========================
+     إعدادات الدوام
+  ========================== */
+  const DEFAULT_SHIFT_MODE = "winter";
+  const SHIFT_STORAGE_KEY = "yaqoubi-monthly-attendance-shifts-v2";
+  const SHIFT_PROFILES = {
+    summer:  { label:"صيفي",  start:"06:45", baseMin:420 },
+    winter:  { label:"شتوي",  start:"07:00", baseMin:420 },
+    ramadan: { label:"رمضان", start:"09:30", baseMin:240 }
+  };
+
+  let currentShiftMode = DEFAULT_SHIFT_MODE;
+  let shiftPeriods = [];
+  const CLAMP_BEFORE_MIN = 30; // سماحية قبل بداية الدوام
+
+  function getCurrentShiftProfile(){
+    return SHIFT_PROFILES[currentShiftMode] || SHIFT_PROFILES[DEFAULT_SHIFT_MODE];
+  }
+
+  function getShiftProfileByMode(mode){
+    return SHIFT_PROFILES[mode] || SHIFT_PROFILES[DEFAULT_SHIFT_MODE];
+  }
+
+  function normalizeShiftPeriods(periods){
+    if (!Array.isArray(periods)) return [];
+    return periods
+      .map(p => ({
+        start: String((p && p.start) || "").trim(),
+        end: String((p && p.end) || "").trim(),
+        mode: String((p && p.mode) || DEFAULT_SHIFT_MODE).trim()
+      }))
+      .filter(p => /^\d{4}-\d{2}-\d{2}$/.test(p.start) && /^\d{4}-\d{2}-\d{2}$/.test(p.end) && p.start <= p.end && SHIFT_PROFILES[p.mode])
+      .sort((a,b) => (a.start + a.end).localeCompare(b.start + b.end));
+  }
+
+  function dateInPeriod(dateKey, period){
+    return !!dateKey && !!period && dateKey >= period.start && dateKey <= period.end;
+  }
+
+  function findShiftPeriodForDate(dateKey){
+    if (!dateKey) return null;
+    for (const period of shiftPeriods){
+      if (dateInPeriod(dateKey, period)) return period;
+    }
+    return null;
+  }
+
+  function getShiftContextForDate(dateKey){
+    const period = findShiftPeriodForDate(dateKey);
+    const mode = (period && period.mode) || currentShiftMode;
+    const p = getShiftProfileByMode(mode);
+    const fullMin = p.baseMin;
+    const halfMin = Math.round(fullMin / 2);
+    const shiftStartM = hhmmToMinutes(p.start);
+
+    const clampMinM = shiftStartM - CLAMP_BEFORE_MIN;
+    const clampMaxM = shiftStartM + fullMin;
+
+    return {
+      key: mode,
+      label: p.label,
+      start: p.start,
+      fullMin,
+      halfMin,
+      shiftStartM,
+      clampMinM,
+      clampMaxM,
+      isFromPeriod: !!period,
+      periodStart: (period && period.start) || "",
+      periodEnd: (period && period.end) || ""
+    };
+  }
+
+  function getShiftDisplayText(){
+    const p = getCurrentShiftProfile();
+    return `${p.label} — ${p.start}`;
+  }
+
+  function getShiftPeriodDisplayText(period){
+    if (!period) return "";
+    const p = getShiftProfileByMode(period.mode);
+    return `${p.label} — ${p.start} | ${period.start} ← ${period.end}`;
+  }
+
+  function getTeacherShiftSummary(teacher){
+    if (!teacher) return getShiftDisplayText();
+
+    const used = new Map();
+    const dates = Array.from(teacher.days.keys()).sort();
+    for (const dateKey of dates){
+      const day = teacher.days.get(dateKey);
+      if (isExcludedDayKey(dateKey, day && day.statusRaw).excluded) continue;
+      const sc = getShiftContextForDate(dateKey);
+      const token = `${sc.key}|${sc.start}`;
+      if (!used.has(token)) used.set(token, `${sc.label} — ${sc.start}`);
+    }
+
+    if (!used.size) return `الأساسي: ${getShiftDisplayText()}`;
+    if (used.size === 1) return Array.from(used.values())[0];
+    return `مختلط — ${Array.from(used.values()).join(" / ")}`;
+  }
+
+  function hasShiftPeriodOverlap(start, end, ignoreIndex = -1){
+    for (let i=0; i<shiftPeriods.length; i++){
+      if (i === ignoreIndex) continue;
+      const p = shiftPeriods[i];
+      const separated = end < p.start || start > p.end;
+      if (!separated) return p;
+    }
+    return null;
+  }
+
+  function saveShiftSettings(){
+    try{
+      localStorage.setItem(SHIFT_STORAGE_KEY, JSON.stringify({
+        currentShiftMode,
+        shiftPeriods
+      }));
+    }catch(_){ }
+  }
+
+  function loadShiftSettings(){
+    try{
+      const raw = localStorage.getItem(SHIFT_STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data && SHIFT_PROFILES[data.currentShiftMode]) currentShiftMode = data.currentShiftMode;
+      shiftPeriods = normalizeShiftPeriods((data && data.shiftPeriods) || []);
+    }catch(_){
+      shiftPeriods = [];
+      currentShiftMode = DEFAULT_SHIFT_MODE;
+    }
+  }
+
+  function removeShiftPeriod(index){
+    if (index < 0 || index >= shiftPeriods.length) return;
+    shiftPeriods.splice(index, 1);
+    saveShiftSettings();
+    updateShiftUI();
+    renderSelectedTeacher();
+  }
+
+  function renderShiftPeriods(){
+    const wrap = document.getElementById("shiftPeriodsChips");
+    if (!wrap) return;
+
+    if (!shiftPeriods.length){
+      wrap.innerHTML = `<span class="chip">الفترات الخاصة: <b>لا توجد</b></span>`;
+      return;
+    }
+
+    wrap.innerHTML = shiftPeriods.map((period, index) => {
+      const p = getShiftProfileByMode(period.mode);
+      return `
+        <span class="chip" title="فترة خاصة تطبق على الأيام الواقعة بين التاريخين">
+          ${escapeHtml(p.label)}
+          <b>${escapeHtml(period.start)}</b>
+          <b>إلى</b>
+          <b>${escapeHtml(period.end)}</b>
+          <button class="btn danger" type="button" data-shift-remove="${index}" style="padding:4px 9px">حذف</button>
+        </span>
+      `;
+    }).join("");
+
+    wrap.querySelectorAll("[data-shift-remove]").forEach(btn => {
+      btn.addEventListener("click", () => removeShiftPeriod(parseInt(btn.getAttribute("data-shift-remove"), 10)));
+    });
+  }
+
+  function addShiftPeriodFromUI(){
+    const startEl = document.getElementById("shiftPeriodStart");
+    const endEl = document.getElementById("shiftPeriodEnd");
+    const modeEl = document.getElementById("shiftPeriodModeSelect");
+
+    const start = String((startEl && startEl.value) || "").trim();
+    const end = String((endEl && endEl.value) || "").trim();
+    const mode = String((modeEl && modeEl.value) || DEFAULT_SHIFT_MODE).trim();
+
+    if (!start || !end){
+      alert("حدد تاريخ البداية والنهاية للفترة الخاصة.");
+      return;
+    }
+    if (start > end){
+      alert("تاريخ بداية الفترة يجب أن يكون قبل أو مساوياً لتاريخ النهاية.");
+      return;
+    }
+    if (!SHIFT_PROFILES[mode]){
+      alert("نوع الدوام المحدد غير صالح.");
+      return;
+    }
+
+    const conflict = hasShiftPeriodOverlap(start, end);
+    if (conflict){
+      alert(`يوجد تداخل مع فترة خاصة أخرى: ${getShiftPeriodDisplayText(conflict)}`);
+      return;
+    }
+
+    shiftPeriods.push({ start, end, mode });
+    shiftPeriods = normalizeShiftPeriods(shiftPeriods);
+    saveShiftSettings();
+    updateShiftUI();
+    renderSelectedTeacher();
+
+    if (startEl) startEl.value = "";
+    if (endEl) endEl.value = "";
+
+    toast(`تمت إضافة فترة ${getShiftProfileByMode(mode).label}.`);
+  }
+
+  function clearShiftPeriods(){
+    shiftPeriods = [];
+    saveShiftSettings();
+    updateShiftUI();
+    renderSelectedTeacher();
+    toast("تم مسح جميع الفترات الخاصة.");
+  }
+
+  function updateShiftUI(){
+    const shiftStartEl = document.getElementById("shiftStartTxt");
+    if (shiftStartEl) shiftStartEl.textContent = getShiftDisplayText();
+
+    const shiftModeSelect = document.getElementById("shiftModeSelect");
+    if (shiftModeSelect && shiftModeSelect.value !== currentShiftMode){
+      shiftModeSelect.value = currentShiftMode;
+    }
+
+    const shiftPeriodModeSelect = document.getElementById("shiftPeriodModeSelect");
+    if (shiftPeriodModeSelect && !SHIFT_PROFILES[shiftPeriodModeSelect.value]){
+      shiftPeriodModeSelect.value = "ramadan";
+    }
+
+    renderShiftPeriods();
+  }
+  /* =========================
+     إعداد البنر داخل الكشف
+     ضع ملف الصورة shree.png بجانب ملف HTML
+  ========================== */
+  const BANNER_SRC = "shree.png";
+
+  /* =========================
+     إعدادات العام الدراسي (ميلادي)
+  ========================== */
+  const ACADEMIC_START_GREG_YEAR = 2025;   // 2025/2026
+  const DEFAULT_GREG_YEAR = ACADEMIC_START_GREG_YEAR;
+
+  function inferYearFromMonth(month){
+    if (!month) return DEFAULT_GREG_YEAR;
+    return (month >= 8) ? ACADEMIC_START_GREG_YEAR : (ACADEMIC_START_GREG_YEAR + 1);
+  }
+
+  /* =========================
+     استبعاد الجمعة/السبت + الإجازات الرسمية
+     ✅ مُحدّث حسب تقويم 1447هـ (الفصلين)
+  ========================== */
+  const SKIP_WEEKEND = true;         // الجمعة + السبت
+  const SKIP_HOLIDAYS = true;        // الإجازات الرسمية/الإضافية
+
+  // نطاقات إجازات (YYYY-MM-DD) شاملة للطرفين
+  const HOLIDAY_RANGES = [
+    // ===== الفصل الدراسي الأول 1447هـ =====
+    { start:"2025-09-23", end:"2025-09-23", label:"إجازة اليوم الوطني" },
+    { start:"2025-10-12", end:"2025-10-12", label:"إجازة إضافية" },
+
+    // إجازة الخريف: تبدأ نهاية دوام الخميس 2025-11-20 => يُستبعد من الجمعة 2025-11-21
+    { start:"2025-11-21", end:"2025-11-29", label:"إجازة الخريف" },
+
+    { start:"2025-12-11", end:"2025-12-11", label:"إجازة إضافية" },
+    { start:"2025-12-14", end:"2025-12-14", label:"إجازة إضافية" },
+
+    // إجازة منتصف العام: تبدأ نهاية دوام الخميس 2026-01-08 => يُستبعد من الجمعة 2026-01-09 حتى السبت 2026-01-17
+    { start:"2026-01-09", end:"2026-01-17", label:"إجازة منتصف العام" },
+
+    // ===== الفصل الدراسي الثاني 1447–1448هـ =====
+    { start:"2026-02-22", end:"2026-02-22", label:"إجازة يوم التأسيس" },
+
+    // عيد الفطر: تبدأ نهاية دوام الخميس 2026-03-05 => يُستبعد من الجمعة 2026-03-06 إلى السبت 2026-03-28
+    { start:"2026-03-06", end:"2026-03-28", label:"إجازة عيد الفطر" },
+
+    // عيد الأضحى: تبدأ نهاية دوام الخميس 2026-05-21 => يُستبعد من الجمعة 2026-05-22 إلى الإثنين 2026-06-01
+    { start:"2026-05-22", end:"2026-06-01", label:"إجازة عيد الأضحى" },
+
+    // نهاية العام: تبدأ نهاية دوام الخميس 2026-06-25 => يُستبعد من الجمعة 2026-06-26
+    // ⚠️ نهاية تقريبية، عدّلها عند توفر المقابل الميلادي الرسمي لـ (9 صفر 1448هـ)
+    { start:"2026-06-26", end:"2026-07-25", label:"إجازة نهاية العام" }
+  ];
+
+
+  const el = (id) => document.getElementById(id);
+
+  const fileInput = el("fileInput");
+  const folderInput = el("folderInput");
+  const teacherSelect = el("teacherSelect");
+  const shiftModeSelect = el("shiftModeSelect");
+  const shiftPeriodStart = el("shiftPeriodStart");
+  const shiftPeriodEnd = el("shiftPeriodEnd");
+  const shiftPeriodModeSelect = el("shiftPeriodModeSelect");
+  const btnAddShiftPeriod = el("btnAddShiftPeriod");
+  const btnClearShiftPeriods = el("btnClearShiftPeriods");
+  const idInput = el("idInput");
+  const notice = el("notice");
+  const daysImportedEl = el("daysImported");
+  const excelReadEl = el("excelRead");
+  const stateEl = el("state");
+  const monthChipEl = el("monthChip");
+  const reportHeadlineEl = el("reportHeadline");
+
+  // بنر
+  const bannerImg = el("bannerImg");
+  if (bannerImg){
+    bannerImg.src = BANNER_SRC;
+    bannerImg.onerror = () => {
+      // fallback صامت (بدون تعطيل)
+      bannerImg.style.display = "none";
+    };
+  }
+
+  // مؤشرات
+  const mAttendance = el("mAttendance");
+  const mDiscipline = el("mDiscipline");
+  const mLevel = el("mLevel");
+
+  // WhatsApp UI
+  const waOverlay = el("waOverlay");
+  const waModal = el("waModal");
+  const waTextEl = el("waText");
+  const waHintEl = el("waHint");
+
+  // Registry warn UI
+  const regWarn = el("regWarn");
+  const regWarnCount = el("regWarnCount");
+  const regOverlay = el("regOverlay");
+  const regModal = el("regModal");
+  const regList = el("regList");
+
+  // حقول التقرير
+  const tName = el("tName");
+  const tId   = el("tId");
+  const tPhone= el("tPhone");
+  const tSpec = el("tSpec");
+  const tRank = el("tRank");
+  const tShift= el("tShift");
+
+  const sumWork = el("sumWork");
+const sumLate = el("sumLate");
+const sumExcuse = el("sumExcuse"); // ✅ NEW
+const sumAbs  = el("sumAbs");
+const sumOpen = el("sumOpen");
+const daysBody= el("daysBody");
+
+
+  loadShiftSettings();
+  updateShiftUI();
+
+  setTodayHeader();
+
+  /* =========================
+     بيانات المعلمين (مزروعة)
+  ========================== */
+  const TEACHERS_TSV = `
+موسى صلبان عبده عسيري\t1093013116\t966507058931\tفيزيا\tمعلم ممارس
+منذر عامر حمود زميع\t1065913053\t966541188974\tانجليزي\tمعلم ممارس
+عماد محمد جمعان الزهراني\t1048667289\t966542203039\tمكتبات\tمعلم ممارس
+ابراهيم حبيب عبدالغني الميمني\t1072815481\t966530163027\tرياضيات\tمعلم ممارس
+بندر عبدالعزيز محمد الغامدي\t1046853881\t966546135135\tحاسب\tمعلم ممارس
+حسين  محمد  فهد القحطاني\t1014268567\t966504988086\tاحياء\tمعلم ممارس
+ناصر علي ناصر الراشد\t1008303370\t966542933888\tحاسب\tمعلم ممارس
+حسين  محمد  حسين الأحمد\t1060369202\t966563740777\tاللغة العربية\tمعلم ممارس
+علي سعد سعيد الاصلعي الاحمري\t1023999780\t966590986464\tاحياء\tمعلم ممارس
+محمد حمد عبدالرحمن التويجري\t1064745944\t966541381105\tاللغة العربية\tمعلم ممارس
+عبدالله فيصل بن فطيس الهذلي\t1094733290\t966591585407\tرياضيات\tمعلم ممارس
+احمد عبدالرحيم عبدالحميد ابوعصيده\t1033584234\t966546623431\tانجليزي\tمعلم ممارس
+عبدالله  عبدالعزيز  سيف السهلي\t1063175010\t966546221133\tعلم اجتماع\tمعلم ممارس
+بشير  أحمد  عبدالله آل سليم\t1019783917\t966500126925\tمكتبات\tمعلم ممارس
+ابراهيم محمد ابراهيم الربيع\t1004182687\t966548638056\tانجليزي\tمعلم ممارس
+عبدالمجيد عبدالله سالم آل حبشان\t1004581359\t966500223640\tاجتماعيات\tمعلم ممارس
+فيصل فهد علي الزهراني\t1086115373\t966508448455\tرياضيات\tمعلم ممارس
+زياد عواض ابن عيضه العمري\t1092156742\t966557530102\tعلم إدارة\tمعلم ممارس
+عبد الله حسن عمر الادريسي\t1081556910\t966533025505\tرياضيات\tمعلم ممارس
+تقي عبد الهادي تقي العلي\t1026472363\t966543219321\tكيميا\tمعلم ممارس
+عادل علي ناصر البارقي\t1007370701\t966530667666\tرياضه\tمعلم ممارس
+ابراهيم أحمد ابراهيم العجلان\t1001082179\t966559999808\tدين\tمعلم ممارس
+خالد أحمد محمد الشهري\t1034318301\t966560687900\tكيميا\tمعلم ممارس
+خالد سعد راشد المرضي\t1025640010\t966505877238\tاجتماعيات\tمعلم ممارس
+عبدالله خلوفة عبدالله ال مرعي\t1029490875\t966533225515\tدين\tمعلم ممارس
+يحيى محمد سعيد القحطاني\t1048978892\t966555751385\tاجتماعيات\tمعلم ممارس
+حسين سعيد سلمان المدن\t1022616799\t966556336875\tمكتبات\tمعلم ممارس
+يوسف عيسى عيسى العيد\t1012646822\t966592038351\tاللغة العربية\tمعلم ممارس
+نبيل محسن محمد القلاف\t1025472604\t966562962766\tرياضه\tمعلم ممارس
+عبدالمجيد عبدالرحمن عبدالله السالمي\t1073861831\t966558151033\tانجليزي\tمعلم ممارس
+حسن علي حسن الشهري\t1037273594\t966500677015\tاللغة العربية\tمعلم ممارس
+جميل عبدالمجيد جواد العلي\t1029281589\t966566712113\tفيزيا\tمعلم ممارس
+حسن يوسف حسين الخليفة\t1056994203\t966506907431\tكيميا\tمعلم ممارس
+حسن عبدالله علي العبدالله\t1005472780\t966543705512\tاحياء\tمعلم ممارس
+عادل علي سليمان السبعان\t1003700802\t966504836200\tموجه طلابي\tمعلم ممارس
+ياسر عبدالله محمد النمر\t1001443397\t966543705512\tمدخل بيانات\tمساعد معلم
+علي حسن علي آل قمبر\t1004780860\t966502085389.00\tسكرتاريه\tمساعد معلم
+حسن عامراحمد الشهري\t1013124175\t966598893731\tمحضر مختبر\tمساعد معلم
+عدنان علي حسين الزريق\t1015776766\t966505808451.00\tوكيل\tمعلم ممارس
+فهد حامد علي الزهراني\t1024193532\t966504532489.00\tمدير المدرسة\tمعلم ممارس
+`.trim();
+// ===================== PART 4 / 7 =====================
+  // ✅ بناء السجل + رصد المشكلات
+  const registryBuild = buildRegistryById(TEACHERS_TSV); // {map, issues}
+  const registryById = registryBuild.map;                // id -> reg
+  const registryIssues = registryBuild.issues;           // list
+  const idByNameKey  = buildNameToIdIndex(registryById); // nameKey -> id
+
+  updateRegistryWarnUI();
+
+  /* =========================
+     سياق الشهر (من اسم المجلد)
+  ========================== */
+  const monthCtx = {
+    month: null,
+    year: DEFAULT_GREG_YEAR,
+    folderLabel: ""
+  };
+
+  /* =========================
+     مخزن البيانات
+  ========================== */
+  const teachers = new Map();      // key = teacherId (الهوية) -> teacher obj
+  const importedDates = new Set(); // dayKey YYYY-MM-DD
+
+  let importedExcelCount = 0;
+  let lastSourceLabel = "";
+  let currentWaText = "";
+let importedPermCount = 0; // ✅ NEW
+  resetDataToRegistry();
+updateTeacherSelect(); // ✅ إظهار الأسماء فور فتح الصفحة
+  /* =========================
+     أحداث
+  ========================== */
+  el("btnPrint").addEventListener("click", () => window.print());
+  el("btnClose").addEventListener("click", () => {
+    if (history.length > 1) history.back();
+    else document.documentElement.style.display = "none";
+  });
+  el("btnExport").addEventListener("click", exportCurrentTeacherExcel);
+  el("btnPDF").addEventListener("click", exportCurrentTeacherPDF);
+
+  teacherSelect.addEventListener("change", renderSelectedTeacher);
+  if (shiftModeSelect){
+    shiftModeSelect.addEventListener("change", () => {
+      currentShiftMode = shiftModeSelect.value || DEFAULT_SHIFT_MODE;
+      saveShiftSettings();
+      updateShiftUI();
+      renderSelectedTeacher();
+      toast(`تم اعتماد الدوام الأساسي ${getCurrentShiftProfile().label} للأيام غير المشمولة بفترات خاصة.`);
+    });
+  }
+  if (btnAddShiftPeriod) btnAddShiftPeriod.addEventListener("click", addShiftPeriodFromUI);
+  if (btnClearShiftPeriods) btnClearShiftPeriods.addEventListener("click", clearShiftPeriods);
+  if (shiftPeriodEnd) shiftPeriodEnd.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter") addShiftPeriodFromUI();
+  });
+
+  // بحث بالهوية ثم Enter
+  idInput.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Enter") return;
+    const id = cleanId(idInput.value);
+    if (id && teachers.has(id)){
+      teacherSelect.value = id;
+      renderSelectedTeacher();
+      toast("تم تحديد المعلم بالهوية.");
+    }else{
+      toast("لم يتم العثور على هذه الهوية في السجل.");
+    }
+  });
+
+  // WhatsApp
+  el("btnWA").addEventListener("click", () => openWAModal());
+  el("btnWAClose").addEventListener("click", closeWAModal);
+  waOverlay.addEventListener("click", closeWAModal);
+  el("btnWACopy").addEventListener("click", copyWAMessage);
+  el("btnWASend").addEventListener("click", openWhatsAppChat);
+  el("btnWAPrint").addEventListener("click", printWAMessage);
+
+  // Registry modal
+  regWarn.addEventListener("click", () => openRegModal());
+  el("btnRegClose").addEventListener("click", closeRegModal);
+  regOverlay.addEventListener("click", closeRegModal);
+
+  fileInput.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    if (!monthCtx.month){
+      const guessFolder = guessFolderNameFromFiles(files);
+      if (guessFolder) applyMonthFromFolder(guessFolder);
+    }
+    if (!monthCtx.month){
+      const mNow = (new Date()).getMonth()+1;
+      monthCtx.month = mNow;
+      monthCtx.year = inferYearFromMonth(mNow);
+      updateMonthUI();
+    }
+
+    await handleImport(files, { source: "files" });
+    fileInput.value = "";
+  });
+
+  folderInput.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    let folderName = "";
+    const first = files[0];
+    if (first && first.webkitRelativePath){
+      folderName = first.webkitRelativePath.split("/")[0] || "";
+    }
+
+    applyMonthFromFolder(folderName);
+    await handleImport(files, { source: "folder", folderName });
+    folderInput.value = "";
+  });
+
+  async function handleImport(files, meta){
+    setState("جارٍ الاستيراد...");
+
+    // ✅ استيراد شهري نظيف
+    resetDataToRegistry();
+    importedDates.clear();
+    importedExcelCount = 0;
+    daysImportedEl.textContent = "0";
+    excelReadEl.textContent = "0";
+
+    try{
+   const onlyExcel = files.filter(isExcelFile);
+
+// ✅ ترتيب الملفات لضمان قراءة مرتبة وثابتة
+onlyExcel.sort((a,b)=> (a.name||"").localeCompare(b.name||"", "ar"));
+
+const skipped = files.length - onlyExcel.length;
+
+      lastSourceLabel = (meta.source === "folder" && meta.folderName)
+        ? `المجلد: ${meta.folderName}`
+        : (meta.source === "folder" ? "مجلد (غير مُسمّى)" : "ملفات محددة");
+
+      if (!onlyExcel.length){
+        setState("لا توجد ملفات Excel");
+        notice.textContent = `لم يتم العثور على ملفات Excel داخل ${lastSourceLabel}.`;
+        return;
+      }
+
+      await importFiles(onlyExcel);
+
+      // ✅ إن لم يظهر المعلم في بيانات اليوم => غياب (على أيام الدوام فقط بعد الاستبعاد)
+      ensureAbsencesForAllTeachers();
+
+      setState("جاهز");
+      updateTeacherSelect();
+      updateNotice(skipped);
+      renderSelectedTeacher();
+    }catch(err){
+      console.error(err);
+      setState("تعذر الاستيراد");
+      notice.textContent = "تعذر قراءة بعض الملفات. تأكد أن الملفات بصيغة Excel صحيحة ثم أعد المحاولة.";
+    }
+  }
+
+ function isExcelFile(fileOrName){
+  const name =
+    (typeof fileOrName === "string")
+      ? fileOrName
+      : (fileOrName && fileOrName.name) ? fileOrName.name : "";
+
+  return /\.(xlsx|xls|xlsm|xlsb|csv)$/i.test(name);
+}
+
+
+  /* =========================
+     الاستيراد (بالهوية كمفتاح فريد)
+  ========================== */
+  async function importFiles(files){
+    for (const f of files){
+      const ctx = buildFileContext(f);
+
+      const buf = await readAsArrayBuffer(f);
+      const wb = XLSX.read(buf, { type:"array", cellDates:true, raw:true });
+
+      let anySheetRead = false;
+
+      for (const sheetName of wb.SheetNames){
+        const ws = wb.Sheets[sheetName];
+        if (!ws) continue;
+
+        const matrix = XLSX.utils.sheet_to_json(ws, { header:1, defval:"", raw:true });
+        if (!matrix || !matrix.length) continue;
+// ✅ محاولة قراءة الاستئذانات
+const parsedPerm = parsePermissionMatrix(matrix, ctx);
+if (parsedPerm && parsedPerm.rows.length){
+  anySheetRead = true;
+  importedPermCount += parsedPerm.rows.length;
+
+  for (const p of parsedPerm.rows){
+    const id = resolveTeacherId(p.id, p.name);
+    if (!id) continue;
+
+    const teacher = teachers.get(id);
+    if (!teacher) continue;
+
+    const dateKey = p.dateKey || "";
+    if (!dateKey) continue;
+
+    // استبعاد الجمعة/السبت + الإجازات مثل الحضور
+    if (isExcludedDayKey(dateKey, "").excluded) continue;
+
+    addPermissionToTeacher(teacher, dateKey, p);
+  }
+
+  // لا نكمل كحضور لهذا الشيت
+  continue;
+}
+        const parsed = parseAttendanceMatrix(matrix, ctx);
+        if (!parsed || !parsed.rows.length) continue;
+
+        anySheetRead = true;
+
+        for (const r of parsed.rows){
+          // ✅ تحديد الهوية: من العمود أو من الاسم عبر السجل المزروع
+          const id = resolveTeacherId(r.id, r.name);
+          if (!id) continue; // لا نضيف خارج السجل
+
+          const teacher = teachers.get(id);
+          if (!teacher) continue;
+
+          // ✅ تحديد اليوم (الأولوية لتاريخ الصف، ثم سياق الملف)
+          const dateKey = r.dateKey || ctx.dayKey || "";
+          if (!dateKey) continue;
+
+          // ✅ استبعاد الجمعة/السبت + الإجازات
+          const ex = isExcludedDayKey(dateKey, r.status);
+          if (ex.excluded) continue;
+
+          // ✅ تسجيل اليوم ضمن الأيام المستوردة
+          importedDates.add(dateKey);
+
+          // ✅ تحديث بيانات قد تأتي من الملف
+          if (r.phone) {
+            const p = normalizeKsaMobile(r.phone);
+            if (p && (!teacher.phone || teacher.phone === "—")) teacher.phone = p;
+          }
+          if (r.spec && teacher.spec === "—") teacher.spec = String(r.spec).trim();
+          if (r.rank && teacher.rank === "—") teacher.rank = String(r.rank).trim();
+
+          const day = teacher.days.get(dateKey) || { inM:null, outM:null, statusRaw:"", hasIn:false, hasOut:false };
+
+          const inM = parseTimeToMinutes(r.inTime);
+          const outM = parseTimeToMinutes(r.outTime);
+
+          if (inM !== null){
+            day.inM = (day.inM === null) ? inM : Math.min(day.inM, inM);
+            day.hasIn = true;
+          }
+          if (outM !== null){
+            day.outM = (day.outM === null) ? outM : Math.max(day.outM, outM);
+            day.hasOut = true;
+          }
+
+          const s = (r.status || "").toString().trim();
+          if (s) day.statusRaw = day.statusRaw ? (day.statusRaw + " | " + s) : s;
+
+          teacher.days.set(dateKey, day);
+        }
+      }
+
+      if (anySheetRead) importedExcelCount++;
+    }
+
+    daysImportedEl.textContent = String(importedDates.size);
+    excelReadEl.textContent = String(importedExcelCount);
+  }
+
+  function parseAttendanceMatrix(matrix, ctx){
+  const keys = {
+  name: ["الاسم","الإسم","الاسم الكامل","اسم الموظف","اسم المعلم","المعلم","Name","Employee Name","Employee"],
+  id: [
+    "رقم الهوية","الهوية","الرقم الوظيفي","رقم الموظف",
+    "السجل المدني","رقم السجل المدني","السجل المدنى","رقم السجل المدنى",
+    "الهوية الوطنية","رقم الهوية الوطنية",
+    "National ID","Employee ID","ID","Civil ID","Civil Registry"
+  ],
+
+  // ✅ أضف هذا
+  phone: ["الجوال","رقم الجوال","الهاتف","Phone","Mobile"],
+
+  inTime: ["الحضور","وقت الحضور","وقت الدخول","بصمة الدخول","دخول","Check in","Check-in","In","وقت الدوام"],
+  outTime: ["الانصراف","وقت الانصراف","وقت الخروج","بصمة الخروج","خروج","Check out","Check-out","Out"],
+  status: ["الحالة","البيان","الوضع","Status","حالة"],
+  date: ["التاريخ","اليوم","تاريخ الحركة","Date","Day","التاريخ الميلادي","تاريخ"],
+  spec: ["التخصص","القسم","Specialty","Department"],
+  rank: ["المرتبة","الدرجة","Rank","Grade"]
+};
+
+
+
+    let headerRowIndex = -1;
+    let colMap = null;
+
+    for (let i=0;i<matrix.length;i++){
+      const row = matrix[i].map(v => (v ?? "").toString().trim());
+      if (!row.join("").trim()) continue;
+
+      const map = buildColMap(row, keys);
+      const okTimeOrStatus = (map.inTime !== null) || (map.outTime !== null) || (map.status !== null);
+      const okIdentity = (map.id !== null) || (map.name !== null);
+
+      if (okIdentity && okTimeOrStatus){
+        headerRowIndex = i;
+        colMap = map;
+        break;
+      }
+    }
+    if (headerRowIndex < 0 || !colMap) return null;
+
+    const rows = [];
+    for (let r=headerRowIndex+1; r<matrix.length; r++){
+      const row = matrix[r];
+      if (!row || !row.length) continue;
+
+      const name = colMap.name !== null ? getCell(row, colMap.name) : "";
+      const id   = colMap.id   !== null ? getCell(row, colMap.id)   : "";
+const phone = (colMap.phone != null) ? getCell(row, colMap.phone) : "";
+
+      if (!String(name||"").trim() && !String(id||"").trim()) continue;
+
+      const dateVal = (colMap.date !== null) ? getCell(row, colMap.date) : "";
+
+      const rec = {
+        name, id, phone,
+        date: dateVal,
+        inTime: colMap.inTime !== null ? getCell(row, colMap.inTime) : "",
+        outTime: colMap.outTime !== null ? getCell(row, colMap.outTime) : "",
+        status: colMap.status !== null ? getCell(row, colMap.status) : "",
+        spec: colMap.spec !== null ? getCell(row, colMap.spec) : "",
+        rank: colMap.rank !== null ? getCell(row, colMap.rank) : ""
+      };
+
+      const dObj = normalizeDateWithContext(rec.date, ctx);
+      rec.dateKey = dObj ? dateToKey(dObj) : (ctx.dayKey || "");
+
+      rows.push(rec);
+    }
+
+    return {rows};
+  }
+
+  function buildColMap(row, keys){
+  const idx = (arr) => {
+    if (!arr || !arr.length) return null; // ✅ مهم
+    for (let j=0;j<row.length;j++){
+      const cell = (row[j]||"").toString().trim();
+      if (!cell) continue;
+      const norm = normHeader(cell);
+      for (const k of arr){
+        const nk = normHeader(k);
+        if (nk && norm.includes(nk)) return j;
+      }
+    }
+    return null;
+  };
+
+  const out = {};
+  for (const k in keys){
+    out[k] = idx(keys[k]);
+  }
+  return out;
+}
+
+
+ function normHeader(s){
+  return (s||"").toString().trim().toLowerCase()
+    .replace(/[\u064B-\u065F\u0670]/g,"")     // تشكيل
+    .replace(/[إأآٱ]/g,"ا")                  // همزات إلى ألف
+    .replace(/[ىي]/g,"ي")                   // ياء/ألف مقصورة
+    .replace(/ة/g,"ه")                      // تاء مربوطة
+    .replace(/\s+/g," ")
+    .replace(/[^\p{L}\p{N} ]/gu,"")
+    .trim();
+}
+
+
+  function getCell(row, i){
+    if (i === null || i === undefined) return "";
+    return (row[i] ?? "");
+  }
+
+  async function readAsArrayBuffer(file){
+    return new Promise((resolve,reject)=>{
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = () => reject(fr.error || new Error("FileReader error"));
+      fr.readAsArrayBuffer(file);
+    });
+  }
+/* =========================
+   ✅ قراءة الاستئذانات (شهري)
+========================== */
+function parsePermissionMatrix(matrix, ctx){
+  const keys = {
+    name: [
+      "اسم الموظف","الاسم","الإسم","الاسم بالكامل","الاسم الرباعي","الموظف","اسم","Employee Name","Name"
+    ],
+    id: [
+      "رقم الموظف","الرقم الوظيفي","الرقم الوظيفى","هوية","الهوية","رقم الهوية",
+      "السجل المدني","الهوية الوطنية","Employee ID","ID","National ID"
+    ],
+
+    // ✅ تاريخ الاستئذان
+    date: [
+      "التاريخ","تاريخ","تاريخ الحركة","التاريخ الميلادي","Date","Day"
+    ],
+
+    // ✅ أوقات الاستئذان (إن وجدت)
+    fromTime: [
+      "من","من الساعة","وقت البداية","بداية الاستئذان","من وقت","From","Start Time","وقت الخروج"
+    ],
+    toTime: [
+      "إلى","الى","إلى الساعة","وقت النهاية","نهاية الاستئذان","To","End Time","وقت العودة"
+    ],
+
+    // ✅ مدة الاستئذان (إن وجدت)
+    duration: [
+      "المدة","مدة الاستئذان","مده","Duration","الزمن"
+    ],
+
+    // ✅ حالة الطلب/الاعتماد (اختياري)
+    status: [
+      "الحالة","حالة الطلب","الاعتماد","الموافقة","Status","Approval"
+    ],
+
+    // ✅ نوع الطلب/السبب (اختياري)
+    type: [
+      "النوع","نوع الاستئذان","نوع الطلب","السبب","Type","Reason"
+    ]
+  };
+
+  let headerRowIndex = -1;
+  let colMap = null;
+
+  for (let i=0; i<matrix.length; i++){
+    const row = matrix[i].map(v => (v ?? "").toString().trim());
+    if (!row.join("").trim()) continue;
+
+    const map = buildColMap(row, keys);
+
+    const okIdentity = (map.id !== null) || (map.name !== null);
+    const okDate     = (map.date !== null);
+    const okTime     = (map.duration !== null) || (map.fromTime !== null) || (map.toTime !== null);
+
+    if (okIdentity && okDate && okTime){
+      headerRowIndex = i;
+      colMap = map;
+      break;
+    }
+  }
+
+  if (headerRowIndex < 0 || !colMap) return null;
+
+  const rows = [];
+
+  for (let r=headerRowIndex+1; r<matrix.length; r++){
+    const row = matrix[r];
+    if (!row || !row.length) continue;
+
+    const name = colMap.name !== null ? getCell(row, colMap.name) : "";
+    const id   = colMap.id   !== null ? getCell(row, colMap.id)   : "";
+    if (!String(name||"").trim() && !String(id||"").trim()) continue;
+
+    const statusVal = colMap.status !== null ? getCell(row, colMap.status) : "";
+    const stN = normName(statusVal || "");
+
+    // ✅ إن وُجدت حالة، نقبل (مقبول/معتمد/تم الاعتماد/approved/accepted)
+    if (stN){
+      const ok =
+        stN.includes("مقبول") ||
+        stN.includes("معتمد") ||
+        stN.includes("اعتماد") ||
+        stN.includes("تم اعتماد") ||
+        stN.includes("approved") ||
+        stN.includes("accepted");
+      if (!ok) continue;
+    }
+
+    const dateVal = colMap.date !== null ? getCell(row, colMap.date) : "";
+    const d = normalizeDateWithContext(dateVal, ctx) || normalizeDate(dateVal);
+    if (!d) continue;
+
+    const dateKey = dateToKey(d);
+
+    const fromTimeVal = colMap.fromTime !== null ? getCell(row, colMap.fromTime) : "";
+    const toTimeVal   = colMap.toTime   !== null ? getCell(row, colMap.toTime)   : "";
+    const durationVal = colMap.duration !== null ? getCell(row, colMap.duration) : "";
+
+    const fromM = parseTimeToMinutes(fromTimeVal);
+    const toM   = parseTimeToMinutes(toTimeVal);
+    const durMin = parseDurationToMinutes(durationVal);
+
+    let min = (durMin !== null) ? durMin : computeDiffMinutes(fromM, toM);
+    if (!min || min < 0) min = 0;
+
+    const typeVal = colMap.type !== null ? getCell(row, colMap.type) : "";
+
+    const kind = classifyPermissionKind(dateKey, fromM, toM);
+
+    rows.push({
+      id, name,
+      dateKey,
+      min,
+      kind,
+      fromM, toM,
+      type: String(typeVal||"").trim(),
+      status: String(statusVal||"").trim()
+    });
+  }
+
+  return { rows };
+}
+
+
+function parseDurationToMinutes(v){
+  if (v === null || v === undefined || v === "") return null;
+
+  if (typeof v === "number" && isFinite(v)){
+    if (v > 0 && v < 1) return Math.round(v * 24 * 60);
+    if (v >= 1 && v <= 24*60) return Math.round(v);
+  }
+
+  const s0 = String(v).trim();
+  if (!s0) return null;
+  const s = toWesternDigits(s0);
+
+  const m = s.match(/(\d{1,2})\s*:\s*(\d{2})/);
+  if (m){
+    const hh = parseInt(m[1],10);
+    const mm = parseInt(m[2],10);
+    if (Number.isFinite(hh) && Number.isFinite(mm)) return hh*60 + mm;
+  }
+
+  const digits = s.replace(/\D+/g,"");
+  if (digits){
+    const n = parseInt(digits,10);
+    if (Number.isFinite(n)) return n;
+  }
+
+  return null;
+}
+
+function computeDiffMinutes(fromM, toM){
+  if (fromM === null || toM === null) return 0;
+  let diff = toM - fromM;
+  if (diff < 0) diff += 24*60;
+  return Math.max(0, diff);
+}
+
+function classifyPermissionKind(dateKey, fromM, toM){
+  const sc = getShiftContextForDate(dateKey);
+  const START_WINDOW = 60;
+  const END_WINDOW   = 60;
+
+  if (fromM !== null && fromM <= (sc.shiftStartM + START_WINDOW)) return "start";
+  if (toM !== null && toM >= (sc.clampMaxM - END_WINDOW)) return "end";
+  return "mid";
+}
+
+
+function addPermissionToTeacher(teacher, dateKey, p){
+  const cur = teacher.perms.get(dateKey) || { totalMin:0, startMin:0, midMin:0, endMin:0, items:[] };
+
+  cur.totalMin += (p.min || 0);
+  if (p.kind === "start") cur.startMin += (p.min || 0);
+  else if (p.kind === "end") cur.endMin += (p.min || 0);
+  else cur.midMin += (p.min || 0);
+
+  const fromTxt = (p.fromM !== null) ? minutesToHHMM(p.fromM) : "—";
+  const toTxt   = (p.toM !== null) ? minutesToHHMM(p.toM) : "—";
+
+  cur.items.push({
+    kind: p.kind,
+    min: p.min || 0,
+    fromTxt, toTxt,
+    type: p.type || "",
+    status: p.status || ""
+  });
+
+  teacher.perms.set(dateKey, cur);
+}
+
+function buildPermHtml(perm){
+  if (!perm || !perm.totalMin){
+    return `<div class="permCell"><span class="permPill none">—</span></div>`;
+  }
+
+  const total = minsToHM(perm.totalMin);
+  const pills = [];
+
+  if (perm.startMin) pills.push(`<span class="permPill start">بداية ${escapeHtml(minsToHM(perm.startMin))}</span>`);
+  if (perm.midMin)   pills.push(`<span class="permPill mid">وسط ${escapeHtml(minsToHM(perm.midMin))}</span>`);
+  if (perm.endMin)   pills.push(`<span class="permPill end">نهاية ${escapeHtml(minsToHM(perm.endMin))}</span>`);
+
+  return `
+    <div class="permCell">
+      <b>${escapeHtml(total)}</b>
+      <div class="permPills">${pills.join("")}</div>
+    </div>
+  `.trim();
+}
+
+function buildPermText(perm){
+  if (!perm || !perm.totalMin) return "—";
+  const parts = [];
+  if (perm.startMin) parts.push(`بداية ${minsToHM(perm.startMin)}`);
+  if (perm.midMin)   parts.push(`وسط ${minsToHM(perm.midMin)}`);
+  if (perm.endMin)   parts.push(`نهاية ${minsToHM(perm.endMin)}`);
+  return `${minsToHM(perm.totalMin)}${parts.length ? " (" + parts.join(" + ") + ")" : ""}`;
+}
+
+  /* =========================
+     الشهر من اسم المجلد
+  ========================== */
+  function applyMonthFromFolder(folderName){
+    const parsed = parseMonthYear(folderName);
+    if (parsed.month){
+      monthCtx.month = parsed.month;
+      monthCtx.year = parsed.year || inferYearFromMonth(parsed.month);
+      monthCtx.folderLabel = folderName || "";
+    }else{
+      monthCtx.month = null;
+      monthCtx.year = DEFAULT_GREG_YEAR;
+      monthCtx.folderLabel = folderName || "";
+    }
+    updateMonthUI();
+  }
+
+    function updateMonthUI(){
+    const m = monthCtx.month;
+    const y = monthCtx.year;
+
+    const monthTxt = (m ? toArNumber(m) : "—");
+    const yearTxt  = (y ? toArNumber(y) : "—");
+
+    monthChipEl.textContent = (m ? `${monthTxt} / ${yearTxt}` : "—");
+
+    const headline = (m && y)
+      ? `احصائيات الحضور والانصراف لشهر ${monthTxt} من عام ${yearTxt}`
+      : `احصائيات الحضور والانصراف`;
+
+    reportHeadlineEl.textContent = headline;
+    document.title = (m && y) ? `كشف حضوري (شهري) — شهر ${monthTxt} عام ${yearTxt}` : "كشف حضوري (شهري)";
+
+    updateDaysSectionTitle();
+  }
+
+  // ✅ أضفها هنا مباشرة (مرة واحدة فقط)
+  function updateDaysSectionTitle(){
+    const t = document.getElementById("daysSectionTitle");
+    if (!t) return;
+
+    const m = monthCtx.month;
+    const y = monthCtx.year;
+
+    if (m && y){
+      t.textContent = `سجل المتابعة اليومي للحضور والانصراف لشهر ${toArNumber(m)} من عام ${toArNumber(y)} (أحدث الأيام أولاً)`;
+    } else {
+      t.textContent = "سجل المتابعة اليومي للحضور والانصراف (أحدث الأيام أولاً)";
+    }
+  }
+
+  function guessFolderNameFromFiles(files){
+    for (const f of files){
+      const p = f.webkitRelativePath || "";
+      if (p.includes("/")) return p.split("/")[0] || "";
+    }
+    return "";
+  }
+
+  function parseMonthYear(folderName){
+    const s0 = String(folderName||"").trim();
+    if (!s0) return {month:null, year:DEFAULT_GREG_YEAR};
+
+    const s = toWesternDigits(s0);
+    const nums = (s.match(/\d+/g) || []).map(n => parseInt(n,10)).filter(n => Number.isFinite(n));
+
+    const yearExplicit = nums.find(n => n>=2000 && n<=2100) || null;
+    const month = nums.find(n => n>=1 && n<=12) || null;
+
+    const year = yearExplicit || (month ? inferYearFromMonth(month) : DEFAULT_GREG_YEAR);
+    return {month, year};
+  }
+
+  function toArNumber(n){
+    try{
+      return new Intl.NumberFormat("ar-SA").format(n).replace(/[٬,]/g,"");
+    }catch(_){
+      return String(n);
+    }
+  }
+
+  /* =========================
+     سياق اليوم من اسم الملف
+  ========================== */
+  function buildFileContext(file){
+    const year = monthCtx.year || DEFAULT_GREG_YEAR;
+    const month = monthCtx.month;
+
+    const dayNum = parseDayFromFileName(file?.name || "");
+    const dayKey = (month && dayNum) ? makeDayKey(year, month, dayNum) : "";
+
+    return { year, month, dayNum, dayKey, fileName:file?.name || "" };
+  }
+
+  function parseDayFromFileName(name){
+    const base = String(name||"").trim().replace(/\.[^.]+$/,"");
+    const w = toWesternDigits(base);
+
+    const dot = w.match(/^(\d{1,2})\s*\.\s*\d+/);
+    if (dot){
+      const d = parseInt(dot[1],10);
+      if (Number.isFinite(d) && d>=1 && d<=31) return d;
+    }
+
+    const parts = w.split(/[^\d]+/).filter(Boolean);
+    const cand = parts.filter(p => p.length<=2).map(p => parseInt(p,10)).filter(n => Number.isFinite(n) && n>=1 && n<=31);
+    if (cand.length) return cand[cand.length-1];
+
+    const m = w.match(/(\d{1,2})/);
+    if (!m) return null;
+    const d = parseInt(m[1],10);
+    if (!Number.isFinite(d) || d < 1 || d > 31) return null;
+    return d;
+  }
+
+  function makeDayKey(year, month, day){
+    const m = String(month).padStart(2,"0");
+    const d = String(day).padStart(2,"0");
+    return `${year}-${m}-${d}`;
+  }
+
+  /* =========================
+     ✅ الغياب عند عدم وجود الاسم بالملف
+  ========================== */
+  function ensureAbsencesForAllTeachers(){
+    const allDays = Array.from(importedDates).sort();
+    if (!allDays.length) return;
+
+    for (const t of teachers.values()){
+      for (const dk of allDays){
+        if (!t.days.has(dk)){
+          t.days.set(dk, { inM:null, outM:null, statusRaw:"غياب", hasIn:false, hasOut:false });
+        }
+      }
+    }
+  }
+
+  /* =========================
+     قائمة المعلمين (فريدة بالهوية)
+  ========================== */
+  function updateTeacherSelect(){
+    const current = teacherSelect.value;
+    teacherSelect.innerHTML = `<option value="">— اختر —</option>`;
+
+    const list = Array.from(teachers.values())
+      .sort((a,b)=> a.name.localeCompare(b.name, "ar"));
+
+    for (const t of list){
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = `${t.name} — ${t.id}`;
+      teacherSelect.appendChild(opt);
+    }
+
+    if (current && teachers.has(current)) teacherSelect.value = current;
+  }
+function getGlobalPeriod(){
+  const keys = Array.from(importedDates).sort(); // تصاعدي
+  if (!keys.length){
+    return { fromKey:"", toKey:"", fromTxt:"—", toTxt:"—" };
+  }
+
+  const fromKey = keys[0];
+  const toKey   = keys[keys.length - 1];
+
+  const fromD = keyToDate(fromKey);
+  const toD   = keyToDate(toKey);
+
+  const fromTxt = fromD ? `${weekdayAr(fromD)} ${formatHijriDate(fromD)}` : fromKey;
+  const toTxt   = toD   ? `${weekdayAr(toD)} ${formatHijriDate(toD)}`   : toKey;
+
+  return { fromKey, toKey, fromTxt, toTxt };
+}
+  function updateNotice(skippedCount){
+    const period = getGlobalPeriod();
+    const skipTxt = skippedCount ? ` — تم تجاهل ${skippedCount} ملف غير Excel` : "";
+
+    const m = monthCtx.month, y = monthCtx.year;
+    const monthLine = (m && y) ? ` — شهر ${toArNumber(m)} من عام ${toArNumber(y)}` : "";
+
+    notice.textContent =
+      `تم استيراد ${importedExcelCount} ملف Excel من ${lastSourceLabel}${skipTxt}${monthLine} — الأيام من ${period.fromTxt} حتى ${period.toTxt} — (يُستبعد الجمعة والسبت والإجازات الرسمية تلقائياً) — اختر معلماً لعرض كشفه الشهري.`;
+  }
+
+  /* =========================
+     العرض والحسابات
+  ========================== */
+function renderSelectedTeacher(){
+  const id = teacherSelect.value;
+  if (!id || !teachers.has(id)){
+    clearReport();
+    return;
+  }
+  const teacher = teachers.get(id);
+
+  const days = Array.from(teacher.days.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
+
+  tName.textContent = teacher.name || "—";
+  tId.textContent   = teacher.id || "—";
+  tPhone.textContent= normalizeKsaMobile(teacher.phone || "") || "—";
+  tSpec.textContent = teacher.spec || "—";
+  tRank.textContent = teacher.rank || "—";
+  tShift.textContent= getTeacherShiftSummary(teacher);
+
+  let totalWork = 0;
+  let totalLate = 0;
+  let absCount  = 0;
+  let openCount = 0;
+
+  let totalExcuse = 0;
+  let permDays = 0;
+  let permStart = 0, permMid = 0, permEnd = 0;
+
+  const lateItems = [];
+  const absDaysList = [];
+  const openDaysList = [];
+  const permItems = [];
+
+  const bodyRows = [];
+
+  for (const [dateKey, day] of days){
+    const ex = isExcludedDayKey(dateKey, day.statusRaw);
+    if (ex.excluded) continue;
+
+    const dObj = keyToDate(dateKey);
+    const dayLabel = dObj ? `${weekdayAr(dObj)} ${formatHijriDate(dObj)}` : dateKey;
+
+    const status = computeStatus(day);
+const calc = computeTimes(day, dateKey);
+
+    totalWork += calc.workMin;
+    totalLate += calc.lateMin;
+
+    if (status.isAbsent){
+      absCount++;
+      absDaysList.push(dayLabel);
+    }
+    if (status.notClosed){
+      openCount++;
+      openDaysList.push(dayLabel);
+    }
+    if (calc.lateMin > 0){
+      lateItems.push({ dateKey, dayLabel, lateMin: calc.lateMin });
+    }
+
+    const perm = teacher.perms.get(dateKey) || null;
+    if (perm && perm.totalMin){
+      totalExcuse += perm.totalMin;
+      permDays++;
+      permStart += (perm.startMin || 0);
+      permMid   += (perm.midMin || 0);
+      permEnd   += (perm.endMin || 0);
+      permItems.push({ dateKey, dayLabel, perm });
+    }
+
+    const rowClass = status.isAbsent ? "absent" : (status.notClosed ? "open" : "");
+    const permHtml = buildPermHtml(perm);
+
+    bodyRows.push({
+      dayLabel,
+      inTxt: calc.inTxt,
+      outTxt: calc.outTxt,
+      workTxt: minsToHM(calc.workMin),
+      lateTxt: minsToHM(calc.lateMin),
+      permHtml,
+      statusTxt: status.label,
+      rowClass
+    });
+  }
+
+  sumWork.textContent = minsToHM(totalWork);
+  sumLate.textContent = minsToHM(totalLate);
+  if (sumExcuse) sumExcuse.textContent = minsToHM(totalExcuse);
+  sumAbs.textContent  = String(absCount);
+  sumOpen.textContent = String(openCount);
+
+  const totalDays = bodyRows.length || 0;
+  const attendanceDays = Math.max(0, totalDays - absCount);
+  const attendanceRate = totalDays ? Math.round((attendanceDays / totalDays) * 100) : 0;
+
+  const disciplineScore = calcDisciplineScore({totalDays, absCount, openCount, totalLateMin: totalLate});
+const level = scoreToLevel(disciplineScore);
+
+function setMetricBadges({attendanceRate, disciplineScore, level}){
+  // نسبة الحضور
+  if (mAttendance){
+    mAttendance.textContent = `نسبة الحضور: ${toArNumber(attendanceRate)}%`;
+    mAttendance.className = "badge " + (attendanceRate >= 95 ? "ok" : (attendanceRate >= 85 ? "warn" : "bad"));
+  }
+
+  // مؤشر الانضباط
+  if (mDiscipline){
+    mDiscipline.textContent = `مؤشر الانضباط: ${toArNumber(disciplineScore)}/100`;
+    mDiscipline.className = "badge " + (level?.tone || "warn");
+  }
+
+  // المستوى
+  if (mLevel){
+    mLevel.textContent = `المستوى: ${level?.text || "—"}`;
+    mLevel.className = "badge " + (level?.tone || "warn");
+  }
+}
+
+// ✅ هذا السطر كان ناقصًا
+setMetricBadges({attendanceRate, disciplineScore, level});
+
+
+  if (!bodyRows.length){
+    daysBody.innerHTML = `<tr><td colspan="7" class="hint">لا توجد بيانات (بعد استبعاد الجمعة/السبت والإجازات) ضمن الملفات المستوردة.</td></tr>`;
+    currentWaText = "";
+    return;
+  }
+
+  daysBody.innerHTML = bodyRows.map(r => `
+    <tr class="${r.rowClass}">
+      <td>${escapeHtml(r.dayLabel)}</td>
+      <td>${escapeHtml(r.inTxt)}</td>
+      <td>${escapeHtml(r.outTxt)}</td>
+      <td>${escapeHtml(r.workTxt)}</td>
+      <td>${escapeHtml(r.lateTxt)}</td>
+      <td>${r.permHtml}</td>
+      <td>${escapeHtml(r.statusTxt)}</td>
+    </tr>
+  `).join("");
+
+  currentWaText = buildWhatsAppMessage({
+    teacher,
+    totalDays,
+    totalWorkMin: totalWork,
+    totalLateMin: totalLate,
+    totalExcuseMin: totalExcuse,
+    absCount,
+    openCount,
+    attendanceRate,
+    disciplineScore,
+    level,
+
+    permDays,
+    permStartMin: permStart,
+    permMidMin: permMid,
+    permEndMin: permEnd,
+
+    lateItems,
+    absDaysList,
+    openDaysList,
+    permItems
+  });
+}
+
+
+  function clearReport(){
+    tName.textContent  = "—";
+    tId.textContent    = "—";
+    tPhone.textContent = "—";
+    tSpec.textContent  = "—";
+    tRank.textContent  = "—";
+    tShift.textContent = "—";
+
+    sumWork.textContent = "—";
+    sumLate.textContent = "—";
+if (sumExcuse) sumExcuse.textContent = "—";
+    sumAbs.textContent  = "—";
+    sumOpen.textContent = "—";
+
+    mAttendance.textContent = "نسبة الحضور: —";
+    mDiscipline.textContent = "مؤشر الانضباط: —";
+    mLevel.textContent = "المستوى: —";
+    mAttendance.className = "badge";
+    mDiscipline.className = "badge";
+    mLevel.className = "badge";
+
+    daysBody.innerHTML = `<tr><td colspan="7" class="hint">اختر معلماً بعد الاستيراد لعرض تفاصيل الأيام.</td></tr>`;
+    currentWaText = "";
+  }
+
+  function computeStatus(day){
+    const raw = (day.statusRaw || "").toString();
+    const rawN = normName(raw);
+
+    const isAbsent = rawN.includes("غائب") || rawN.includes("غياب");
+    const notClosed = !isAbsent && day.hasIn && !day.hasOut;
+
+    let label = "—";
+    if (isAbsent) label = "غياب";
+    else if (notClosed) label = "لم يُغلق الدوام";
+    else if (raw.trim()) label = raw.trim();
+    else label = (day.hasIn ? "حضور" : "—");
+
+    return {isAbsent, notClosed, label};
+  }
+
+  function computeTimes(day, dateKey){
+  const status = computeStatus(day);
+  if (status.isAbsent){
+    return {workMin:0, lateMin:0, inTxt:"—", outTxt:"—", status, openMinutes:0};
+  }
+
+  const sc = getShiftContextForDate(dateKey);
+
+  const inM  = (day.inM!==null)  ? clamp(day.inM,  sc.clampMinM, sc.clampMaxM) : null;
+  const outM = (day.outM!==null) ? clamp(day.outM, sc.clampMinM, sc.clampMaxM) : null;
+
+  const inTxt  = inM===null ? "—" : minutesToHHMM(inM);
+  let outTxt   = outM===null ? "—" : minutesToHHMM(outM);
+
+  // ✅ لم يُغلق الدوام: نصف دوام حسب دوام ذلك اليوم
+  if (status.notClosed){
+    outTxt = "—";
+    const lateMin = (inM!==null) ? Math.max(0, inM - sc.shiftStartM) : 0;
+    return {workMin: sc.halfMin, lateMin, inTxt, outTxt, status, openMinutes:(sc.fullMin - sc.halfMin)};
+  }
+
+  let workMin = 0;
+  let lateMin = 0;
+
+  if (inM!==null && outM!==null && outM>=inM){
+    workMin = outM - inM;
+    lateMin = Math.max(0, inM - sc.shiftStartM);
+  }
+
+  return {workMin, lateMin, inTxt, outTxt, status, openMinutes:0};
+}
+
+<!-- ===================== PART 7 / 7 ===================== -->
+  /* =========================
+     مؤشرات الانضباط
+  ========================== */
+  function calcDisciplineScore({totalDays, absCount, openCount, totalLateMin}){
+    let s = 100;
+    s -= absCount * 12;
+    s -= openCount * 6;
+    s -= Math.min(25, Math.round((totalLateMin || 0) / 5));
+    if (totalDays === 0) s = 0;
+    return clamp(Math.round(s), 0, 100);
+  }
+
+  function scoreToLevel(score){
+    if (score >= 95) return {tone:"ok", text:"ممتاز"};
+    if (score >= 88) return {tone:"ok", text:"جيد جداً"};
+    if (score >= 80) return {tone:"warn", text:"جيد"};
+    if (score >= 70) return {tone:"warn", text:"يحتاج متابعة"};
+    return {tone:"bad", text:"يحتاج تحسين"};
+  }
+
+  /* =========================
+     WhatsApp
+  ========================== */
+ function buildWhatsAppMessage({
+  teacher,
+  totalDays,
+  totalWorkMin,
+  totalLateMin,
+  totalExcuseMin = 0,
+  absCount,
+  openCount,
+  attendanceRate,
+  disciplineScore,
+  level,
+
+  permDays = 0,
+  permStartMin = 0,
+  permMidMin = 0,
+  permEndMin = 0,
+
+  lateItems = [],
+  absDaysList = [],
+  openDaysList = [],
+  permItems = []
+}){
+  const m = monthCtx.month, y = monthCtx.year;
+  const monthTxt = m ? toArNumber(m) : "—";
+  const yearTxt  = y ? toArNumber(y) : "—";
+
+  const workTxt   = minsToHM(totalWorkMin);
+  const lateTxt   = minsToHM(totalLateMin);
+  const excuseTxt = minsToHM(totalExcuseMin);
+
+  const greet = `السلام عليكم ورحمة الله وبركاته`;
+  const head  = `أ. ${teacher.name}`;
+  const sub   = `ملخص الحضور والانصراف لشهر ${monthTxt} لعام ${yearTxt} (أيام الدوام فقط).`;
+
+  const l1 = `• أيام الدوام: ${toArNumber(totalDays)} | نسبة الحضور: ${toArNumber(attendanceRate)}%`;
+  const l2 = `• ساعات الدوام: ${workTxt} | التأخر: ${lateTxt} | الاستئذان: ${excuseTxt}`;
+  const l3 = `• الغياب: ${toArNumber(absCount)} | عدم إغلاق الدوام: ${toArNumber(openCount)}`;
+  const l4 = `• مؤشر الانضباط: ${toArNumber(disciplineScore)}/100 (${level.text}).`;
+
+  const l5 = permDays
+    ? `• تفصيل الاستئذان: أيام ${toArNumber(permDays)} | بداية ${minsToHM(permStartMin)} | وسط ${minsToHM(permMidMin)} | نهاية ${minsToHM(permEndMin)}`
+    : "";
+
+  const details = [];
+
+  if (lateItems.length){
+    details.push("تفصيل التأخر (الأيام ذات التأخر فقط):");
+    details.push(...lateItems.map(x => `• ${x.dayLabel}: ${minsToHM(x.lateMin)}`));
+  }
+
+  if (permItems.length){
+    details.push("تفصيل الاستئذان (الأيام ذات الاستئذان فقط):");
+    details.push(...permItems.map(x => `• ${x.dayLabel}: ${buildPermText(x.perm)}`));
+  }
+
+  if (absDaysList.length){
+    details.push("أيام الغياب:");
+    details.push(...absDaysList.map(d => `• ${d}`));
+  }
+
+  if (openDaysList.length){
+    details.push("أيام لم يُغلق الدوام:");
+    details.push(...openDaysList.map(d => `• ${d}`));
+  }
+
+  const tip = `للدقة التنظيمية: عند وجود ملاحظة على البيانات، يُرجى الإفادة لتصحيحها وفق الإجراءات المعتمدة.`;
+
+  return [
+    greet, "",
+    head,
+    sub,
+    l1, l2, l3, l4,
+    l5 ? l5 : "",
+    details.length ? "" : "",
+    ...details,
+    "",
+    tip
+  ].filter(Boolean).join("\n");
+}
+
+  function openWAModal(){
+    const id = teacherSelect.value;
+    if (!id || !teachers.has(id)){
+      alert("اختر معلماً أولاً.");
+      return;
+    }
+    if (!currentWaText) renderSelectedTeacher();
+
+    const teacher = teachers.get(id);
+    const phone = normalizeKsaMobile(teacher.phone || "");
+
+    waTextEl.textContent = currentWaText || "—";
+    waHintEl.textContent = phone
+      ? `سيتم توجيه الرسالة لرقم: ${phone}`
+      : `لا يوجد رقم جوال صالح للمعلم — حدّث رقم الجوال في السجل المزروع.`;
+
+    waOverlay.classList.add("show");
+    waModal.classList.add("show");
+    waModal.setAttribute("aria-hidden","false");
+  }
+
+  function closeWAModal(){
+    waOverlay.classList.remove("show");
+    waModal.classList.remove("show");
+    waModal.setAttribute("aria-hidden","true");
+  }
+
+  async function copyWAMessage(){
+    const text = currentWaText || waTextEl.textContent || "";
+    if (!text.trim()){
+      alert("لا توجد رسالة للنسخ.");
+      return;
+    }
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("تم نسخ الرسالة.");
+    }catch(_){
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position="fixed";
+      ta.style.opacity="0";
+      document.body.appendChild(ta);
+      ta.select();
+      try{ document.execCommand("copy"); toast("تم نسخ الرسالة."); }
+      catch(err){ alert("تعذر النسخ. انسخها يدوياً من مربع الرسالة."); }
+      finally{ ta.remove(); }
+    }
+  }
+
+  function openWhatsAppChat(){
+    const id = teacherSelect.value;
+    if (!id || !teachers.has(id)){
+      alert("اختر معلماً أولاً.");
+      return;
+    }
+    const teacher = teachers.get(id);
+    const phone = normalizeKsaMobile(teacher.phone || "");
+    if (!phone){
+      alert("لا يوجد رقم جوال صالح للمعلم لإرسال واتساب.");
+      return;
+    }
+    const text = encodeURIComponent(currentWaText || "");
+    const url = `https://wa.me/${phone}?text=${text}`;
+    window.open(url, "_blank", "noopener");
+  }
+
+  function printWAMessage(){
+    const id = teacherSelect.value;
+    if (!id || !teachers.has(id)){
+      alert("اختر معلماً أولاً.");
+      return;
+    }
+    const teacher = teachers.get(id);
+
+    const m = monthCtx.month, y = monthCtx.year;
+    const monthTxt = m ? toArNumber(m) : "—";
+    const yearTxt  = y ? toArNumber(y) : "—";
+    const phone = normalizeKsaMobile(teacher.phone||"") || "—";
+
+    const html = `<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>طباعة رسالة واتساب</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;font-family:Tajawal,system-ui;background:#fff;color:#0b2f2b}
+  .page{padding:18mm}
+  .h{font-weight:1000;color:#0b5660;font-size:18px;margin:0 0 10px}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{border:1px solid #e5eff1;border-radius:999px;padding:7px 10px;font-weight:900;color:#0b5660;background:#f3fbfb}
+  .box{border:1px solid #e5eff1;border-radius:16px;padding:14px;font-weight:900;line-height:2;white-space:pre-wrap}
+  .foot{margin-top:12px;font-weight:900;color:#2f4f53}
+  @page{size:A4 portrait;margin:10mm}
+</style></head><body>
+  <div class="page">
+    <h1 class="h">رسالة واتساب — ملخص الحضور والانصراف لشهر ${monthTxt} لعام ${yearTxt}</h1>
+    <div class="meta">
+      <span class="chip">المعلم: ${escapeHtml(teacher.name)}</span>
+      <span class="chip">الهوية: ${escapeHtml(teacher.id)}</span>
+      <span class="chip">الجوال: ${escapeHtml(phone)}</span>
+    </div>
+    <div class="box">${escapeHtml(currentWaText || "")}</div>
+    <div class="foot">وفق منصة حضوري الرسمية لتسهيل المتابعة</div>
+  </div>
+
+<!-- ====== LOVABLE BRIDGE: شعار الوزارة + جسر الأرشفة ====== -->
+<style>
+  /* توحيد ظهور شعار الوزارة في جميع الأوراق الرسمية والطباعة */
+  .moe-official-logo{display:inline-block;height:64px;width:auto;object-fit:contain;vertical-align:middle}
+  @media print{
+    .moe-official-logo{height:70px !important}
+    body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+  /* تصحيح اتجاه نوع الإجراء */
+  .action-type, .actionType, [data-field="action_type"], [data-field="actionType"]{
+    direction: rtl !important;
+    unicode-bidi: plaintext !important;
+    text-align: right !important;
+  }
+</style>
+<script>
+(function(){
+  // إعلام الإطار الأب بأن الصفحة جاهزة
+  try{ window.parent && window.parent.postMessage({ __lovable:true, type:'ready', source:'monthly_attendance' }, '*'); }catch(e){}
+
+  // جسر موحّد للأرشفة عبر postMessage
+  window.LovableArchive = function(payload){
+    try{
+      window.parent.postMessage({
+        __lovable: true,
+        type: 'archive',
+        source: 'monthly_attendance',
+        payload: payload || {}
+      }, '*');
+    }catch(e){ console.warn('archive bridge failed', e); }
+  };
+
+  // التقاط النقر على أي زر تصدير/إرسال/طباعة وأرشفته تلقائياً
+  document.addEventListener('click', function(ev){
+    var t = ev.target && ev.target.closest && ev.target.closest('button,.btn,a');
+    if(!t) return;
+    var label = (t.textContent||'').trim().slice(0,80);
+    if(/طباعة|PDF|واتساب|إرسال|حفظ|تصدير|تنزيل|أرشف/.test(label)){
+      try{
+        window.LovableArchive({
+          action_type: label,
+          report_type: document.title || '',
+          summary: label,
+          captured_at: new Date().toISOString()
+        });
+      }catch(e){}
+    }
+  }, true);
+
+  // إدراج شعار الوزارة الرسمي تلقائياً في أي رأس طباعة لا يحتوي شعار
+  function ensureLogo(){
+    try{
+      var imgs = document.querySelectorAll('img');
+      var hasLogo = false;
+      imgs.forEach(function(i){
+        var s = (i.src||'').toLowerCase();
+        if(s.includes('moe') || s.includes('وزارة') || s.includes('education')) hasLogo = true;
+      });
+      if(!hasLogo){
+        var headers = document.querySelectorAll('.print-head, .doc-head, .official-head, header, .header, .print-header');
+        headers.forEach(function(h){
+          if(h.querySelector('.moe-official-logo')) return;
+          var img = document.createElement('img');
+          img.src = '/images/moe-logo-official.png';
+          img.alt = 'وزارة التعليم';
+          img.className = 'moe-official-logo';
+          h.insertBefore(img, h.firstChild);
+        });
+      }
+    }catch(e){}
+  }
+  if(document.readyState === 'complete' || document.readyState === 'interactive'){ setTimeout(ensureLogo, 300); }
+  else document.addEventListener('DOMContentLoaded', function(){ setTimeout(ensureLogo, 300); });
+})();
+</script>
+<!-- ====== END LOVABLE BRIDGE ====== -->
+
+</body></html>`;
+
+    const w = window.open("", "_blank", "noopener,noreferrer");
+    if (!w){ alert("تعذر فتح نافذة الطباعة."); return; }
+
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+
+    w.onload = () => setTimeout(() => { try{ w.focus(); w.print(); }catch(_){ } }, 200);
+  }
+function waitForImages(root, timeoutMs = 7000){
+  const imgs = Array.from(root.querySelectorAll("img"))
+    .filter(img => !img.complete || img.naturalWidth === 0);
+
+  if (!imgs.length) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    let done = false;
+    const t = setTimeout(() => { if(!done){ done = true; resolve(); } }, timeoutMs);
+
+    let left = imgs.length;
+    const finish = () => {
+      left--;
+      if (left <= 0 && !done){
+        done = true;
+        clearTimeout(t);
+        resolve();
+      }
+    };
+
+    imgs.forEach(img => {
+      img.addEventListener("load", finish, { once:true });
+      img.addEventListener("error", finish, { once:true });
+    });
+  });
+}
+  /* =========================
+     ✅ تنزيل PDF (كشف المعلم)
+  ========================== */
+async function exportCurrentTeacherPDF(){
+  const id = teacherSelect.value;
+  if (!id || !teachers.has(id)){
+    alert("اختر معلماً أولاً.");
+    return;
+  }
+
+  if (typeof html2canvas !== "function"){
+    alert("مكتبة html2canvas لم تُحمّل.");
+    return;
+  }
+  if (!window.jspdf || !window.jspdf.jsPDF){
+    alert("مكتبة jsPDF لم تُحمّل.");
+    return;
+  }
+
+  renderSelectedTeacher();
+
+  const src = el("reportPage");
+  if (!src){
+    alert("تعذر العثور على صفحة التقرير.");
+    return;
+  }
+
+  const makeOffscreenClone = () => {
+    const wrap = document.createElement("div");
+    wrap.style.position = "fixed";
+    wrap.style.left = "-100000px";
+    wrap.style.top = "0";
+    wrap.style.width = "210mm";
+    wrap.style.background = "#fff";
+    wrap.style.zIndex = "-1";
+
+    const clone = src.cloneNode(true);
+
+    clone.style.width = "210mm";
+    clone.style.maxWidth = "210mm";
+    clone.style.margin = "0";
+    clone.style.boxShadow = "none";
+    clone.style.borderRadius = "0";
+    clone.style.border = "0";
+    clone.style.direction = "rtl";
+
+    wrap.appendChild(clone);
+    document.body.appendChild(wrap);
+    return { wrap, clone };
+  };
+
+  // ✅ يحاول تحويل البنر إلى DataURL لضمان دخوله في الـ PDF بدون مشاكل CORS
+  async function inlineBannerIfPossible(clone){
+    const b = clone.querySelector("#bannerImg");
+    if (!b) return;
+
+    // اجعلها anonymous إن وُجدت
+    try{ b.crossOrigin = "anonymous"; }catch(_){}
+
+    // انتظر تحميلها إن أمكن
+    await new Promise((resolve) => {
+      if (b.complete && b.naturalWidth) return resolve();
+      b.addEventListener("load", resolve, { once:true });
+      b.addEventListener("error", resolve, { once:true });
+      setTimeout(resolve, 1500);
+    });
+
+    if (!(b.complete && b.naturalWidth)) return;
+
+    try{
+      const c = document.createElement("canvas");
+      c.width = b.naturalWidth;
+      c.height = b.naturalHeight;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(b, 0, 0);
+      const dataUrl = c.toDataURL("image/png");
+      if (dataUrl && dataUrl.startsWith("data:image/")) b.src = dataUrl;
+    }catch(_){
+      // إذا فشل التحويل، نتركه كما هو (قد ينجح الالتقاط على نفس النطاق)
+    }
+  }
+
+  try{
+    setState("جارٍ تجهيز PDF...");
+
+    const { wrap, clone } = makeOffscreenClone();
+
+    try{
+      await (document.fonts?.ready || Promise.resolve());
+      await waitForImages(clone, 12000);
+      await inlineBannerIfPossible(clone);
+
+      const scale = 3; // ✅ وضوح أعلى (إن رغبت أخف حجمًا: اجعلها 2.2)
+
+      const canvas = await html2canvas(clone, {
+        scale,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        scrollX: 0,
+        scrollY: 0,
+        width: clone.scrollWidth,
+        height: clone.scrollHeight,
+        windowWidth: clone.scrollWidth,
+        windowHeight: clone.scrollHeight
+      });
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+
+      const margin = 6;
+      const availW = pageW - margin*2;
+      const availH = pageH - margin*2;
+
+      // قياس الصورة لو طُبعت بعرض الصفحة
+      const fullImgW = availW;
+      const fullImgH = (canvas.height * fullImgW) / canvas.width;
+
+      // ✅ إذا تجاوزت صفحة واحدة بمقدار بسيط: صغّر لتصبح صفحة واحدة (يمنع صفحة ثانية شبه فارغة)
+      const OVERFLOW_TOL_MM = 12; // سماحية 12mm
+      if (fullImgH <= (availH + OVERFLOW_TOL_MM)){
+        const imgData = canvas.toDataURL("image/png");
+        const fitH = availH;
+        const fitW = (canvas.width * fitH) / canvas.height;
+        const x = margin + (availW - fitW)/2;
+        pdf.addImage(imgData, "PNG", x, margin, fitW, fitH);
+      } else {
+        // ✅ تقسيم فعلي للكانفس إلى صفحات (قصّ شرائح)
+        const pxPerMm = canvas.width / fullImgW;
+        const pagePxH = Math.floor(availH * pxPerMm);
+
+        let yPx = 0;
+        let pageIndex = 0;
+
+        while (yPx < canvas.height){
+          const sliceH = Math.min(pagePxH, canvas.height - yPx);
+
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = sliceH;
+
+          const sctx = sliceCanvas.getContext("2d");
+          sctx.drawImage(canvas, 0, yPx, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+          const sliceImg = sliceCanvas.toDataURL("image/png");
+          const sliceMmH = sliceH / pxPerMm;
+
+          if (pageIndex > 0) pdf.addPage();
+          pdf.addImage(sliceImg, "PNG", margin, margin, fullImgW, sliceMmH);
+
+          yPx += sliceH;
+          pageIndex++;
+        }
+      }
+
+      const teacher = teachers.get(id);
+      const hijriShort = getHijriShort(new Date());
+      pdf.save(`كشف حضوري شهري - ${safeFileName(teacher.name)} - ${hijriShort}.pdf`);
+
+      setState("جاهز");
+      toast("تم تنزيل PDF.");
+    } finally {
+      wrap.remove();
+    }
+
+  } catch(err){
+    console.error("PDF export error:", err);
+    setState("جاهز");
+    alert("تعذر إنشاء PDF. افتح Console وستجد السبب تحت: PDF export error");
+  }
+}
+
+  /* =========================
+     Registry warn modal
+  ========================== */
+  function updateRegistryWarnUI(){
+    const n = registryIssues.length;
+    if (n > 0){
+      regWarn.style.display = "";
+      regWarnCount.textContent = String(n);
+      regList.innerHTML = registryIssues.map(x => `<div class="it">${escapeHtml(x)}</div>`).join("");
+    }else{
+      regWarn.style.display = "none";
+      regWarnCount.textContent = "0";
+      regList.innerHTML = "";
+    }
+  }
+
+  function openRegModal(){
+    if (!registryIssues.length) return;
+    regOverlay.classList.add("show");
+    regModal.classList.add("show");
+    regModal.setAttribute("aria-hidden","false");
+  }
+  function closeRegModal(){
+    regOverlay.classList.remove("show");
+    regModal.classList.remove("show");
+    regModal.setAttribute("aria-hidden","true");
+  }
+
+  /* =========================
+     التصدير إلى Excel
+  ========================== */
+  function exportCurrentTeacherExcel(){
+  const id = teacherSelect.value;
+  if (!id || !teachers.has(id)){
+    alert("اختر معلماً أولاً.");
+    return;
+  }
+  const teacher = teachers.get(id);
+
+  const all = Array.from(teacher.days.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
+  const days = all.filter(([dk, day]) => !isExcludedDayKey(dk, day.statusRaw).excluded);
+
+  // ✅ (تفصيل) — مع عمود الاستئذان
+  const detail = days.map(([dk, day]) => {
+    const dObj = keyToDate(dk);
+    const label = dObj ? `${weekdayAr(dObj)} ${formatHijriDate(dObj)}` : dk;
+
+    const st = computeStatus(day);
+const c  = computeTimes(day, dk);
+    const perm = teacher.perms.get(dk) || null;
+
+    return {
+      "اليوم": label,
+      "الحضور": c.inTxt,
+      "الانصراف": c.outTxt,
+      "ساعات الدوام": minsToHM(c.workMin),
+      "التأخر": minsToHM(c.lateMin),
+      "الاستئذان": buildPermText(perm),
+      "الحالة": st.label
+    };
+  });
+
+  // ✅ (ملخص) — مع إجمالي الاستئذان
+  let totalWork=0, totalLate=0, totalExcuse=0, abs=0, open=0;
+
+  for (const [dk, day] of days){
+    const st = computeStatus(day);
+const c  = computeTimes(day, dk);
+    totalWork += c.workMin;
+    totalLate += c.lateMin;
+    if (st.isAbsent) abs++;
+    if (st.notClosed) open++;
+
+    const perm = teacher.perms.get(dk) || null;
+    if (perm && perm.totalMin) totalExcuse += perm.totalMin;
+  }
+
+  const totalDays = days.length || 0;
+  const attendanceDays = Math.max(0, totalDays - abs);
+  const attendanceRate = totalDays ? Math.round((attendanceDays / totalDays) * 100) : 0;
+  const disciplineScore = calcDisciplineScore({totalDays, absCount:abs, openCount:open, totalLateMin: totalLate});
+  const level = scoreToLevel(disciplineScore);
+
+  const m = monthCtx.month, y = monthCtx.year;
+  const monthTxt = (m ? toArNumber(m) : "—");
+  const yearTxt  = (y ? toArNumber(y) : "—");
+
+  const summary = [
+    {"البند":"الشهر", "القيمة": (m && y) ? `شهر ${monthTxt} من عام ${yearTxt}` : "—"},
+    {"البند":"الاسم", "القيمة": teacher.name},
+    {"البند":"رقم الهوية (الرقم الوظيفي)", "القيمة": teacher.id || "—"},
+    {"البند":"الجوال", "القيمة": normalizeKsaMobile(teacher.phone||"") || "—"},
+    {"البند":"التخصص", "القيمة": teacher.spec},
+    {"البند":"المرتبة", "القيمة": teacher.rank},
+    {"البند":"ملاحظة", "القيمة": "أيام الدوام فقط (مستبعد الجمعة/السبت والإجازات الرسمية)."},
+    {"البند":"نسبة الحضور", "القيمة": `${toArNumber(attendanceRate)}%`},
+    {"البند":"مؤشر الانضباط", "القيمة": `${toArNumber(disciplineScore)}/100 (${level.text})`},
+    {"البند":"إجمالي ساعات الدوام", "القيمة": minsToHM(totalWork)},
+    {"البند":"إجمالي التأخر", "القيمة": minsToHM(totalLate)},
+    {"البند":"إجمالي الاستئذان", "القيمة": minsToHM(totalExcuse)},
+    {"البند":"إجمالي الغياب", "القيمة": String(abs)},
+    {"البند":"أيام لم يُغلق الدوام", "القيمة": String(open)}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.json_to_sheet(summary, {skipHeader:false});
+  const ws2 = XLSX.utils.json_to_sheet(detail, {skipHeader:false});
+
+  ws1["!cols"] = [{wch:32},{wch:54}];
+  ws2["!cols"] = [{wch:30},{wch:10},{wch:10},{wch:14},{wch:10},{wch:18},{wch:18}];
+
+  XLSX.utils.book_append_sheet(wb, ws1, "ملخص");
+  XLSX.utils.book_append_sheet(wb, ws2, "تفصيل");
+
+  const out = XLSX.write(wb, {bookType:"xlsx", type:"array"});
+  const blob = new Blob([out], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+
+  const hijriShort = getHijriShort(new Date());
+  a.download = `كشف حضوري شهري - ${safeFileName(teacher.name)} - ${hijriShort}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 250);
+}
+
+  /* =========================
+     أدوات استبعاد الأيام
+  ========================== */
+  function statusLooksHoliday(statusRaw){
+    const s = normName(statusRaw || "");
+    return s.includes("اجازه") || s.includes("عطله") || s.includes("holiday");
+  }
+
+  function inHolidayRanges(dateKey){
+    for (const r of HOLIDAY_RANGES){
+      if (dateKey >= r.start && dateKey <= r.end) return (r.label || "إجازة رسمية");
+    }
+    return "";
+  }
+
+  function isExcludedDayKey(dateKey, statusRaw){
+    if (!dateKey) return {excluded:false, reason:""};
+
+    if (SKIP_HOLIDAYS && statusLooksHoliday(statusRaw)) return {excluded:true, reason:"إجازة"};
+
+    const d = keyToDate(dateKey);
+    if (SKIP_WEEKEND && d){
+      const wd = d.getDay(); // 0=Sun ... 5=Fri 6=Sat
+      if (wd === 5 || wd === 6) return {excluded:true, reason:"نهاية الأسبوع"};
+    }
+
+    if (SKIP_HOLIDAYS){
+      const lbl = inHolidayRanges(dateKey);
+      if (lbl) return {excluded:true, reason:lbl};
+    }
+
+    return {excluded:false, reason:""};
+  }
+
+  /* =========================
+     أدوات مساعدة
+  ========================== */
+  function setState(txt){ stateEl.textContent = txt; }
+
+  function hhmmToMinutes(hhmm){
+    const m = String(hhmm||"").trim().match(/^(\d{1,2}):(\d{2})/);
+    if (!m) return 0;
+    return (parseInt(m[1],10)*60) + parseInt(m[2],10);
+  }
+
+  function minutesToHHMM(mins){
+    mins = Math.max(0, Math.round(mins));
+    const h = Math.floor(mins/60);
+    const m = mins%60;
+    return String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
+  }
+
+  function minsToHM(mins){ return minutesToHHMM(mins || 0); }
+  function clamp(v, a, b){ return Math.min(b, Math.max(a, v)); }
+
+  function parseTimeToMinutes(v){
+    if (v === null || v === undefined) return null;
+
+    if (typeof v === "number" && isFinite(v)){
+      if (v > 1){
+        try{
+          const d = XLSX.SSF.parse_date_code(v);
+          if (d && typeof d.H === "number" && typeof d.M === "number"){
+            return d.H*60 + d.M;
+          }
+        }catch(_){}
+        return null;
+      }
+      const mins = Math.round(v * 24 * 60);
+      if (mins < 0 || mins > 24*60) return null;
+      return mins;
+    }
+
+    const s = String(v).trim();
+    if (!s) return null;
+
+    let ss = s.replace(/[^\d:صمAPMapm ]+/g," ").trim();
+    const isPM = /م/i.test(ss) || /\bPM\b/i.test(ss);
+    const isAM = /ص/i.test(ss) || /\bAM\b/i.test(ss);
+
+    const m = ss.match(/(\d{1,2})\s*:\s*(\d{2})/);
+    if (!m) return null;
+
+    let hh = parseInt(m[1],10);
+    const mm = parseInt(m[2],10);
+
+    if (mm < 0 || mm > 59) return null;
+    if (isPM && hh < 12) hh += 12;
+    if (isAM && hh === 12) hh = 0;
+    if (hh < 0 || hh > 23) return null;
+
+    return hh*60 + mm;
+  }
+
+  function normalizeDateWithContext(v, ctx){
+    const full = normalizeDate(v);
+    if (full) return full;
+
+    const month = ctx?.month, year = ctx?.year;
+    if (!month || !year) return null;
+
+    if (typeof v === "number" && isFinite(v)){
+      const d = Math.floor(v);
+      if (d>=1 && d<=31) return new Date(year, month-1, d);
+    }
+    const s = String(v ?? "").trim();
+    if (s){
+      const w = toWesternDigits(s);
+      const m = w.match(/^(\d{1,2})$/);
+      if (m){
+        const d = parseInt(m[1],10);
+        if (d>=1 && d<=31) return new Date(year, month-1, d);
+      }
+    }
+    return null;
+  }
+
+  function normalizeDate(v){
+    if (v === null || v === undefined) return null;
+
+    if (v instanceof Date && !isNaN(v.getTime())) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+
+    if (typeof v === "number" && isFinite(v)){
+      try{
+        const d = XLSX.SSF.parse_date_code(v);
+        if (d && d.y && d.m && d.d){
+          return new Date(d.y, d.m-1, d.d);
+        }
+      }catch(_){}
+      return null;
+    }
+
+    const s = String(v).trim();
+    if (!s) return null;
+
+    const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (m){
+      const y = parseInt(m[1],10), mo = parseInt(m[2],10)-1, d = parseInt(m[3],10);
+      const dt = new Date(y, mo, d);
+      if (!isNaN(dt.getTime())) return dt;
+    }
+
+    const m2 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (m2){
+      const d = parseInt(m2[1],10), mo = parseInt(m2[2],10)-1, y = parseInt(m2[3],10);
+      const dt = new Date(y, mo, d);
+      if (!isNaN(dt.getTime())) return dt;
+    }
+
+    return null;
+  }
+
+  function dateToKey(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const da = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+
+  function keyToDate(key){
+    const m = String(key||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const y = parseInt(m[1],10), mo = parseInt(m[2],10)-1, d = parseInt(m[3],10);
+    const dt = new Date(y, mo, d);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  function weekdayAr(d){
+    try{
+      return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {weekday:"long"}).format(d);
+    }catch(_){
+      return d.toLocaleDateString("ar-SA", {weekday:"long"});
+    }
+  }
+
+  function formatHijriDate(d){
+    try{
+      const parts = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+        year:"numeric", month:"2-digit", day:"2-digit"
+      }).formatToParts(d);
+
+      const get = (t) => (parts.find(p=>p.type===t)?.value || "");
+      const y = get("year"), mo = get("month"), da = get("day");
+      return `${y}/${mo}/${da} هـ`;
+    }catch(_){
+      return d.toLocaleDateString("ar-SA");
+    }
+  }
+
+  function getHijriShort(d){
+    try{
+      const parts = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+        year:"numeric", month:"2-digit", day:"2-digit"
+      }).formatToParts(d);
+      const get = (t) => (parts.find(p=>p.type===t)?.value || "");
+      const y = get("year"), mo = get("month"), da = get("day");
+      return `${y}${mo}${da}`;
+    }catch(_){
+      const key = dateToKey(new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+      return key.replaceAll("-","");
+    }
+  }
+
+  function setTodayHeader(){
+    const now = new Date();
+    const dow = el("todayDow");
+    const hij = el("todayHijri");
+    if (dow) dow.textContent = weekdayAr(now);
+    if (hij) hij.textContent = formatHijriDate(now);
+  }
+
+  function normName(s){
+    return (s||"")
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[\u064B-\u065F\u0670]/g,"")
+      .replace(/[إأآٱ]/g,"ا")
+      .replace(/[ىي]/g,"ي")
+      .replace(/ة/g,"ه")
+      .replace(/[^\p{L}\p{N} ]/gu," ")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "").replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[s]));
+  }
+
+  function safeFileName(name){
+    return String(name||"")
+      .replace(/[\\\/:*?"<>|]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 80) || "بدون-اسم";
+  }
+
+  function toWesternDigits(s){
+    const map = {"٠":"0","١":"1","٢":"2","٣":"3","٤":"4","٥":"5","٦":"6","٧":"7","٨":"8","٩":"9","۰":"0","۱":"1","۲":"2","۳":"3","۴":"4","۵":"5","۶":"6","۷":"7","۸":"8","۹":"9"};
+    return String(s||"").replace(/[٠-٩۰-۹]/g, ch => map[ch] || ch);
+  }
+
+  function toast(msg){
+    const t = document.createElement("div");
+    t.textContent = msg;
+    t.style.position="fixed";
+    t.style.bottom="16px";
+    t.style.left="16px";
+    t.style.zIndex="200";
+    t.style.background="rgba(255,255,255,.92)";
+    t.style.border="1px solid #e5eff1";
+    t.style.borderRadius="999px";
+    t.style.padding="10px 12px";
+    t.style.fontWeight="1000";
+    t.style.boxShadow="0 12px 30px rgba(0,0,0,.12)";
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 1400);
+  }
+
+  /* =========================
+     السجل المزروع (بالهوية)
+  ========================== */
+  function buildRegistryById(tsv){
+    const map = new Map();
+    const issues = [];
+    const lines = String(tsv||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+
+    for (const line of lines){
+      const parts = line.split("\t").map(p => (p||"").trim());
+      if (parts.length < 2) continue;
+
+      const name = parts[0];
+      const id   = cleanId(parts[1]);
+      const phone= normalizeKsaMobile(parts[2] || "");
+      const spec = parts[3] || "—";
+      const rank = parts[4] || "—";
+
+      if (!name || !id) continue;
+
+      if (map.has(id)){
+        const prev = map.get(id);
+        if (prev && prev.name !== name){
+          issues.push(`تكرار هوية (${id}): ${prev.name} / ${name} — تم اعتماد أول سجل.`);
+          continue;
+        }
+      }
+
+      if (!phone) issues.push(`بيان جوال غير مكتمل: ${name} (${id})`);
+      if (!spec || spec === "—") issues.push(`بيان تخصص غير مكتمل: ${name} (${id})`);
+      if (!rank || rank === "—") issues.push(`بيان مرتبة/وظيفة غير مكتمل: ${name} (${id})`);
+
+      map.set(id, { name, id, phone: phone || "—", spec, rank });
+    }
+
+    return { map, issues };
+  }
+
+  function buildNameToIdIndex(registryMap){
+    const m = new Map();
+    for (const [id, rec] of registryMap.entries()){
+      const k = nameKey(rec?.name || "");
+      if (!k) continue;
+      if (!m.has(k)) m.set(k, id);
+    }
+    return m;
+  }
+
+  function nameKey(name){
+    return normName(name).replace(/\s+/g, "");
+  }
+
+  function cleanId(v){
+    const s = toWesternDigits(String(v ?? "")).replace(/\D+/g, "");
+    if (!s) return "";
+    return s;
+  }
+
+  function normalizeKsaMobile(v){
+    let s = String(v ?? "").trim();
+    if (!s) return "";
+    s = toWesternDigits(s);
+    s = s.replace(/\.0+$/g, "");
+    let digits = s.replace(/\D+/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("00")) digits = digits.slice(2);
+    if (digits.startsWith("966")){
+      digits = "966" + digits.slice(3).replace(/^0+/, "");
+    } else if (digits.length === 10 && digits.startsWith("05")){
+      digits = "966" + digits.slice(1);
+    } else if (digits.length === 9 && digits.startsWith("5")){
+      digits = "966" + digits;
+    }
+    if (digits.length === 12 && digits.startsWith("9665")) return digits;
+    return "";
+  }
+
+  function resolveTeacherId(idRaw, nameRaw){
+    const id = cleanId(idRaw);
+    if (id && teachers.has(id)) return id;
+    if (id && registryById.has(id)) return id;
+
+    const k = nameKey(nameRaw || "");
+    if (k && idByNameKey.has(k)) return idByNameKey.get(k);
+
+    return "";
+  }
+
+  function resetDataToRegistry(){
+    teachers.clear();
+    for (const [id, r] of registryById.entries()){
+      teachers.set(id, {
+        id,
+        name: r.name || "—",
+        phone: normalizeKsaMobile(r.phone || "") || "—",
+        spec: (r.spec || "—"),
+        rank: (r.rank || "—"),
+days: new Map(),
+perms: new Map() // ✅ NEW: dateKey -> تجميع الاستئذان
+      });
+    }
+  }
+
+})();
+</script>
+</body>
+</html>

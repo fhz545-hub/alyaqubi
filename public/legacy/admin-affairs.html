@@ -1,0 +1,3091 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>الشؤون الإدارية والمتابعة</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+    <style>
+      :root{--moe:#0b7e88;--ink:#111;--sidebarW:390px;--b:#e6eeee}
+      *{box-sizing:border-box}
+      html,body{margin:0;background:#f6fafb;color:var(--ink);font:12.6px/1.8 Tajawal,system-ui;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+      p,li,span,strong,b{letter-spacing:0;word-spacing:.25px}
+      .app{display:grid;grid-template-columns:var(--sidebarW) 1fr;min-height:100vh}
+      @media (max-width:1024px){ .app{grid-template-columns:1fr} }
+
+      .sidebar{position:sticky;top:0;height:100vh;background:#fff;border-inline-end:1px solid #e8f2f2;box-shadow:0 0 24px rgba(0,0,0,.04);display:flex;flex-direction:column;z-index:5}
+      @media (max-width:1024px){
+        .sidebar{position:relative;height:auto;top:auto;border-inline-end:0;border-bottom:1px solid #e8f2f2}
+      }
+      .sb-head{padding:12px;border-bottom:1px solid #eef4f4;font-weight:900;color:#064b50}
+      .sb-body{padding:12px;overflow:auto;max-height:calc(100vh - 120px)}
+      @media (max-width:1024px){.sb-body{max-height:none}}
+      .f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+      .f label{font-weight:800;color:#03636a;font-size:11.8px}
+      .sel,.inp,.btn{height:36px;border:1px solid #dbe9e9;border-radius:12px;background:#fff;padding:7px 10px;font-weight:800}
+      .sel{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#89a 0),linear-gradient(135deg,#89a 50%,transparent 0);background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;cursor:pointer}
+      .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+      .chips{display:flex;gap:8px;flex-wrap:wrap}
+      .chip{border:1px solid #dbe9e9;border-radius:14px;background:#f2fafb;color:#0b5e63;font-weight:900;padding:7px 12px;cursor:pointer}
+      .chip.active{background:var(--moe);color:#fff;border-color:transparent}
+      .btn{cursor:pointer}
+      .btn.ghost{background:#eef7f7}
+      .btn.primary{background:var(--moe);color:#fff;border-color:transparent}
+      .btn.wh{background:#25D366;color:#fff;border-color:#1aae53}
+      /* زر حصائيات الحضور والانصراف شهري */
+      .btn.monthlyStats{
+        background:linear-gradient(90deg,#0ea5e9,#2563eb);
+        color:#fff;
+        border-color:transparent;
+        box-shadow:0 10px 26px rgba(37,99,235,.18);
+      }
+      .btn.monthlyStats:hover{filter:brightness(.98)}
+      .btn.monthlyStats:active{transform:translateY(1px)}
+
+      .sb-actions{margin-top:8px;display:flex;flex-direction:column;gap:10px}
+      .rights{font-size:10px;color:#7a8790;text-align:center;padding:8px 10px;border-top:1px dashed #eef4f4;margin-top:auto}
+      .disabled{opacity:.45;pointer-events:none;filter:grayscale(1)}
+
+      .box{border:1px solid #e7f0f0;border-radius:14px;padding:12px;background:#fbfeff}
+      .mini{font-size:11.1px;color:#60727a;font-weight:800}
+      .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #dbe9e9;border-radius:999px;padding:5px 11px;background:#f2fafb;color:#0b5e63;font-weight:900}
+      .pill b{color:#064b50}
+      .sep{height:1px;background:#eef4f4;margin:12px 0}
+      .smallbtn{height:auto;padding:8px 12px;border-radius:14px}
+      .list{border:1px solid #e7f0f0;border-radius:14px;overflow:hidden;background:#fff}
+      .list table{width:100%;border-collapse:collapse;font-size:11.6px}
+      .list th{background:#0b5e63;color:#fff;padding:8px 9px;text-align:center}
+      .list td{border-top:1px solid #eef4f4;padding:7px 9px;text-align:center}
+      .tag{display:inline-flex;align-items:center;justify-content:center;padding:2px 9px;border-radius:999px;font-weight:900;border:1px solid #dbe9e9;background:#f2fafb;color:#0b5e63}
+      .tag.red{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+      .tag.amber{background:#fef3c7;border-color:#fde68a;color:#92400e}
+      .tag.green{background:#dcfce7;border-color:#bbf7d0;color:#166534}
+
+      /* ألوان زرَّي حضوري */
+      .btn.importSoft{background:#ffe7e7;border-color:#fecaca;color:#7c2d12}
+      .btn.driveSoft{background:#e8fff1;border-color:#bbf7d0;color:#166534}
+      .btn.importSoft:hover{filter:brightness(.98)}
+      .btn.driveSoft:hover{filter:brightness(.98)}
+
+      @keyframes pulseWarn{
+        0%{transform:scale(1); box-shadow:0 0 0 rgba(245,158,11,.0)}
+        50%{transform:scale(1.01); box-shadow:0 0 0 7px rgba(245,158,11,.12)}
+        100%{transform:scale(1); box-shadow:0 0 0 rgba(245,158,11,.0)}
+      }
+      .warn{border:1px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:12px;padding:10px 10px;font-weight:900}
+      .warn b{color:#7c2d12}
+      .warn.strong{border-width:2px;animation:pulseWarn 1.05s ease-in-out infinite}
+      .warn .cta{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:8px}
+      .warn .cta .btn{height:auto;padding:7px 10px;border-radius:12px}
+      .ok{border:1px solid #bbf7d0;background:#ecfdf5;color:#166534;border-radius:12px;padding:8px 10px;font-weight:900}
+
+      .content{padding:16px}
+      .sheet-wrap{display:flex;justify-content:center;overflow:auto}
+      .sheet{width:100%;max-width:210mm;min-height:297mm;background:#fff;border:1px solid var(--b);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.04)}
+      .pad{padding:8mm 10mm 9mm}
+
+      .hdr{position:relative;margin:0 0 5mm}
+      .hdr img{width:100%;display:block;border-radius:12px;image-rendering:auto}
+      .meta-stack{position:absolute;inset-inline-end:12px;top:12px;display:flex;flex-direction:column;gap:6px;min-width:130px;transform:translateX(4px)}
+      .meta-stack .rowB{background:transparent;border:0;border-radius:10px;padding:6px 10px;font-weight:900;text-align:center}
+
+      .title-center{text-align:center;margin:5mm 0 3mm}
+      .title-center .t{font-weight:900;font-size:22px;color:#064b50}
+
+      .tbl{width:100%;border-collapse:collapse;table-layout:fixed}
+      .tbl th{background:#0b5e63;color:#fff;border:1px solid #244a4a;padding:6px 7px;font-weight:900}
+      .tbl td{border:1px solid #3f5b57;padding:5px 7px;height:10mm;text-align:center}
+      .tbl .name{width:38%}.tbl .spec{width:14%}.tbl .level{width:16%}.tbl .job{width:16%}.tbl .work{width:16%}
+
+      .badges-under{margin:6px auto 0;display:flex;gap:10px;justify-content:flex-start;align-items:center;width:100%}
+      .badge{display:inline-flex;align-items:center;gap:8px;border:1px solid #0b7e88;border-radius:10px;padding:2px 10px;background:#fff;font-weight:900}
+      .badge .tag{background:var(--moe);color:#fff;border-radius:8px;padding:2px 8px}
+
+      .sec{margin-top:6mm}
+      .sec h3{margin:0 0 6px;color:#0b5e63;font-size:14px}
+      .rule-row{display:flex;align-items:center;gap:6px;margin-top:3px}
+      .rule-row .label{font-weight:900;white-space:nowrap}
+      .dotfield{display:inline-block;min-width:25mm;border-bottom:1px dotted #2f4f4c;text-align:center;padding:0 2mm}
+      .timebox{display:inline-block;min-width:26mm;text-align:center;padding:.4mm 2.5mm;background:#fff;color:#111;font-weight:900;border-radius:6px;border:1px solid #000;font-family:ui-monospace,Consolas,monospace;font-size:12px;cursor:text}
+      .timebox.empty{color:#777;border-color:#bbb}
+      .checks{margin:5px 0 6px}
+      .checkline{display:flex;align-items:flex-start;gap:6px;margin:5px 0}
+      .checkline input{margin-top:3px;transform:scale(1.05)}
+      .checkline .text{flex:1}
+      .calc{font-weight:900;color:#0b5e63}
+
+      .lines{min-height:26mm;border:1px dashed #2f4f4c;border-radius:10px;padding:8px 10px;background:#fafefe}
+      .lines div{height:9mm;border-bottom:1px dotted #2f4f4c}
+      .lines div:last-child{border-bottom:0}
+      .lines.dotted{border-color:#cfd8d8}
+      .lines.dotted div{border-bottom:1px dotted #c7cfd0}
+
+      .footer-note{margin-top:10mm}
+      .footer-note span{display:inline-block;margin-inline-end:auto;color:#333;font-size:10.5px;font-weight:800}
+
+      /* الإحصائيات */
+      #statsDlg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:50;align-items:center;justify-content:center;padding:12px}
+      .stats-card{background:#fff;border-radius:16px;max-width:1100px;width:96%;max-height:90vh;overflow:auto;border:1px solid var(--b)}
+      .stats-card .h{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #eef4f4}
+      .stats-hdr{position:relative;margin:8px 8px 10px}
+      .stats-hdr img{width:100%;display:block;border-radius:12px}
+      .stats-meta{position:absolute;inset-inline-end:12px;top:12px;display:flex;flex-direction:column;gap:6px;min-width:130px}
+      .stats-meta .rowB{background:transparent;border:0;border-radius:10px;padding:6px 10px;font-weight:900;text-align:center}
+      .tbl2{width:100%;border-collapse:collapse}
+      .tbl2 th{background:#0b5e63;color:#fff;border:1px solid #2b4949;padding:6px 8px;position:sticky;top:0}
+      .tbl2 td{border:1px solid #2b4949;padding:6px 8px}
+      .tbl2 .no-print{}
+
+      /* كشف حضوري */
+      #hadoryReportDlg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55;align-items:center;justify-content:center;padding:12px}
+      .report-card{background:#fff;border-radius:16px;max-width:1100px;width:96%;max-height:90vh;overflow:auto;border:1px solid var(--b)}
+      .report-card .h{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #eef4f4}
+      .report-hdr{position:relative;margin:8px 8px 10px}
+      .report-hdr img{width:100%;display:block;border-radius:12px}
+      .report-meta{position:absolute;inset-inline-end:12px;top:12px;display:flex;flex-direction:column;gap:6px;min-width:130px}
+      .report-meta .rowB{background:transparent;border:0;border-radius:10px;padding:6px 10px;font-weight:900;text-align:center}
+
+      /* اختيار الوقت */
+      #clockDlg{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.35);align-items:center;justify-content:center;padding:16px}
+      .clock-card{background:#fff;border:1px solid var(--b);border-radius:16px;max-width:360px;width:96%}
+      .clock-card .h{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #eef4f4}
+      .clock-card .b{padding:12px}
+      .clock-row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+      .clock-row .col{flex:1}
+      .clock-row input[type=range]{width:100%}
+      .clock-big{font:900 26px/1 Tajawal,system-ui;text-align:center;color:#064b50;margin:8px 0}
+      .clock-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+      .clock-actions .btn{height:auto;padding:7px 10px}
+
+      /* حماية التاريخ */
+      #dateGuardDlg{display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.42);align-items:center;justify-content:center;padding:14px}
+      .guard-card{background:#fff;border:1px solid var(--b);border-radius:16px;max-width:520px;width:96%;box-shadow:0 16px 48px rgba(0,0,0,.18)}
+      .guard-card .h{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #eef4f4}
+      .guard-card .b{padding:12px}
+      .guard-title{font-weight:900;color:#7c2d12}
+      .guard-note{background:#fffbeb;border:2px solid #f59e0b;border-radius:14px;padding:10px;font-weight:900;color:#92400e}
+      .guard-note .k{color:#7c2d12}
+      .guard-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+      .guard-actions .btn{height:auto;padding:8px 12px;border-radius:14px}
+      .guard-check{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-weight:900;color:#0b5e63}
+      .guard-check input{margin-top:3px;transform:scale(1.05)}
+
+      *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+      @media print{
+        @page{size:A4;margin:10mm}
+        body{background:#fff}
+
+        body[data-print="stats"] .app{display:none !important}
+        body[data-print="stats"] #statsDlg[aria-hidden="false"]{display:block !important; position:static !important; inset:auto !important;background:#fff !important; padding:0 !important}
+        body[data-print="stats"] #statsDlg .stats-card{border:0 !important;border-radius:0 !important;width:210mm !important;max-width:none !important;min-height:auto !important;max-height:none !important;overflow:visible !important;box-shadow:none !important;margin:0 auto !important;page-break-inside:avoid}
+        body[data-print="stats"] #statsDlg .stats-hdr{display:block !important;margin:0 0 6mm !important}
+        body[data-print="stats"] #statsDlg .h, body[data-print="stats"] #statsDlg .stats-actions{display:none !important}
+        body[data-print="stats"] #tblStats thead{display:table-header-group}
+        body[data-print="stats"] #tblStats th, body[data-print="stats"] #tblStats td{border-color:#000 !important}
+        body[data-print="stats"] #tblStats th{background:#0b5e63 !important;color:#fff !important}
+        body[data-print="stats"] #tblStats tr{page-break-inside:avoid}
+        body[data-print="stats"] #tblStats th:last-child, body[data-print="stats"] #tblStats td:last-child, body[data-print="stats"] #tblStats .no-print{display:none !important}
+
+        body[data-print="hadory"] .app{display:none !important}
+        body[data-print="hadory"] #hadoryReportDlg[aria-hidden="false"]{display:block !important; position:static !important; inset:auto !important;background:#fff !important; padding:0 !important}
+        body[data-print="hadory"] #hadoryReportDlg .report-card{border:0 !important;border-radius:0 !important;width:210mm !important;max-width:none !important;min-height:auto !important;max-height:none !important;overflow:visible !important;box-shadow:none !important;margin:0 auto !important}
+        body[data-print="hadory"] #hadoryReportDlg .report-hdr{display:block !important;margin:0 0 6mm !important}
+        body[data-print="hadory"] #hadoryReportDlg .h, body[data-print="hadory"] #hadoryReportDlg .report-actions{display:none !important}
+        body[data-print="hadory"] #tblHadoryReport thead{display:table-header-group}
+        body[data-print="hadory"] #tblHadoryReport th, body[data-print="hadory"] #tblHadoryReport td{border-color:#000 !important}
+        body[data-print="hadory"] #tblHadoryReport th{background:#0b5e63 !important;color:#fff !important}
+        body[data-print="hadory"] #tblHadoryReport tr{page-break-inside:avoid}
+
+        body:not([data-print="stats"]):not([data-print="hadory"]) .sidebar,
+        body:not([data-print="stats"]):not([data-print="hadory"]) .rights,
+        body:not([data-print="stats"]):not([data-print="hadory"]) #clockDlg,
+        body:not([data-print="stats"]):not([data-print="hadory"]) #dateGuardDlg,
+        body:not([data-print="stats"]):not([data-print="hadory"]) #hadoryReportDlg{display:none !important}
+
+        body:not([data-print="stats"]):not([data-print="hadory"]) .content{padding:0}
+        body:not([data-print="stats"]):not([data-print="hadory"]) .sheet{width:210mm;min-height:auto;border:0;box-shadow:none;page-break-inside:avoid}
+        body:not([data-print="stats"]):not([data-print="hadory"]) .pad{padding:7mm 9mm 8mm}
+        body:not([data-print="stats"]):not([data-print="hadory"]) .hdr{margin:0 0 4mm}
+        body:not([data-print="stats"]):not([data-print="hadory"]) .hdr img{max-height:40mm;object-fit:cover;border-radius:8px}
+
+        #alertPack, #absencePack{line-height:1.45 !important}
+        #alertPack p, #absencePack p{margin:2mm 0 1.5mm !important}
+        #alertPack .sec, #absencePack .sec{margin-top:4mm !important}
+        #alertPack .checkline, #absencePack .checkline{margin:3mm 0 !important;gap:4px !important}
+        #alertPack .lines div, #absencePack .lines div{height:6mm !important}
+        #alertPack .lines, #absencePack .lines{padding:6px 8px !important}
+
+        /* وضع قرار الحسم: 3 صفحات A4 متتالية */
+        body.mode-deduct .hdr,
+        body.mode-deduct .title-center,
+        body.mode-deduct .pad > .tbl,
+        body.mode-deduct .badges-under,
+        body.mode-deduct .footer-note{display:none !important}
+        body.mode-deduct .pad{padding:0 !important}
+        #deductPack .ded-page{page-break-after:always}
+        #deductPack .ded-page:last-child{page-break-after:auto}
+      }
+
+      /* عرض شاشة لقرار الحسم */
+      #deductPack{display:none}
+      #deductPack .ded-page{padding:7mm 9mm 8mm;border-bottom:2px dashed #cbd5d4}
+      #deductPack .ded-page:last-child{border-bottom:0}
+      #deductPack .ded-hdr{display:flex;align-items:flex-start;gap:10px;margin-bottom:6mm}
+      #deductPack .ded-hdr img{max-height:38mm;border-radius:8px;flex:1;object-fit:cover}
+      #deductPack .ded-hdr .meta{min-width:55mm;font-size:12px;color:#0b4a4f;line-height:1.7}
+      #deductPack h3.ded-title{text-align:center;background:#0b5e63;color:#fff;padding:6px 10px;border-radius:6px;margin:6px 0 10px;font-size:15px}
+      #deductPack .ded-tbl{width:100%;border-collapse:collapse;margin:6px 0}
+      #deductPack .ded-tbl th,#deductPack .ded-tbl td{border:1px solid #0b4a4f;padding:6px 8px;font-size:12.5px;text-align:center}
+      #deductPack .ded-tbl th{background:#b0c4de;color:#0b3a3f;font-weight:900}
+      #deductPack .ded-body p{margin:3mm 0;font-size:13px;line-height:1.8}
+      #deductPack .ded-sign{margin-top:8mm;display:flex;justify-content:space-between;gap:12px;font-size:12.5px}
+      #deductPack .ded-sign .col{flex:1;line-height:1.9}
+      body.mode-deduct #deductPack{display:block}
+      body.mode-deduct .sheet{min-height:auto}
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <aside class="sidebar" id="sidebar">
+        <div class="sb-head">لوحة التعليمات</div>
+        <div class="sb-body">
+          <div class="f">
+            <label>نوع الإجراء</label>
+            <div class="chips" id="kindChips">
+              <button class="chip active" data-k="late">تأخر</button>
+              <button class="chip" data-k="absent">عدم تواجد</button>
+              <button class="chip" data-k="gaib">مساءلة غياب</button>
+              <button class="chip" data-k="note">لفت نظر</button>
+              <!-- نُقل قرار الحسم إلى مركز شؤون المعلمين > ملف المعلم -->
+            </div>
+          </div>
+
+          <div class="f">
+            <label>المعلّم</label>
+            <select id="selTeacher" class="sel"></select>
+          </div>
+
+          <div class="f">
+            <label>توقيت الدوام</label>
+            <div class="chips" id="seasonChips">
+              <button class="chip" data-season="winter">الشتوي</button>
+              <button class="chip active" data-season="summer">الصيفي</button>
+              <button class="chip" data-season="ramadan">رمضان</button>
+            </div>
+          </div>
+
+          <!-- ✅ جديد: تمديد نصف ساعة -->
+          <div class="f" id="extendBox" style="display:none">
+            <label>تمديد نهاية الدوام</label>
+            <button id="btnExtend" class="btn ghost" style="width:100%">تفعيل التمديد +30 دقيقة</button>
+            <div class="mini">لكل وضع يمكن تمديد نهاية الدوام حتى نصف ساعة فقط.</div>
+          </div>
+
+          <div class="f">
+            <label>سبب لفت النظر</label>
+            <select id="noteReason" class="sel">
+              <option value="">— اختر السبب —</option>
+              <option>عدم المشاركة في الإشراف الصباحي وفق الجدول المعتمد.</option>
+              <option>التقصير في مناوبة نهاية الدوام مما أثّر على انضباط خروج الطلاب.</option>
+              <option>قصور في الحضور أثناء الإشراف وقت الفسحة مما أدى إلى ضعف متابعة السلوك الطلابي</option>
+              <option>عدم الإشراف على صلاة الظهر في المصلى المدرسي.</option>
+              <option>عدم التحضير الإلكتروني في منصة مدرستي حسب المتطلبات.</option>
+              <option>الخروج من الحصة قبل انتهائها دون مبرر نظامي.</option>
+              <option>التأخر عن دخول الحصة وفق الجدول الزمني.</option>
+              <option>عدم الحضور للطابور الصباحي دون عذر.</option>
+              <option>التغيب عن اجتماع المدرسة الرسمي دون عذر.</option>
+              <option>عدم الرد على مساءلة إدارية في الموعد المحدد.</option>
+              <option>رفض التوقيع على النماذج أو المحاضر الرسمية.</option>
+              <option>رفض تنفيذ توجيه إداري أو تربوي دون مبرر.</option>
+              <option>عدم رفع بيانات الغياب في (فارس) بالوقت المحدد.</option>
+              <option>عدم دخول حصة الانتظار المكلَّف بها.</option>
+              <option>عدم دخول الحصة الرسمية والخروج بدون استئذان .</option>
+              <option>التقصير في إدخال الدرجات في (نور) ضمن الإطار الزمني المعتمد.</option>
+              <option>عدم تسجيل الانصراف في منصة حضوري.</option>
+            </select>
+            <!-- ✅ تفاصيل الحصة (تظهر فقط عند: التأخر عن دخول الحصة / الخروج قبل انتهائها) -->
+            <div class="f" id="lessonBox" style="display:none">
+              <label id="lessonTitle">تفاصيل الحصة</label>
+
+              <div class="row">
+                <select id="classLevel" class="sel" style="width:30%">
+                  <option value="">— الفصل —</option>
+                  <option value="أول ثانوي">أول ثانوي</option>
+                  <option value="ثاني ثانوي">ثاني ثانوي</option>
+                  <option value="ثالث ثانوي">ثالث ثانوي</option>
+                </select>
+
+                <select id="sectionNo" class="sel" style="width:22%">
+                  <option value="">— الشعبة —</option>
+                  <option value="1">١</option>
+                  <option value="2">٢</option>
+                  <option value="3">٣</option>
+                  <option value="4">٤</option>
+                  <option value="5">٥</option>
+                  <option value="6">٦</option>
+                  <option value="7">٧</option>
+                  <option value="8">٨</option>
+                  <option value="9">٩</option>
+                  <option value="10">١٠</option>
+                  <option value="11">١١</option>
+                  <option value="12">١٢</option>
+                  <option value="13">١٣</option>
+                  <option value="14">١٤</option>
+                  <option value="15">١٥</option>
+                  <option value="16">١٦</option>
+                  <option value="17">١٧</option>
+                  <option value="18">١٨</option>
+                  <option value="19">١٩</option>
+                  <option value="20">٢٠</option>
+                </select>
+
+                <input id="className" type="hidden" value="" />
+
+                <select id="periodNo" class="sel" style="width:18%">
+                  <option value="">— الحصة —</option>
+                  <option value="1">١</option>
+                  <option value="2">٢</option>
+                  <option value="3">٣</option>
+                  <option value="4">٤</option>
+                  <option value="5">٥</option>
+                  <option value="6">٦</option>
+                  <option value="7">٧</option>
+                </select>
+
+                <span class="pill" style="flex:1;justify-content:center"> <b id="lessonMins">0</b> دقيقة </span>
+              </div>
+
+              <div class="row" style="margin-top:8px">
+                <div style="flex:1">
+                  <div class="mini" id="lessonA_lbl">وقت بداية الحصة (حسب الجدول)</div>
+                  <span id="lessonA" class="timebox empty" contenteditable="true" data-mask>--:--</span>
+                </div>
+
+                <div style="flex:1">
+                  <div class="mini" id="lessonB_lbl">وقت دخول المعلم للحصة</div>
+                  <span id="lessonB" class="timebox empty" contenteditable="true" data-mask>--:--</span>
+                </div>
+              </div>
+
+              <div class="mini" id="lessonHint" style="margin-top:6px">أدخل الوقتين وسيتم احتساب الدقائق تلقائيًا.</div>
+            </div>
+          </div>
+
+          <div class="f">
+            <label>العذر/القبول/فارس</label>
+            <button
+              id="btnUnified"
+              class="btn ghost"
+              style="width:100%;display:flex;justify-content:space-between;align-items:center"
+            >
+              <span id="unifiedText">بدون عذر</span><span>▾</span>
+            </button>
+            <div
+              id="unifiedPanel"
+              style="display:none;border:1px solid #dbe9e9;border-radius:12px;padding:10px;margin-top:8px"
+            >
+              <div class="f" style="margin:0">
+                <label>العذر</label>
+                <div class="chips" id="excuseGroup">
+                  <button class="chip" data-exc="with">بعذر</button>
+                  <button class="chip active" data-exc="without">بدون عذر</button>
+                </div>
+              </div>
+              <div class="f" style="margin:8px 0 0">
+                <label>قبول العذر</label>
+                <div class="chips" id="acceptGroup">
+                  <button class="chip" data-acc="accepted">مقبول</button>
+                  <button class="chip active" data-acc="rejected">غير مقبول</button>
+                </div>
+              </div>
+              <div class="f" style="margin:8px 0 0">
+                <label>فارس — يظهر فقط لمساءلة الغياب</label>
+                <div class="chips" id="frGroup">
+                  <button class="chip" data-fr="raised">مرفوع</button>
+                  <button class="chip active" data-fr="not">لم يُرفع</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="f">
+            <label>التاريخ</label>
+            <div class="row"><button id="btnCalToggle" class="btn" style="flex:1">🗓️ هجري</button></div>
+            <div id="pickHijri" class="row" style="margin-top:8px">
+              <select id="hY" class="sel" style="width:33%"></select>
+              <select id="hM" class="sel" style="width:33%"></select>
+              <select id="hD" class="sel" style="width:34%"></select>
+            </div>
+            <div id="pickGreg" class="row" style="display:none;margin-top:8px">
+              <input id="gY" class="inp" type="number" min="1900" max="2100" placeholder="YYYY" style="width:40%" />
+              <input id="gM" class="inp" type="number" min="1" max="12" placeholder="MM" style="width:30%" />
+              <input id="gD" class="inp" type="number" min="1" max="31" placeholder="DD" style="width:30%" />
+            </div>
+          </div>
+
+          <!-- ============= فاصل بصري لقسم حضوري ============= -->
+          <div style="margin:22px 0 12px;display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:2px;background:linear-gradient(90deg,transparent,#0b7e88,transparent)"></div>
+            <div
+              style="background:linear-gradient(135deg,#0b7e88,#13a4b0);color:#fff;padding:8px 18px;border-radius:999px;font-weight:900;font-size:14px;box-shadow:0 4px 12px rgba(11,126,136,.3);white-space:nowrap"
+            >
+              🗂️ قسم حضوري — المتابعة والمحاسبة
+            </div>
+            <div style="flex:1;height:2px;background:linear-gradient(90deg,transparent,#0b7e88,transparent)"></div>
+          </div>
+
+          <div
+            class="box"
+            id="hadoryBox"
+            style="border:2px solid #0b7e88;background:linear-gradient(180deg,#f0fafb,#ffffff);box-shadow:0 6px 20px rgba(11,126,136,.08);position:relative"
+          >
+            <div
+              style="position:absolute;top:-1px;right:-1px;background:#0b7e88;color:#fff;padding:4px 12px;border-radius:0 8px 0 12px;font-size:11px;font-weight:900"
+            >
+              حضوري
+            </div>
+            <div class="pill" style="margin-top:6px">
+              <span>📥</span><b>استيراد حضوري</b><span class="mini" id="hadoryStatus">جاهز</span>
+            </div>
+
+            <div id="hadoryDateWarn" class="warn strong" style="display:none;margin-top:10px">
+              <b>🚨 تحذير إلزامي قبل اعتماد أي مخالفة:</b>
+              <div style="margin-top:6px">
+                أنت مسؤول عن اختيار <b>تاريخ التقرير يدويًا</b> والتأكد أنه يطابق يوم بيانات الملف المستورد؛
+                <b>وإلا سيتم إيقاف الطباعة/الإرسال تلقائيًا</b>.
+              </div>
+              <div class="mini" style="margin-top:6px;color:#7c2d12;font-weight:900" id="warnReason">—</div>
+              <div class="cta">
+                <span class="pill"><b>الحماية:</b> مفعّلة</span>
+                <button id="btnConfirmDateInline" class="btn primary">تأكيد مطابقة التاريخ ✅</button>
+              </div>
+            </div>
+
+            <div id="hadoryDateOk" class="ok" style="display:none;margin-top:10px">
+              ✅ تم تأكيد التاريخ — يمكنك اعتماد الإجراءات بثقة.
+            </div>
+
+            <div class="f" style="margin-top:10px">
+              <label>ملفات Excel من منصة حضوري</label>
+              <input id="hadoryFiles" class="inp" type="file" accept=".xlsx,.xls,.csv" multiple style="display:none" />
+              <div
+                class="mini"
+                style="background:#f0f9fa;border:1px dashed #c7e0e3;padding:8px;border-radius:8px;margin-top:6px"
+              >
+                🗂️ الاستيراد يتم من قسم <b>«كشف حضوري شهري»</b> (مجلد كامل أو ملف Excel منفرد) ثم تتم المزامنة تلقائيًا
+                مع هذا القسم.
+              </div>
+            </div>
+
+            <div class="f">
+              <label>تاريخ التقرير (اختيار يدوي إلزامي)</label>
+              <div class="row">
+                <input id="hadoryManualDate" class="inp" type="date" style="flex:1" />
+                <button id="btnUseManualDate" class="btn ghost smallbtn">تطبيق</button>
+              </div>
+              <div class="mini">
+                بداية التحضير المسموح بها: <b>06:30–07:00</b>، وما بعد <b>بداية الدوام الرسمي</b> يُعد تأخرًا. كما يتم
+                رصد: <b>الغياب</b> و<b>عدم تسجيل الانصراف</b> وفق بيانات منصة حضوري.
+              </div>
+            </div>
+
+            <div class="f">
+              <label>التواريخ التي ظهرت داخل الملفات (للمراجعة فقط)</label>
+              <select id="hadoryDates" class="sel">
+                <option value="">— لم يتم الاستيراد بعد —</option>
+              </select>
+            </div>
+
+            <div class="row" style="justify-content:space-between">
+              <span class="pill"><b>غياب:</b> <span id="cAbsent">0</span></span>
+              <span class="pill"><b>تأخر:</b> <span id="cLate">0</span></span>
+              <span class="pill"><b>لم يُغلق الدوام:</b> <span id="cNoOut">0</span></span>
+            </div>
+
+            <div class="f" style="margin-top:10px">
+              <label>قائمة المستحقين للمحاسبة (من حضوري)</label>
+              <select id="hadoryCases" class="sel">
+                <option value="">— اختر من القائمة —</option>
+              </select>
+              <div class="sb-actions" style="display:flex;flex-wrap:nowrap;gap:6px;margin-top:10px;align-items:stretch">
+                <button
+                  id="btnPrintSave"
+                  class="btn primary"
+                  style="flex:1;font-size:12px;padding:8px 6px;white-space:nowrap"
+                >
+                  طباعة / حفظ
+                </button>
+                <button id="btnWA" class="btn wh" style="flex:1;font-size:12px;padding:8px 6px;white-space:nowrap">
+                  واتساب
+                </button>
+                <button
+                  id="btnHadoryReport"
+                  class="btn ghost"
+                  style="flex:1;font-size:12px;padding:8px 6px;white-space:nowrap"
+                >
+                  كشف حضوري 🗂️
+                </button>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:6px">
+                <button
+                  id="btnSMS"
+                  class="btn"
+                  style="flex:1;font-size:12px;padding:8px 6px;white-space:nowrap;background:#0b7e88;color:#fff;border-color:#0b7e88"
+                >
+                  📩 إرسال SMS للمعلم
+                </button>
+              </div>
+            </div>
+
+            <div class="list" style="margin-top:10px">
+              <table>
+                <thead>
+                  <tr>
+                    <th>النوع</th>
+                    <th>الاسم</th>
+                    <th>الحضور</th>
+                    <th>الانصراف</th>
+                  </tr>
+                </thead>
+                <tbody id="hadoryMiniTable">
+                  <tr>
+                    <td colspan="4" class="mini" style="text-align:center;padding:12px">لا توجد بيانات بعد.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sb-actions"></div>
+        </div>
+
+        <div class="rights">مبادرة اليعقوبي — تطوير: فهد حامد الزهراني (لا تظهر في الطباعة)</div>
+      </aside>
+
+      <main class="content">
+        <div class="sheet-wrap">
+          <div class="sheet" id="sheet" aria-label="صفحة A4">
+            <div class="pad">
+              <div class="hdr">
+                <img id="hdrImg" src="hhh.png" alt="هيدر" crossorigin="anonymous" />
+                <div class="meta-stack">
+                  <div class="rowB" id="metaDay">—</div>
+                  <div class="rowB" id="metaHijri">—</div>
+                  <div class="rowB">الرقم: <span id="metaNo">01</span></div>
+                </div>
+              </div>
+
+              <div class="title-center"><div class="t" id="mainTitle">تنبيه</div></div>
+
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th class="name">الاسم</th>
+                    <th class="spec">التخصص</th>
+                    <th class="level">المرتبة</th>
+                    <th class="job">رقم الوظيفة</th>
+                    <th class="work">العمل الحالي</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td id="t_name">—</td>
+                    <td id="t_spec">—</td>
+                    <td id="t_level">—</td>
+                    <td id="t_job">—</td>
+                    <td id="t_work">—</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="badges-under">
+                <div class="badge"><span class="tag">السجل المدني</span><span id="t_civil">—</span></div>
+              </div>
+
+              <!-- محتوى النماذج كما هو -->
+              <div id="alertPack" class="sec">
+                <h3>( 1 ) خطاب التنبيه — <span id="kindTitle">تأخر</span></h3>
+                <div class="rule-row">
+                  <span class="label">المكرم المعلم :</span>
+                  <strong
+                    id="teacherNameInline"
+                    style="min-width:38mm;text-align:center;border-bottom:1px dotted #2f4f4c;display:inline-block;padding:0 2mm"
+                    >—</strong
+                  >
+                  <span>وفقه الله</span>
+                </div>
+                <p><strong>السلام عليكم ورحمة الله وبركاته، وبعد ،،،</strong></p>
+                <p>
+                  إنه في يوم <span class="dotfield"><span id="dynDay">—</span></span> الموافق
+                  <span class="dotfield"><span id="dynHijri">—</span></span> :
+                </p>
+
+                <div class="checks">
+                  <label id="lineLate" class="checkline">
+                    <input type="checkbox" checked />
+                    <span class="text">
+                      تأخركم من بداية العمل، وحضوركم الساعة (
+                      <span id="tLateIn" class="timebox empty" contenteditable="true" data-mask>--:--</span> ).
+                      <span class="calc"
+                        >— إجمالي التأخر: <span id="lateTotal">0 دقيقة</span> (<span id="lateHH">00:00</span> س)</span
+                      >
+                    </span>
+                  </label>
+
+                  <label id="lineAbs" class="checkline" style="display:none">
+                    <input type="checkbox" checked />
+                    <span class="text">
+                      عدم تواجدكم أثناء العمل من الساعة : (
+                      <span id="tAbsFrom" class="timebox empty" contenteditable="true" data-mask>--:--</span> ) إلى
+                      الساعة : (
+                      <span id="tAbsTo" class="timebox empty" contenteditable="true" data-mask>--:--</span> ).
+                      <span class="calc"
+                        >— مدة عدم التواجد: <span id="absTotal">0 دقيقة</span> (<span id="absHH">00:00</span> س)</span
+                      >
+                    </span>
+                  </label>
+                </div>
+
+                <p>عليه نأمل توضيح أسباب ذلك مع إرفاق ما يؤيد عذركم … ولكم تحياتنا.</p>
+                <p style="margin-top:6px">
+                  <strong>مدير المدرسة :</strong> <span>فهد حامد علي الزهراني</span> &nbsp;&nbsp;
+                  <strong>التوقيع :</strong> <span class="dotfield" style="min-width:26mm"></span> &nbsp;&nbsp;
+                  <strong>التاريخ :</strong> <span class="dotfield" style="min-width:20mm"></span>
+                </p>
+              </div>
+
+              <div id="affidavitPack" class="sec">
+                <h3>( 2 ) إفادة المعلم</h3>
+                <p>أُفيدكم بأن سبب <span id="affKind">التأخر</span> الموضّح أعلاه هو:</p>
+                <div class="lines">
+                  <div></div>
+                  <div></div>
+                </div>
+                <p style="margin-top:6px">
+                  <strong>اسم المعلم :</strong> <span id="affTeacher">—</span> &nbsp;&nbsp;
+                  <strong>التوقيع :</strong> ____________________ &nbsp;&nbsp; <strong>التاريخ :</strong> ______ /
+                  ______ / ______
+                </p>
+              </div>
+
+              <div id="principalPack" class="sec">
+                <h3>( 3 ) رأي مدير المدرسة</h3>
+                <label class="checkline"
+                  ><input type="checkbox" /> تمّ تنبيه الموظف شفهيًا بالأخذ بأسباب الانضباط.</label
+                >
+                <label class="checkline"
+                  ><input type="checkbox" /> يُكتفى بهذا التنبيه مع المتابعة خلال الفترة القادمة.</label
+                >
+                <label class="checkline"><input type="checkbox" /> يُرفع لجهة الاختصاص عند تكرار المخالفة.</label>
+                <p style="margin-top:6px">
+                  <strong>اسم المدير :</strong> <span>فهد حامد علي الزهراني</span> &nbsp;&nbsp;
+                  <strong>التوقيع :</strong> ____________________ &nbsp;&nbsp; <strong>التاريخ :</strong> ______ /
+                  ______ / ______
+                </p>
+              </div>
+
+              <div id="absencePack" class="sec" style="display:none">
+                <p>
+                  إنه في يوم <strong><span id="absDayP">—</span></strong> الموافق
+                  <strong><span id="absDateYMD">—</span></strong> تغيبت عن العمل.
+                </p>
+                <h3>( 1 ) طلب الإفادة</h3>
+                <p><strong>المكرم /</strong> <span id="abs-name-top">—</span> <span>وفقه الله</span></p>
+                <p><strong>السلام عليكم ورحمة الله وبركاته، وبعد ،،،</strong></p>
+                <p>
+                  من خلال متابعة سجل الدوام تبين غيابكم خلال الفترة الموضحة بعالية، آمل الإفادة عن سبب ذلك وتقديم ما
+                  يؤيد عذركم خلال أسبوع من تاريخه؛ علماً بأنه في حالة عدم الالتزام سيتم اتخاذ اللازم حسب التعليمات.
+                </p>
+                <p>
+                  <strong>اسم الرئيس المباشر :</strong> <span>فهد بن حامد علي الزهراني</span> &nbsp;&nbsp;
+                  <strong>التوقيع :</strong> ________ &nbsp;&nbsp; <strong>التاريخ :</strong> ______ / ______ / ______
+                </p>
+
+                <h3>( 2 ) الإفادة — سطران فقط</h3>
+                <p><strong>المكرم / مدير المدرسة</strong> وفقه الله</p>
+                <p><strong>السلام عليكم ورحمة الله وبركاته، وبعد ،،،</strong></p>
+                <p>أفيدكم أن غيابي كان للأسباب التالية:</p>
+                <div class="lines dotted">
+                  <div></div>
+                  <div></div>
+                </div>
+                <p>وسأقوم بتقديم ما يثبت ذلك خلال أسبوع من تاريخه.</p>
+                <p>
+                  <strong>اسم المعلم :</strong> <span id="abs-teacher-name">—</span> &nbsp;&nbsp;
+                  <strong>التوقيع :</strong> ________ &nbsp;&nbsp; <strong>التاريخ :</strong> ______ / ______ / ______
+                </p>
+
+                <h3>( 3 ) مدير المدرسة</h3>
+                <label><input type="checkbox" /> تُحتسب له إجازة مرضية بعد التأكد من نظامية التقرير.</label><br />
+                <label
+                  ><input type="checkbox" /> يُحتسب غيابه من رصيده للإجازات الإضطرارية لقبول عذره إذا كان رصيده يسمح ولا
+                  يُحسم عليه.</label
+                ><br />
+                <label><input type="checkbox" /> يعتمد الحسم لعدم قبول عذره.</label>
+
+                <div class="sec" id="principalSignPack" style="margin-top:6mm">
+                  <h3>( 4 ) توقيع المدير</h3>
+                  <p>
+                    <strong>اسم الرئيس المباشر :</strong> <span id="principalNameAbs">—</span> &nbsp;&nbsp;
+                    <strong>التوقيع :</strong> <span id="principalSignAbs">____________________</span> &nbsp;&nbsp;
+                    <strong>التاريخ :</strong> <span id="principalDateAbs">—</span>
+                  </p>
+                </div>
+              </div>
+
+              <div id="notePack" class="sec" style="display:none">
+                <h3>نموذج لفت نظر</h3>
+                <p>الأستاذ الفاضل/ <span id="noteTeacherName" style="font-weight:900">—</span> حفظه الله</p>
+                <p><strong>السلام عليكم ورحمة الله وبركاته، وبعد ،،،</strong></p>
+                <p>
+                  في يوم
+                  <span id="noteDay" style="font-weight:900;border-bottom:1px dotted #2f4f4c;padding:0 3mm">—</span>
+                  الموافق
+                  <span id="noteHijri" style="font-weight:900;border-bottom:1px dotted #2f4f4c;padding:0 3mm">—</span>
+                </p>
+                <p id="noteParagraph">
+                  إشارةً إلى التعليمات والأنظمة المعتمدة في المدرسة؛ لوحِظ
+                  <span id="noteReasonText" style="font-weight:900">المهمة المحددة</span>
+                  <span id="noteLessonExtra" style="display:none">
+                    (في فصل <span id="noteClassName" style="font-weight:900">—</span> — الحصة رقم
+                    <span id="notePeriodNo" style="font-weight:900">—</span>
+                    <span id="noteMinutesWrap">
+                      — <span id="noteLessonKind" style="font-weight:900">التأخر</span>:
+                      <span id="noteLessonMin" style="font-weight:900">0</span> دقيقة </span
+                    >)
+                  </span>
+                  ونأمل منكم المبادرة بمعالجة ذلك، والالتزام التام بما يُوكل إليكم من مهام؛ دعمًا للانضباط المهني ورفعًا
+                  لجودة الأداء.
+                </p>
+                <p>
+                  <strong>توقيع الموظف بالاطلاع:</strong> ............................... &nbsp;&nbsp;
+                  <strong>الاسم:</strong> ............................... &nbsp;&nbsp; <strong>التاريخ:</strong> ______
+                  / ______ / 14
+                </p>
+                <p><strong>توقيع قائد المدرسة:</strong> فهد حامد علي الزهراني</p>
+              </div>
+
+              <!-- ============ قرار حسم مجموع ساعات تأخر وخروج مبكر (3 صفحات) ============ -->
+              <div id="deductPack">
+                <!-- صفحة 1: خطاب الإحالة -->
+                <section class="ded-page">
+                  <div class="ded-hdr">
+                    <img src="hhh.png" alt="هيدر" crossorigin="anonymous" />
+                    <div class="meta">
+                      <div>الرقم: <span id="dedRefNo">01/30</span></div>
+                      <div>التاريخ: <span class="dedHijri">—</span></div>
+                      <div>مشفوعات: 3</div>
+                    </div>
+                  </div>
+                  <h3 class="ded-title">الموضوع: قرار حسم</h3>
+                  <div class="ded-body">
+                    <p><strong>سعادة مدير عام التعليم بالمنطقة الشرقية</strong> حفظه الله</p>
+                    <p><strong>السلام عليكم ورحمة الله وبركاته، وبعد:</strong></p>
+                    <p>
+                      نفيد سعادتكم بأنه تم رصد مجموع التأخر الصباحي للمعلم الموضح بياناته أدناه، حيث تجاوزت أكثر من
+                      <strong>(7)</strong> ساعات، وذلك وفق ما هو موثق في سجلات الحضور والانصراف.
+                    </p>
+                    <p>
+                      وعليه تجدون برفقه نموذج قرار الحسم، نأمل من سعادتكم التوجيه بإكمال اللازم حيال اعتماده وفق الأنظمة
+                      والتعليمات.
+                    </p>
+                    <table class="ded-tbl">
+                      <thead>
+                        <tr>
+                          <th style="width:30mm">م</th>
+                          <th>اسم المعلم</th>
+                          <th style="width:55mm">السجل المدني</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>1</td>
+                          <td class="dedName">—</td>
+                          <td class="dedCivil">—</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p style="margin-top:6mm">والسلام عليكم ورحمة الله وبركاته،،،</p>
+                    <div class="ded-sign">
+                      <div class="col">
+                        <div><strong>مدير المدرسة</strong></div>
+                        <div>فهد حامد علي الزهراني</div>
+                        <div>التوقيع: ____________________</div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- صفحة 2: نموذج قرار الحسم -->
+                <section class="ded-page">
+                  <div class="ded-hdr">
+                    <img src="hhh.png" alt="هيدر" crossorigin="anonymous" />
+                    <div class="meta">
+                      <div>نموذج رقم ( 19 )</div>
+                      <div>رمز النموذج: ( و.م.ع.ن - 02 - 03 )</div>
+                      <div>التاريخ: <span class="dedHijri">—</span></div>
+                    </div>
+                  </div>
+                  <h3 class="ded-title">قرار حسم مجموع ساعات تأخر وخروج مبكر</h3>
+                  <table class="ded-tbl">
+                    <tr>
+                      <th style="width:30mm">المدرسة</th>
+                      <td colspan="4">اليعقوبي الثانوية</td>
+                    </tr>
+                    <tr>
+                      <th>السجل المدني</th>
+                      <td colspan="4" class="dedCivil">—</td>
+                    </tr>
+                    <tr>
+                      <th>الاسم</th>
+                      <th>التخصص</th>
+                      <th>المرتبة</th>
+                      <th>رقم الوظيفة</th>
+                      <th>العمل الحالي</th>
+                    </tr>
+                    <tr>
+                      <td class="dedName">—</td>
+                      <td class="dedSpec">—</td>
+                      <td class="dedLevel">—</td>
+                      <td class="dedJob">—</td>
+                      <td class="dedWork">—</td>
+                    </tr>
+                  </table>
+                  <div class="ded-body">
+                    <p>
+                      إن مدير المدرسة وبناءً على صلاحياته، وبناءً على المادة (21) من نظام الخدمة المدنية، وبناءً على
+                      موافقة معالي الوزير على إعطاء بعض الصلاحيات للمدارس بالقرار رقم 1/1139 وتاريخ 17/3/1431هـ، ولبلوغ
+                      ساعات التأخر عن الدوام والخروج المبكر من الدوام
+                      <strong>(<span class="dedHoursWritten">—</span>)</strong> ساعة وحيث إن عذره غير مقبول وبمقتضى
+                      النظام.
+                    </p>
+                    <p><strong>يُقرر ما يلي:</strong></p>
+                    <p>
+                      [1] حسم مدة الغياب الموضحة بعاليه وعددها ( <span class="dedDaysCount">—</span> ) يوماً من راتبه.
+                    </p>
+                    <p>
+                      [2] على إدارة شؤون الموظفين تنفيذ الأنظمة بتنفيذ الحسم واستبعادها من خدماته وأصل القرار لملفه
+                      بالإدارة مع الأساس لملفه والله الموفق.
+                    </p>
+                    <div class="ded-sign">
+                      <div class="col">
+                        <div><strong>الرئيس المباشر</strong></div>
+                        <div>الاسم: فهد حامد علي الزهراني</div>
+                        <div>التوقيع: ____________________</div>
+                        <div>التاريخ: <span class="dedHijri">—</span></div>
+                      </div>
+                      <div class="col" style="text-align:center">
+                        <div style="margin-top:6mm">الختم</div>
+                        <div
+                          style="border:1px dashed #0b4a4f;width:30mm;height:30mm;margin:4mm auto 0;border-radius:50%"
+                        ></div>
+                      </div>
+                    </div>
+                    <p style="margin-top:6mm;font-size:11.5px;color:#0b4a4f">
+                      صورة / للموظفين لمتابعة تنفيذ الحسم (تنفيذ الأنظمة)<br />
+                      صورة / للإدارة العامة للتعليم<br />
+                      صورة / لملفه بالمدرسة
+                    </p>
+                  </div>
+                </section>
+
+                <!-- صفحة 3: نموذج حصر ساعات التأخر -->
+                <section class="ded-page">
+                  <div class="ded-hdr">
+                    <img src="hhh.png" alt="هيدر" crossorigin="anonymous" />
+                    <div class="meta">
+                      <div>الرقم: 01/30</div>
+                      <div>التاريخ: <span class="dedHijri">—</span></div>
+                      <div>مشفوعات: 3</div>
+                    </div>
+                  </div>
+                  <h3 class="ded-title">نموذج حصر ساعات التأخر للمعلم</h3>
+                  <table class="ded-tbl">
+                    <tr>
+                      <th style="width:35%">اسم المعلم</th>
+                      <th>رقم الهوية</th>
+                    </tr>
+                    <tr>
+                      <td class="dedName">—</td>
+                      <td class="dedCivil">—</td>
+                    </tr>
+                  </table>
+                  <table class="ded-tbl" id="dedHoursTable">
+                    <thead>
+                      <tr>
+                        <th>التاريخ (هـ)</th>
+                        <th>اليوم</th>
+                        <th>وقت الحضور</th>
+                        <th>ساعات التأخر</th>
+                        <th>ساعات التأخر كتابةً</th>
+                        <th>عذر التأخير</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dedHoursBody">
+                      <tr>
+                        <td colspan="6" style="padding:10px;color:#666">— لا توجد بيانات تأخر بعد —</td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th colspan="3" style="text-align:center">المجموع</th>
+                        <td><span class="dedHoursTotal">0</span> ساعة</td>
+                        <td colspan="2">كتابةً: <span class="dedHoursWritten">—</span></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                  <p style="font-size:11.5px;color:#0b4a4f;margin-top:4mm">
+                    ملاحظة: يعتمد هذا النموذج على ما هو موثق في سجلات الحضور والانصراف من (منصة حضوري) ويُرفق عند الحاجة
+                    لإكمال الإجراءات النظامية.
+                  </p>
+                  <div class="ded-sign">
+                    <div class="col">
+                      <div><strong>مدير المدرسة:</strong> فهد حامد الزهراني</div>
+                      <div style="margin-top:6mm">التوقيع: ____________________</div>
+                    </div>
+                    <div class="col" style="text-align:center">
+                      <div>الختم</div>
+                      <div
+                        style="border:1px dashed #0b4a4f;width:28mm;height:28mm;margin:4mm auto 0;border-radius:50%"
+                      ></div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <div class="footer-note"><span>تحفظ في ملف المتابعة</span></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <!-- الإحصائيات -->
+    <div id="statsDlg" aria-hidden="true">
+      <div class="stats-card" id="statsCard">
+        <div class="stats-hdr">
+          <img id="statsHdrImg" src="hhh.png" alt="هيدر الإحصائيات" crossorigin="anonymous" />
+          <div class="stats-meta">
+            <div class="rowB" id="statsDay">—</div>
+            <div class="rowB" id="statsHijri">—</div>
+          </div>
+        </div>
+        <div class="h">
+          <div style="font-weight:900;color:#064b50">ملخص الإحصائيات</div>
+          <div class="stats-actions" style="display:flex;gap:6px">
+            <button id="btnResetStats" class="btn ghost" title="تصفير الأرشيف">تصفير الأرشيف ♻️</button>
+            <button id="btnStatsPDF" class="btn primary" title="طباعة الإحصائيات">طباعة الإحصائيات</button>
+            <button id="btnCloseStats" class="btn ghost">إغلاق</button>
+          </div>
+        </div>
+        <div style="padding:12px">
+          <table id="tblStats" class="tbl2">
+            <thead>
+              <tr>
+                <th>المعلّم</th>
+                <th>النوع</th>
+                <th>اليوم</th>
+                <th>التاريخ (هـ)</th>
+                <th>العذر</th>
+                <th>فارس</th>
+                <th>تفاصيل</th>
+                <th class="no-print">إجراء</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- كشف حضوري -->
+    <div id="hadoryReportDlg" aria-hidden="true">
+      <div class="report-card" id="reportCard">
+        <div class="report-hdr">
+          <img id="reportHdrImg" src="hhh.png" alt="هيدر كشف حضوري" crossorigin="anonymous" />
+          <div class="report-meta">
+            <div class="rowB" id="repDay">—</div>
+            <div class="rowB" id="repHijri">—</div>
+          </div>
+        </div>
+        <div class="h">
+          <div style="font-weight:900;color:#064b50">كشف حضوري (اليومي)</div>
+          <div class="report-actions" style="display:flex;gap:6px">
+            <button id="btnReportPrint" class="btn ghost" title="طباعة">طباعة</button>
+            <button id="btnCloseReport" class="btn ghost">إغلاق</button>
+          </div>
+        </div>
+
+        <div style="padding:12px">
+          <div
+            class="mini"
+            style="margin:0 0 10px;text-align:center;font-size:12.8px;font-weight:900;color:#064b50;background:#f2fafb;border:1px solid #dbe9e9;border-radius:12px;padding:8px 10px;line-height:1.9"
+          >
+            سجل الحضور والإنصراف اليومي للمعلمين<br />
+            <span style="font-size:12px;color:#0b5e63">
+              اليوم: <span id="repDayTxt">—</span> — التاريخ: <span id="repHijriTxt">—</span>
+            </span>
+          </div>
+
+          <table id="tblHadoryReport" class="tbl2">
+            <thead>
+              <tr>
+                <th style="width:5%">م</th>
+                <th style="width:29%">الاسم</th>
+                <th style="width:10%">الهوية</th>
+                <th style="width:10%">الحضور</th>
+                <th style="width:10%">الانصراف</th>
+                <th style="width:17%">الحالة</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- اختيار الوقت -->
+    <div id="clockDlg" aria-hidden="true">
+      <div class="clock-card">
+        <div class="h">
+          <div style="font-weight:900;color:#064b50">تحديد الوقت</div>
+          <button id="btnClockClose" class="btn ghost">إغلاق</button>
+        </div>
+        <div class="b">
+          <div class="clock-big" id="clockPreview">--:--</div>
+          <div class="clock-row">
+            <div class="col">
+              <label style="font-weight:900;color:#03636a">الساعة</label>
+              <input id="clockHour" type="range" min="0" max="23" step="1" value="7" />
+            </div>
+            <div class="col">
+              <label style="font-weight:900;color:#03636a">الدقائق</label>
+              <input id="clockMin" type="range" min="0" max="59" step="1" value="30" />
+            </div>
+          </div>
+          <div class="clock-actions">
+            <button id="btnClockNow" class="btn ghost">الآن</button>
+            <button id="btnClockOk" class="btn primary">موافق</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- حماية التاريخ -->
+    <div id="dateGuardDlg" aria-hidden="true">
+      <div class="guard-card">
+        <div class="h">
+          <div class="guard-title">تنبيه قبل اعتماد المخالفة</div>
+          <button id="btnGuardClose" class="btn ghost">إغلاق</button>
+        </div>
+        <div class="b">
+          <div class="guard-note">
+            <div>تم تفعيل <span class="k">حماية التاريخ</span> — لا يمكن الطباعة/الإرسال قبل التأكيد.</div>
+            <div style="margin-top:6px">التاريخ اليدوي الحالي: <span class="k" id="guardDate">—</span></div>
+            <div style="margin-top:6px" class="mini" id="guardWhy">—</div>
+          </div>
+
+          <div class="guard-check">
+            <input type="checkbox" id="chkAck" />
+            <div>
+              أقرّ أن <span style="color:#7c2d12">تاريخ التقرير الذي أدخلته يدويًا</span> يطابق يوم بيانات الملف
+              المستورد من حضوري، وأتحمل مسؤولية اعتماد الإجراء.
+            </div>
+          </div>
+
+          <div class="guard-actions">
+            <button id="btnGuardReview" class="btn ghost">مراجعة التاريخ</button>
+            <button id="btnGuardConfirm" class="btn primary">تأكيد والمتابعة ✅</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ================= أدوات أرقام ================= */
+      const AR='٠١٢٣٤٥٦٧٨٩', EN='0123456789';
+      const en2ar=s=>(''+s).replace(/[0-9]/g,d=>AR[d]);
+      const ar2en=s=>(''+s).replace(/[٠-٩]/g,d=>EN[AR.indexOf(d)]);
+
+      /* ================= مراجع عناصر ================= */
+      const metaDay=document.getElementById('metaDay');
+      const metaHijri=document.getElementById('metaHijri');
+      const metaNo=document.getElementById('metaNo');
+      const dynDay=document.getElementById('dynDay');
+      const dynHijri=document.getElementById('dynHijri');
+      const noteDay=document.getElementById('noteDay');
+      const noteHijri=document.getElementById('noteHijri');
+
+      const t_name=document.getElementById('t_name');
+      const t_spec=document.getElementById('t_spec');
+      const t_level=document.getElementById('t_level');
+      const t_job=document.getElementById('t_job');
+      const t_work=document.getElementById('t_work');
+      const t_civil=document.getElementById('t_civil');
+      const teacherNameInline=document.getElementById('teacherNameInline');
+      const noteTeacherName=document.getElementById('noteTeacherName');
+
+      const lateTotal=document.getElementById('lateTotal');
+      const lateHH=document.getElementById('lateHH');
+      const absTotal=document.getElementById('absTotal');
+      const absHH=document.getElementById('absHH');
+
+      const hY=document.getElementById('hY');
+      const hM=document.getElementById('hM');
+      const hD=document.getElementById('hD');
+
+      const gY=document.getElementById('gY');
+      const gM=document.getElementById('gM');
+      const gD=document.getElementById('gD');
+      /* ✅ تفاصيل الحصة داخل لفت النظر */
+      const lessonBox = document.getElementById('lessonBox');
+      const classLevel = document.getElementById('classLevel');
+      const sectionNo = document.getElementById('sectionNo');
+      const className = document.getElementById('className');
+      const periodNo = document.getElementById('periodNo');
+      const lessonTitle = document.getElementById('lessonTitle');
+      const lessonA = document.getElementById('lessonA');
+      const lessonB = document.getElementById('lessonB');
+      const lessonA_lbl = document.getElementById('lessonA_lbl');
+      const lessonB_lbl = document.getElementById('lessonB_lbl');
+      const lessonMins = document.getElementById('lessonMins');
+      const lessonHint = document.getElementById('lessonHint');
+
+      const noteLessonExtra = document.getElementById('noteLessonExtra');
+      const noteClassName = document.getElementById('noteClassName');
+      const notePeriodNo = document.getElementById('notePeriodNo');
+      const noteLessonKind = document.getElementById('noteLessonKind');
+      const noteLessonMin = document.getElementById('noteLessonMin');
+      const noteMinutesWrap = document.getElementById('noteMinutesWrap');
+
+      let NOTE_LESSON_MODE = ''; // 'enter' أو 'exit'
+
+      function syncClassName(){
+        if(!className) return;
+
+        const lvl = classLevel?.value?.trim() || '';
+        const sec = sectionNo?.value?.trim() || '';
+
+        if(lvl && sec){
+          className.value = `${lvl} / شعبة ${en2ar(sec)}`;
+        }else if(lvl){
+          className.value = lvl;
+        }else{
+          className.value = '';
+        }
+      }
+
+      /* ================= بيانات المعلمين ================= */
+      const TEACHERS_CSV=`موسى صلبان عبده عسيري	1093013116	966507058931	فيزيا	معلم ممارس
+      يوسف  عيسى العيد	1012646822	966592038351	اللغة العربية	معلم ممارس
+      منذر عامر حمود زميع	1065913053	966541188974	انجليزي	معلم ممارس
+      عماد محمد جمعان الزهراني	1048667289	966542203039	مكتبات	معلم ممارس
+      حسن يوسف حسين الخليفة		1056994203	966506907431	كيمياء	معلم ممارس
+      عبدالمجيد عبدالرحمن عبدالله السالمي	1073861831	966558151033	كيمياء	معلم ممارس
+      حسن علي حسن الشهري		1037273594	966536824355	اللغة العربية	معلم ممارس
+      حسين بن سعيد سلمان المدن	1022616799	966556336875	مكتبات	معلم ممارس
+      يحيى بن محمد بن سعيد القحطاني	1048978892	966555751385	اجتماعيات	معلم ممارس
+      بندر عبدالعزيز محمد الغامدي	1046853881	966546135135	حاسب	معلم ممارس
+      حسين بن محمد بن فهد القحطاني	1014268567	966504988086	احياء	معلم ممارس
+      ناصر علي ناصر الراشد	1008303370	966542933888	حاسب	معلم ممارس
+      حسين بن محمد بن حسين الأحمد	1060369202	966563740777	اللغة العربية	معلم ممارس
+      علي سعد سعيد الاصلعي الاحمري	1023999780	966590986464	احياء	معلم ممارس
+      حسن عبدالله علي العبدالله	1005472780	966543705512	احياء	معلم ممارس
+      محمد حمد عبدالرحمن التويجري	1064745944	966541381105	اللغة العربية	معلم ممارس
+      عبدالله فيصل بن فطيس الهذلي	1094733290	966591585407	رياضيات	معلم ممارس
+      احمد عبدالرحيم عبدالحميد ابوعصيده	1033584234	966546623431	انجليزي	معلم ممارس
+      عبدالله بن عبدالعزيز بن سيف السهلي	1063175010	966546221133	علم اجتماع	معلم ممارس
+      بشير بن أحمد بن عبدالله آل سليم	1019783917	966500126925	مكتبات	معلم ممارس
+      ابراهيم بن محمد بن ابراهيم الربيع	1004182687	966548638056	انجليزي	معلم ممارس
+      عبدالمجيد عبدالله سالم آل حبشان	1004581359	966500223640	اجتماعيات	معلم ممارس
+      خالد سعد راشد المرضي	1025640010	966505877238	اجتماعيات	معلم ممارس
+      فيصل فهد علي الزهراني	1086115373	966508448455	رياضيات	معلم ممارس
+      ابراهيم حبيب عبدالغني الميمني	1072815481	966530163027	رياضيات	معلم ممارس
+      زياد عواض ابن عيضه العمري	1092156742	966557530102	علم إدارة	معلم ممارس
+      جميل عبدالمجيد جواد العلي		1029281589	966566712113	فيزيا	معلم ممارس
+      عبد الله حسن عمر الادريسي	1081556910	966533025505	رياضيات	معلم ممارس
+      تقي عبد الهادي تقي العلي	1026472363	966543219321	كيميا	معلم ممارس
+      خالد أحمد محمد الشهري	1034318301	966560687900	كيميا	معلم ممارس
+      عبدالله  خلوفة  عبدالله ال مرعي		1029490875	966533225515	دين	معلم ممارس
+      ابراهيم بن أحمد بن ابراهيم العجلان	1001082179	966559999808	دين	معلم ممارس
+      عادل بن علي بن ناصر البارقي	1007370701	966530667666	رياضه	معلم ممارس
+      نبيل بن محسن بن محمد القلاف  	1025472604	966562962766	رياضه	معلم ممارس
+      عادل بن علي بن سليمان السبعان	1003700802	966504836200	موجه طلابي	معلم ممارس
+      ياسر عبدالله محمد النمر	1001443397	966503834833	مدخل بيانات	مساعد معلم
+      علي بن حسن بن علي آل قمبر	1004780860	966502085389	سكرتاريه	مساعد معلم
+      حسن بن عامر احمد الشهري	1013124175	966598893731	محضر مختبر	مساعد معلم
+      عدنان علي حسين الزريق	1015776766	966505808451	وكيل	معلم ممارس
+      فهد حامد علي الزهراني	1024193532	966504532489	مدير المدرسة	معلم ممارس`;
+
+      /* ✅ تحسين قراءة CSV: يدعم الحالات التي فيها تبويب زائد (عمود فارغ) */
+      function parseTeachersCSV(csv){
+        const digitsOnly = (s)=>String(s||'').replace(/[^\d]/g,'').trim();
+        const looksCivil = (s)=>digitsOnly(s).length===10;
+        const looksPhone = (s)=>{ const d=digitsOnly(s); return d.startsWith('966') && d.length>=11; };
+
+        return csv.trim().split(/\r?\n/).map(line=>{
+          const parts=line.split(/\t+/).map(x=>String(x||'').trim());
+          const name=(parts[0]||'').trim();
+          const rest=parts.slice(1).filter(x=>x!=='');
+
+          let civil='', phone='', spec='', level='';
+
+          // 1) التقط الهوية والجوال من أي مكان
+          rest.forEach(tok=>{
+            if(!civil && looksCivil(tok)) civil=digitsOnly(tok);
+            else if(!phone && looksPhone(tok)) phone=digitsOnly(tok);
+          });
+
+          // 2) المتبقي: تخصص + مرتبة
+          const remaining = rest.filter(tok=>{
+            const d=digitsOnly(tok);
+            if(civil && d===civil) return false;
+            if(phone && d===phone) return false;
+            return true;
+          });
+
+          if(remaining.length){ spec=remaining[0]||''; level=remaining[1]||''; }
+
+          return {
+            name:name.trim(),
+            civil:civil,
+            phone:phone,
+            spec:(spec||'').trim(),
+            level:(level||'').trim(),
+            job:'',
+            work:'معلم'
+          };
+        }).filter(r=>r.name);
+      }
+
+      const TEACHERS=parseTeachersCSV(TEACHERS_CSV);
+      const TEACHER_BY_CIVIL={}; TEACHERS.forEach(t=>{ if(t.civil) TEACHER_BY_CIVIL[t.civil]=t; });
+
+      const selTeacher=document.getElementById('selTeacher');
+      function fillTeachers(){
+        selTeacher.innerHTML='<option value="">— اختر معلماً —</option>';
+        TEACHERS.forEach((t,i)=>selTeacher.add(new Option(t.name,i)));
+      }
+      fillTeachers();
+
+      /* ============= حالة عامة ============= */
+      let STATE={kind:'late',excuse:'without',accept:'rejected',faris:''};
+
+      /* ============= حضوري مستخدم؟ ============= */
+      let HADORY_USED=false;
+
+      /* ============= حماية التاريخ ============= */
+      let DATE_GUARD_ACTIVE=false;
+      let DATE_GUARD_CONFIRMED=true;
+      let DATE_GUARD_REASON='—';
+      const warnReason=document.getElementById('warnReason');
+
+      const dateGuardDlg=document.getElementById('dateGuardDlg');
+      const guardDate=document.getElementById('guardDate');
+      const guardWhy=document.getElementById('guardWhy');
+      const chkAck=document.getElementById('chkAck');
+
+      function openDateGuard(reason){
+        DATE_GUARD_ACTIVE=true;
+        DATE_GUARD_CONFIRMED=false;
+        DATE_GUARD_REASON=reason||DATE_GUARD_REASON||'';
+        chkAck.checked=false;
+        const iso=document.getElementById('hadoryManualDate').value||'';
+        guardDate.textContent=iso||'—';
+        guardWhy.textContent=DATE_GUARD_REASON;
+        dateGuardDlg.style.display='flex';
+        dateGuardDlg.setAttribute('aria-hidden','false');
+      }
+      function closeDateGuard(){
+        dateGuardDlg.style.display='none';
+        dateGuardDlg.setAttribute('aria-hidden','true');
+      }
+      document.getElementById('btnGuardClose').onclick=closeDateGuard;
+      dateGuardDlg.addEventListener('click',(e)=>{ if(e.target===dateGuardDlg) closeDateGuard(); });
+
+      document.getElementById('btnGuardReview').onclick=()=>{
+        closeDateGuard();
+        document.getElementById('hadoryManualDate').focus();
+      };
+
+      document.getElementById('btnGuardConfirm').onclick=()=>{
+        if(!chkAck.checked){
+          alert('لا يمكن المتابعة قبل وضع علامة الإقرار بتطابق التاريخ.');
+          return;
+        }
+        DATE_GUARD_CONFIRMED=true;
+        DATE_GUARD_ACTIVE=false;
+        closeDateGuard();
+        showDateOk(true);
+      };
+
+      function requireDateGuard(actionName){
+        if(!HADORY_USED) return true;
+        if(!DATE_GUARD_ACTIVE) return true;
+        if(DATE_GUARD_CONFIRMED) return true;
+        openDateGuard(DATE_GUARD_REASON || ('حماية التاريخ مفعّلة قبل: '+actionName));
+        return false;
+      }
+
+      /* ============= أرشيف محلي ============= */
+      const KEY_ARCH='followup_archive_v11';
+      let ARCH=JSON.parse(localStorage.getItem(KEY_ARCH)||'[]');
+      function saveARCH(){ localStorage.setItem(KEY_ARCH, JSON.stringify(ARCH)); }
+      function clearARCH(){ ARCH=[]; saveARCH(); }
+
+      function nextSerialForKey(key){
+        const n=ARCH.filter(e=>((e.civil||e.name)===key)).length+1;
+        return en2ar(String(n).padStart(2,'0'));
+      }
+
+      /* ============= مراجع عناصر ============= */
+      const alertPack=document.getElementById('alertPack');
+      const absencePack=document.getElementById('absencePack');
+      const notePack=document.getElementById('notePack');
+      const lineLate=document.getElementById('lineLate');
+      const lineAbs=document.getElementById('lineAbs');
+      const kindTitle=document.getElementById('kindTitle');
+      const statsDlg=document.getElementById('statsDlg');
+
+      /* ====== توقيت الدوام (صيفي/شتوي/رمضان) + تمديد نصف ساعة ====== */
+      const KEY_SHIFT_EXT='shift_extend_v1';
+
+      /* البداية + مدة الدوام الأساسية (بالدقائق) */
+      const SHIFT_CFG={
+        summer:{ start:'06:45', baseMin: 7*60 },    // 7 ساعات
+        winter:{ start:'07:00', baseMin: 7*60 },    // 7 ساعات
+        ramadan:{ start:'09:30', baseMin: 5*60 }    // 5 ساعات
+      };
+      const EXT_MAX_MIN=30;
+
+      /* حالة التمديد لكل وضع */
+      let SHIFT_EXT = { summer:false, winter:false, ramadan:false };
+      try{ SHIFT_EXT = {...SHIFT_EXT, ...(JSON.parse(localStorage.getItem(KEY_SHIFT_EXT)||'{}'))}; }catch(e){}
+
+      /* النتيجة النهائية المستخدمة في الحسابات */
+      let WORK_RANGE = {
+        summer:{start:'06:45',end:'13:45'},
+        winter:{start:'07:00',end:'14:00'},
+        ramadan:{start:'09:30',end:'14:30'}
+      };
+
+      function saveShiftExt(){
+        localStorage.setItem(KEY_SHIFT_EXT, JSON.stringify(SHIFT_EXT));
+      }
+
+      /* يعتمد على toMin الموجودة لاحقاً في ملفك */
+      function addMinutesHHMM(hhmm, addMin){
+        const base = toMin(hhmm);
+        if(base==null) return hhmm;
+        let t = (base + addMin) % (24*60);
+        if(t<0) t += 24*60;
+        const h = String(Math.floor(t/60)).padStart(2,'0');
+        const m = String(t%60).padStart(2,'0');
+        return `${h}:${m}`;
+      }
+
+      function rebuildWorkRange(){
+        Object.keys(SHIFT_CFG).forEach(k=>{
+          const extra = SHIFT_EXT[k] ? EXT_MAX_MIN : 0;
+          const total = SHIFT_CFG[k].baseMin + extra;
+          WORK_RANGE[k] = {
+            start: SHIFT_CFG[k].start,
+            end: addMinutesHHMM(SHIFT_CFG[k].start, total)
+          };
+        });
+      }
+      let SEASON='summer';
+      document.getElementById('seasonChips').addEventListener('click',e=>{
+        const b=e.target.closest('.chip'); if(!b) return;
+
+        [...e.currentTarget.querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+
+        SEASON=b.dataset.season;
+
+        refreshExtendUI();
+        refreshSeasonChipLabels();
+        recalc();
+
+        // إذا كان حضوري مطبق على تاريخ يدوي، أعد التحليل حسب بداية الدوام الجديدة
+        const iso = document.getElementById('hadoryManualDate')?.value || '';
+        if(iso) applyHadoryForManualDate(iso);
+      });
+      const extendBox=document.getElementById('extendBox');
+      const btnExtend=document.getElementById('btnExtend');
+
+      function refreshSeasonChipLabels(){
+        const wrap=document.getElementById('seasonChips');
+        if(!wrap) return;
+
+        wrap.querySelectorAll('.chip').forEach(btn=>{
+          const s=btn.dataset.season;
+          if(!WORK_RANGE[s]) return;
+
+          const label =
+            (s==='winter')?'الشتوي':
+            (s==='summer')?'الصيفي':
+            (s==='ramadan')?'رمضان':'الدوام';
+
+          btn.textContent = `${label} (${WORK_RANGE[s].start}–${WORK_RANGE[s].end})`;
+        });
+      }
+
+      function refreshExtendUI(){
+        if(!extendBox || !btnExtend) return;
+        const can = !!SHIFT_CFG[SEASON];
+        extendBox.style.display = can ? '' : 'none';
+        const on = !!SHIFT_EXT[SEASON];
+        btnExtend.textContent = on ? 'إلغاء التمديد (+30 دقيقة)' : 'تفعيل التمديد +30 دقيقة';
+      }
+
+      if(btnExtend){
+        btnExtend.addEventListener('click', ()=>{
+          if(!SHIFT_CFG[SEASON]) return;
+          SHIFT_EXT[SEASON]=!SHIFT_EXT[SEASON];
+          saveShiftExt();
+          rebuildWorkRange();
+          refreshSeasonChipLabels();
+          refreshExtendUI();
+          recalc();
+
+          const iso = document.getElementById('hadoryManualDate')?.value || '';
+          if(iso) applyHadoryForManualDate(iso);
+        });
+      }
+
+
+      /* ============= إعداد الباكيت ============= */
+      function setPack(kind){
+        STATE.kind=kind;
+
+        document.body.classList.toggle('mode-deduct', kind==='deduct');
+        document.getElementById('mainTitle').textContent=({late:'تنبيه',absent:'تنبيه',gaib:'مساءلة غياب',note:'لفت نظر',deduct:'قرار حسم'})[kind];
+        const hideStd = (kind==='gaib'||kind==='note'||kind==='deduct');
+        alertPack.style.display=hideStd?'none':'';
+        document.getElementById('affidavitPack').style.display=hideStd?'none':'';
+        document.getElementById('principalPack').style.display=hideStd?'none':'';
+        absencePack.style.display=(kind==='gaib')?'':'none';
+        notePack.style.display=(kind==='note')?'':'none';
+        if(kind==='deduct') populateDeduct();
+
+        lineLate.style.display=(kind==='late')?'':'none';
+        lineAbs.style.display=(kind==='absent')?'':'none';
+
+        kindTitle.textContent=({late:'تأخر',absent:'عدم تواجد'})[kind]||'—';
+        document.getElementById('affKind').textContent=({late:'التأخر',absent:'عدم التواجد'})[kind]||'المخالفة';
+
+        const frWrap=document.getElementById('frGroup').parentElement;
+        if(kind==='gaib'){ frWrap.classList.remove('disabled'); if(!STATE.faris) STATE.faris='not'; }
+        else { frWrap.classList.add('disabled'); STATE.faris=''; }
+
+        updUnifiedText();
+
+        if(kind==='gaib') updatePrincipalAbs();
+
+        updateLessonUI();
+      }
+
+      document.getElementById('kindChips').addEventListener('click',e=>{
+        const b=e.target.closest('.chip'); if(!b) return;
+        [...e.currentTarget.children].forEach(x=>x.classList.remove('active')); b.classList.add('active');
+        setPack(b.dataset.k);
+        recalc();
+      });
+
+      /* ============= العذر/القبول/فارس ============= */
+      const unifiedPanel=document.getElementById('unifiedPanel'), unifiedText=document.getElementById('unifiedText');
+      document.getElementById('btnUnified').onclick=()=>{
+        unifiedPanel.style.display = (unifiedPanel.style.display==='block') ? 'none' : 'block';
+      };
+      unifiedPanel.addEventListener('click',e=>{
+        const c=e.target.closest('.chip'); if(!c) return;
+        if(c.dataset.exc){ c.parentElement.querySelectorAll('[data-exc]').forEach(x=>x.classList.remove('active')); c.classList.add('active'); STATE.excuse=c.dataset.exc; }
+        if(c.dataset.acc){ c.parentElement.querySelectorAll('[data-acc]').forEach(x=>x.classList.remove('active')); c.classList.add('active'); STATE.accept=c.dataset.acc; }
+        if(c.dataset.fr && STATE.kind==='gaib'){ c.parentElement.querySelectorAll('[data-fr]').forEach(x=>x.classList.remove('active')); c.classList.add('active'); STATE.faris=c.dataset.fr; }
+        updUnifiedText();
+        unifiedPanel.style.display='none';
+      });
+      function updUnifiedText(){
+        const excTxt=(STATE.excuse==='with')?'بعذر':'بدون عذر';
+        const frTxt=(STATE.kind==='gaib')?(' • فارس: '+(STATE.faris==='raised'?'مرفوع':'لم يُرفع')):'';
+        unifiedText.textContent=excTxt+frTxt;
+      }
+
+      /* ============= التاريخ هجري/ميلادي ============= */
+      let CAL_MODE='h';
+      const pickHijri=document.getElementById('pickHijri'), pickGreg=document.getElementById('pickGreg');
+      document.getElementById('btnCalToggle').onclick=()=>{
+        CAL_MODE=CAL_MODE==='h'?'g':'h';
+        document.getElementById('btnCalToggle').textContent=(CAL_MODE==='h'?'🗓️ هجري':'🗓️ ميلادي');
+        pickHijri.style.display=CAL_MODE==='h'?'flex':'none';
+        pickGreg.style.display=CAL_MODE==='g'?'flex':'none';
+        if(CAL_MODE==='h') syncFromHijri(); else syncFromGregInputs();
+      };
+
+      function hijriToGregorian(y,m,d){
+        let lo=new Date(1937,0,1), hi=new Date(2077,11,31);
+        const fmt=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'numeric',day:'numeric'});
+        const parts=dt=>{const p=fmt.formatToParts(dt);return{y:+ar2en(p.find(x=>x.type==='year').value),m:+ar2en(p.find(x=>x.type==='month').value),d:+ar2en(p.find(x=>x.type==='day').value)}};
+        while(lo<=hi){
+          const mid=new Date((lo.getTime()+hi.getTime())/2),v=parts(mid);
+          if(v.y===y&&v.m===m&&v.d===d) return new Date(mid.getFullYear(),mid.getMonth(),mid.getDate());
+          if(v.y<y||(v.y===y&&v.m<m)||(v.y===y&&v.m===m&&v.d<d)) lo=new Date(mid.getFullYear(),mid.getMonth(),mid.getDate()+1);
+          else hi=new Date(mid.getFullYear(),mid.getMonth(),mid.getDate()-1);
+        }
+        return new Date();
+      }
+      function buildHijriPicker(){
+        hY.innerHTML=hM.innerHTML=hD.innerHTML='';
+        const now=new Date();
+        const currAH=parseInt(ar2en(new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric'}).format(now)),10);
+        for(let i=currAH-1;i<=currAH+1;i++) hY.add(new Option(en2ar(i),i));
+        for(let i=1;i<=12;i++) hM.add(new Option(en2ar(String(i).padStart(2,'0')),i));
+        for(let i=1;i<=30;i++) hD.add(new Option(en2ar(String(i).padStart(2,'0')),i));
+        const parts=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+        hD.value=+ar2en(parts.find(p=>p.type==='day').value);
+        hM.value=+ar2en(parts.find(p=>p.type==='month').value);
+        hY.value=+ar2en(parts.find(p=>p.type==='year').value);
+        hY.onchange=hM.onchange=hD.onchange=syncFromHijri;
+        syncFromHijri();
+      }
+      function syncFromHijri(){
+        const y=+hY.value, m=+hM.value, d=+hD.value;
+        const g=hijriToGregorian(y,m,d);
+        const dayName=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{weekday:'long'}).format(g);
+        const hij=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'2-digit',day:'2-digit'}).format(g);
+
+        metaDay.textContent=dayName; metaHijri.textContent=hij;
+        dynDay.textContent=dayName; dynHijri.textContent=hij;
+        noteDay.textContent=dayName; noteHijri.textContent=hij;
+
+        document.getElementById('affTeacher').textContent=document.getElementById('t_name').textContent||'—';
+        document.getElementById('absDayP').textContent=dayName;
+        document.getElementById('absDateYMD').textContent=hij;
+        document.getElementById('statsDay').textContent=dayName;
+        document.getElementById('statsHijri').textContent=hij;
+        document.getElementById('repDay').textContent=dayName;
+        document.getElementById('repHijri').textContent=hij;
+
+        const repDayTxt=document.getElementById('repDayTxt');
+        const repHijriTxt=document.getElementById('repHijriTxt');
+        if(repDayTxt) repDayTxt.textContent=dayName;
+        if(repHijriTxt) repHijriTxt.textContent=hij;
+
+        updatePrincipalAbs();
+      }
+      ['gY','gM','gD'].forEach(id=>document.getElementById(id).addEventListener('input',syncFromGregInputs));
+      function syncFromGregInputs(){
+        const y=+gY.value||new Date().getFullYear(), m=+gM.value||new Date().getMonth()+1, d=+gD.value||new Date().getDate();
+        const g=new Date(y,m-1,d);
+        const dayName=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{weekday:'long'}).format(g);
+        const hij=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'2-digit',day:'2-digit'}).format(g);
+
+        metaDay.textContent=dayName; metaHijri.textContent=hij;
+        dynDay.textContent=dayName; dynHijri.textContent=hij;
+        noteDay.textContent=dayName; noteHijri.textContent=hij;
+
+        document.getElementById('affTeacher').textContent=document.getElementById('t_name').textContent||'—';
+        document.getElementById('absDayP').textContent=dayName;
+        document.getElementById('absDateYMD').textContent=hij;
+        document.getElementById('statsDay').textContent=dayName;
+        document.getElementById('statsHijri').textContent=hij;
+        document.getElementById('repDay').textContent=dayName;
+        document.getElementById('repHijri').textContent=hij;
+
+        const repDayTxt=document.getElementById('repDayTxt');
+        const repHijriTxt=document.getElementById('repHijriTxt');
+        if(repDayTxt) repDayTxt.textContent=dayName;
+        if(repHijriTxt) repHijriTxt.textContent=hij;
+
+        updatePrincipalAbs();
+      }
+
+      /* ============= وقت ============= */
+      function toMin(hhmm){
+        const m=/^(\d{1,2}):(\d{2})$/.exec(ar2en(hhmm||'')); if(!m) return null;
+        const h=+m[1], mi=+m[2]; if(h>23||mi>59) return null;
+        return h*60+mi;
+      }
+      function fmtHM(mins){
+        const h=Math.floor(mins/60), m=mins%60;
+        return en2ar(String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'));
+      }
+      function attachTimeMask(el){
+        el.addEventListener('beforeinput',(e)=>{ if(e.inputType==='insertText'){ const ch=e.data; if(!(/[0-9٠-٩:]/.test(ch))) e.preventDefault(); }});
+        el.addEventListener('input',()=>{
+          let v=el.textContent.replace(/[^0-9٠-٩]/g,''); v=ar2en(v);
+          if(v.length>=3){ v=v.slice(0,4).padEnd(4,'0'); v=v.slice(0,2)+':'+v.slice(2,4);}
+          else if(v.length>0){ v=v.padEnd(2,'0'); }
+          el.textContent=en2ar(v.length?v:'--:--'); if(el.textContent.includes(':')) el.classList.remove('empty'); placeCaretAtEnd(el); recalc();
+        });
+        el.addEventListener('blur',()=>{ const m=toMin(el.textContent); if(m==null){ el.textContent='--:--'; el.classList.add('empty'); } else { el.textContent=fmtHM(m); el.classList.remove('empty'); } recalc(); });
+        el.addEventListener('click',()=>openClock(el));
+      }
+      function placeCaretAtEnd(el){ const r=document.createRange(); r.selectNodeContents(el); r.collapse(false); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+      ['tLateIn','tAbsFrom','tAbsTo','lessonA','lessonB'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el) attachTimeMask(el);
+      });
+
+      /* ساعة اختيار */
+      let CLOCK_TARGET=null;
+      const clockDlg=document.getElementById('clockDlg');
+      const clockHour=document.getElementById('clockHour');
+      const clockMin=document.getElementById('clockMin');
+      const clockPreview=document.getElementById('clockPreview');
+      function showClock(){ clockDlg.style.display='flex'; clockDlg.setAttribute('aria-hidden','false'); }
+      function hideClock(){ clockDlg.style.display='none'; clockDlg.setAttribute('aria-hidden','true'); CLOCK_TARGET=null; }
+      function updClockPreview(){ clockPreview.textContent=en2ar(String(clockHour.value).padStart(2,'0')+':'+String(clockMin.value).padStart(2,'0')); }
+      function openClock(target){
+        CLOCK_TARGET=target;
+        const cur=toMin(target.textContent); const now=new Date();
+        const h=(cur!=null)?Math.floor(cur/60):now.getHours();
+        const m=(cur!=null)?(cur%60):now.getMinutes();
+        clockHour.value=h; clockMin.value=m; updClockPreview(); showClock();
+      }
+      clockHour.addEventListener('input',updClockPreview);
+      clockMin.addEventListener('input',updClockPreview);
+      document.getElementById('btnClockNow').onclick=()=>{ const now=new Date(); clockHour.value=now.getHours(); clockMin.value=now.getMinutes(); updClockPreview(); };
+      document.getElementById('btnClockOk').onclick=()=>{ if(!CLOCK_TARGET) return; const m=+clockMin.value, h=+clockHour.value; CLOCK_TARGET.textContent=en2ar(String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')); CLOCK_TARGET.classList.remove('empty'); hideClock(); recalc(); };
+      document.getElementById('btnClockClose').onclick=hideClock;
+      clockDlg.addEventListener('click',(e)=>{ if(e.target===clockDlg) hideClock(); });
+
+      /* حسابات */
+      function detectLessonMode(reason){
+        const r = String(reason||'').trim();
+
+        if(r.includes('التأخر عن دخول الحصة')) return 'enter';
+        if(r.includes('الخروج من الحصة قبل انتهائها')) return 'exit';
+        if(r.includes('عدم دخول حصة الانتظار المكلَّف بها')) return 'slot';
+        if(r.includes('عدم دخول الحصة الرسمية')) return 'slot';
+
+        return '';
+      }
+
+      function resetLessonFields(){
+       if(classLevel) classLevel.value='';
+      if(sectionNo) sectionNo.value='';
+      if(className) className.value='';
+      if(periodNo) periodNo.value='';
+        if(lessonA){ lessonA.textContent='--:--'; lessonA.classList.add('empty'); }
+        if(lessonB){ lessonB.textContent='--:--'; lessonB.classList.add('empty'); }
+        if(lessonMins) lessonMins.textContent='0';
+        if(noteClassName) noteClassName.textContent='—';
+        if(notePeriodNo) notePeriodNo.textContent='—';
+        if(noteLessonMin) noteLessonMin.textContent='0';
+      }
+      function recalcLesson(){
+        if(!NOTE_LESSON_MODE || NOTE_LESSON_MODE === 'slot'){
+          if(lessonMins) lessonMins.textContent='0';
+          if(noteLessonMin) noteLessonMin.textContent='0';
+          return;
+        }
+
+        const a = toMin(lessonA?.textContent.trim());
+        const b = toMin(lessonB?.textContent.trim());
+
+        let mins = 0;
+        if(a!=null && b!=null){
+          if(NOTE_LESSON_MODE==='enter'){
+            mins = Math.max(0, b - a);
+          }else if(NOTE_LESSON_MODE==='exit'){
+            mins = Math.max(0, a - b);
+          }
+        }
+
+        if(lessonMins) lessonMins.textContent = en2ar(mins);
+        if(noteLessonMin) noteLessonMin.textContent = en2ar(mins);
+      }
+      function updateLessonUI(){
+        const reason = document.getElementById('noteReason')?.value || '';
+        NOTE_LESSON_MODE = (STATE.kind==='note') ? detectLessonMode(reason) : '';
+
+        const on = !!NOTE_LESSON_MODE;
+
+        if(lessonBox) lessonBox.style.display = on ? '' : 'none';
+        if(noteLessonExtra) noteLessonExtra.style.display = on ? 'inline' : 'none';
+
+        if(!on){
+          resetLessonFields();
+          return;
+        }
+
+        if(NOTE_LESSON_MODE==='enter'){
+          lessonTitle.textContent = 'تفاصيل التأخر عن دخول الحصة';
+          lessonA_lbl.textContent = 'وقت بداية الحصة (حسب الجدول)';
+          lessonB_lbl.textContent = 'وقت دخول المعلم للحصة';
+          noteLessonKind.textContent = 'التأخر';
+          lessonHint.textContent = 'أدخل وقت بداية الحصة ووقت الدخول — سيتم احتساب دقائق التأخر تلقائيًا.';
+          lessonA.parentElement.style.display = '';
+          lessonB.parentElement.style.display = '';
+        }else if(NOTE_LESSON_MODE==='exit'){
+          lessonTitle.textContent = 'تفاصيل الخروج قبل انتهاء الحصة';
+          lessonA_lbl.textContent = 'وقت نهاية الحصة (حسب الجدول)';
+          lessonB_lbl.textContent = 'وقت خروج المعلم من الحصة';
+          noteLessonKind.textContent = 'الخروج المبكر';
+          lessonHint.textContent = 'أدخل وقت نهاية الحصة ووقت الخروج — سيتم احتساب دقائق الخروج المبكر تلقائيًا.';
+          lessonA.parentElement.style.display = '';
+          lessonB.parentElement.style.display = '';
+        }else if(NOTE_LESSON_MODE==='slot'){
+          lessonTitle.textContent = 'تفاصيل الفصل والحصة';
+          noteLessonKind.textContent = 'عدم الدخول';
+          lessonHint.textContent = 'حدد اسم الفصل ورقم الحصة بدقة.';
+          lessonA.parentElement.style.display = 'none';
+          lessonB.parentElement.style.display = 'none';
+          if(lessonMins) lessonMins.textContent = '0';
+          if(noteLessonMin) noteLessonMin.textContent = '0';
+        }
+
+        if(noteMinutesWrap){
+        noteMinutesWrap.style.display = (NOTE_LESSON_MODE === 'slot') ? 'none' : 'inline';
+      }
+
+      syncClassName();
+      if(noteClassName) noteClassName.textContent = (className?.value.trim() || '—');
+      if(notePeriodNo) notePeriodNo.textContent = (periodNo?.value ? en2ar(periodNo.value) : '—');
+
+      recalcLesson();
+      }
+      function recalc(){
+        const wsM=toMin(WORK_RANGE[SEASON].start);
+        const tLateM=toMin(document.getElementById('tLateIn').textContent.trim());
+        if(tLateM!=null&&wsM!=null&&tLateM>wsM){
+          const mins=tLateM-wsM;
+          lateTotal.textContent=en2ar(mins)+' دقيقة';
+          lateHH.textContent=fmtHM(mins);
+        } else {
+          lateTotal.textContent='0 دقيقة';
+          lateHH.textContent='00:00';
+        }
+        recalcLesson();
+
+        const aFM=toMin(document.getElementById('tAbsFrom').textContent.trim()), aTM=toMin(document.getElementById('tAbsTo').textContent.trim());
+        if(aFM!=null&&aTM!=null&&aTM>aFM){
+          const mins=aTM-aFM;
+          absTotal.textContent=en2ar(mins)+' دقيقة';
+          absHH.textContent=fmtHM(mins);
+        } else {
+          absTotal.textContent='0 دقيقة';
+          absHH.textContent='00:00';
+        }
+      }
+
+      /* سبب لفت النظر */
+      document.getElementById('noteReason').addEventListener('change', e=>{
+        document.getElementById('noteReasonText').textContent = e.target.value || 'المهمة المحددة';
+        updateLessonUI();
+      });
+
+      if(periodNo){
+        periodNo.addEventListener('change', updateLessonUI);
+      }
+
+      if(classLevel){
+        classLevel.addEventListener('change', ()=>{
+          syncClassName();
+          updateLessonUI();
+        });
+      }
+
+      if(sectionNo){
+        sectionNo.addEventListener('change', ()=>{
+          syncClassName();
+          updateLessonUI();
+        });
+      }
+
+      /* اختيار معلم */
+      selTeacher.addEventListener('change',e=>{
+        const i=+e.target.value; const t=Number.isInteger(i)?TEACHERS[i]:null; if(!t) return;
+        t_name.textContent=t.name||'—'; t_spec.textContent=t.spec||'—'; t_level.textContent=t.level||'—';
+        t_job.textContent=t.job||'—'; t_work.textContent=t.work||'—'; t_civil.textContent=t.civil||'—';
+        teacherNameInline.textContent=t.name||'—'; noteTeacherName.textContent=t.name||'—'; document.getElementById('affTeacher').textContent=t.name||'—';
+        document.getElementById('abs-name-top').textContent=t.name||'—'; document.getElementById('abs-teacher-name').textContent=t.name||'—';
+
+        const key = t.civil || t.name;
+        metaNo.textContent = nextSerialForKey(key);
+
+        updatePrincipalAbs();
+        if(STATE.kind==='deduct') populateDeduct();
+      });
+
+      /* ===== قرار حسم: ملء البيانات وربط ساعات التأخر من حضوري ===== */
+      function _arabicNumberInWords(n){
+        // تحويل بسيط للأعداد الصحيحة من 0..99 إلى كلمات عربية
+        const ones=['صفر','واحد','اثنان','ثلاث','أربع','خمس','ست','سبع','ثمان','تسع','عشر','إحدى عشرة','اثنتا عشرة','ثلاث عشرة','أربع عشرة','خمس عشرة','ست عشرة','سبع عشرة','ثماني عشرة','تسع عشرة'];
+        const tens=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
+        n=Math.floor(Number(n)||0);
+        if(n<0) return '';
+        if(n<20) return ones[n];
+        if(n<100){ const t=Math.floor(n/10), u=n%10; return u? (ones[u]+' و'+tens[t]) : tens[t]; }
+        return String(n);
+      }
+      function populateDeduct(){
+        const i=+selTeacher.value; const t=Number.isInteger(i)?TEACHERS[i]:null; if(!t) return;
+        // معلومات المعلم
+        document.querySelectorAll('#deductPack .dedName').forEach(el=>el.textContent=t.name||'—');
+        document.querySelectorAll('#deductPack .dedCivil').forEach(el=>el.textContent=t.civil||'—');
+        document.querySelectorAll('#deductPack .dedSpec').forEach(el=>el.textContent=t.spec||'—');
+        document.querySelectorAll('#deductPack .dedLevel').forEach(el=>el.textContent=t.level||'—');
+        document.querySelectorAll('#deductPack .dedJob').forEach(el=>el.textContent=t.job||'—');
+        document.querySelectorAll('#deductPack .dedWork').forEach(el=>el.textContent=t.work||'—');
+        document.querySelectorAll('#deductPack .dedHijri').forEach(el=>el.textContent=metaHijri.textContent||'—');
+
+        // جمع سجلات التأخر من حضوري لهذا المعلم
+        const wsM = (typeof WORK_RANGE!=='undefined' && WORK_RANGE[SEASON]) ? toMin(WORK_RANGE[SEASON].start) : null;
+        const rows = (Array.isArray(HADORY_LOGS)?HADORY_LOGS:[])
+          .filter(r=>r.civil===t.civil && r.attend && wsM!=null && toMin(r.attend)>wsM)
+          .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+
+        const body=document.getElementById('dedHoursBody');
+        let totalMin=0, daysCount=0;
+        if(!rows.length){
+          body.innerHTML=`<tr><td colspan="6" style="padding:10px;color:#666">— لا توجد بيانات تأخر مسجلة لهذا المعلم في (حضوري) —</td></tr>`;
+        }else{
+          body.innerHTML = rows.map(r=>{
+            const lateMin = toMin(r.attend) - wsM;
+            totalMin += lateMin; daysCount++;
+            let hijri='—', dayName='—';
+            try{
+              if(r.date){
+                const g=new Date(r.date);
+                hijri=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'2-digit',day:'2-digit'}).format(g);
+                dayName=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{weekday:'long'}).format(g);
+              }
+            }catch(e){}
+            const h=Math.floor(lateMin/60), m=lateMin%60;
+            const hStr = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+            const hWritten = h? (_arabicNumberInWords(h)+' ساعة' + (m?` و${_arabicNumberInWords(m)} دقيقة`:'')) : `${m} دقيقة`;
+            return `<tr>
+              <td>${hijri}</td>
+              <td>${dayName}</td>
+              <td>${r.attend||'—'}</td>
+              <td>${hStr}</td>
+              <td>${hWritten}</td>
+              <td>بدون عذر</td>
+            </tr>`;
+          }).join('');
+        }
+        const totalH = (totalMin/60);
+        const totalHRounded = Math.round(totalH*100)/100;
+        document.querySelectorAll('#deductPack .dedHoursTotal').forEach(el=>el.textContent=String(totalHRounded));
+        const wholeH = Math.floor(totalH);
+        document.querySelectorAll('#deductPack .dedHoursWritten').forEach(el=>el.textContent=_arabicNumberInWords(wholeH)+' ساعة');
+        document.querySelectorAll('#deductPack .dedDaysCount').forEach(el=>el.textContent=String(daysCount||1));
+      }
+
+      /* تضمين صور للطباعة */
+      async function embedImageToDataURL(imgEl){
+        try{
+          const src=imgEl.getAttribute('src')||''; if(!src) return;
+          const u=src.match(/^data:/)? src : encodeURI(src);
+          const resp=await fetch(u,{mode:'cors',cache:'no-store'}); if(!resp.ok) return;
+          const blob=await resp.blob(); const reader=new FileReader();
+          await new Promise(res=>{ reader.onload=()=>{ imgEl.src=reader.result; res(); }; reader.readAsDataURL(blob); });
+        }catch(e){}
+      }
+      async function ensureAllImagesEmbedded(root){
+        const imgs=[...root.querySelectorAll('img')];
+        for(const im of imgs){ if(!im.src.startsWith('data:')) await embedImageToDataURL(im); }
+      }
+
+      /* طباعة/حفظ PDF — ✅ إصلاح: إزالة الكتلة المكررة التي كانت تكسر التنفيذ */
+      document.getElementById('btnPrintSave').addEventListener('click', async (e)=>{
+        if(!requireDateGuard('الطباعة/الحفظ')) return;
+
+        const i = +selTeacher.value;
+        if(!Number.isInteger(i)) { alert('اختر معلماً أولاً'); return; }
+        const t = TEACHERS[i];
+
+        // حفظ في الأرشيف قبل إنشاء الـ PDF
+        ARCH.push({
+          ts: Date.now(),
+          civil: t.civil,
+          name: t.name,
+          kind: STATE.kind,
+          excuse: STATE.excuse,
+          accept: STATE.accept,
+          faris: (STATE.kind === 'gaib' ? (STATE.faris || 'not') : ''),
+          hijri: metaHijri.textContent,
+          day: metaDay.textContent,
+             noteReason: (STATE.kind === 'note')
+        ? (document.getElementById('noteReasonText')?.textContent || '')
+        : '',
+      className: (STATE.kind==='note' ? (className?.value.trim() || '') : ''),
+      period: (STATE.kind==='note' ? (periodNo?.value || '') : ''),
+      lessonMode: (STATE.kind==='note' ? (NOTE_LESSON_MODE || '') : ''),
+      lessonMins: (STATE.kind==='note' ? ar2en(lessonMins?.textContent || '0') : ''),
+          lessonA: (STATE.kind==='note' ? (lessonA?.textContent.trim() || '') : ''),
+          lessonB: (STATE.kind==='note' ? (lessonB?.textContent.trim() || '') : '')
+        });
+        saveARCH();
+
+        // ☁️ أرشفة سحابية كاملة لكل إجراء إداري — يُحفظ في teacher_legacy_archive
+        try{
+          const kindLabel = ({late:'تنبيه تأخر',absent:'تنبيه عدم تواجد',gaib:'مساءلة غياب',note:'لفت نظر',deduct:'قرار حسم ساعات تأخر'})[STATE.kind] || 'إجراء إداري';
+          const reasonText = (STATE.kind === 'note')
+            ? (document.getElementById('noteReasonText')?.textContent || '')
+            : ((STATE.excuse === 'with') ? 'بعذر' : 'بدون عذر');
+          const followStatus = (STATE.kind === 'gaib')
+            ? ((STATE.faris === 'raised') ? 'مرفوع لفارس' : 'لم يُرفع لفارس')
+            : ((STATE.accept === 'accepted') ? 'مقبول' : (STATE.accept === 'rejected' ? 'مرفوض' : 'قيد المتابعة'));
+          const todayISO = new Date().toISOString().slice(0,10);
+          window.LovableArchive && window.LovableArchive({
+            report_type: 'إجراء إداري',
+            action_type: kindLabel,
+            teacher_name: t.name || '',
+            teacher_civil_id: t.civil || '',
+            teacher_phone: t.phone || '',
+            greg_date: todayISO,
+            hijri_date: metaHijri.textContent || '',
+            month_label: '',
+            summary: `${kindLabel} — ${t.name} — ${metaDay.textContent || ''} ${metaHijri.textContent || ''} — ${reasonText} — ${followStatus}`,
+            payload: {
+              kind: STATE.kind,
+              kind_label: kindLabel,
+              day_name: metaDay.textContent || '',
+              hijri_date: metaHijri.textContent || '',
+              greg_date: todayISO,
+              reason: reasonText,
+              excuse_mode: STATE.excuse || '',
+              accept_state: STATE.accept || '',
+              follow_up_status: followStatus,
+              faris: (STATE.kind === 'gaib' ? (STATE.faris || 'not') : ''),
+              note_class: (STATE.kind === 'note' ? (className?.value.trim() || '') : ''),
+              note_period: (STATE.kind === 'note' ? (periodNo?.value || '') : ''),
+              note_lesson_mode: (STATE.kind === 'note' ? (NOTE_LESSON_MODE || '') : ''),
+              note_lesson_minutes: (STATE.kind === 'note' ? ar2en(lessonMins?.textContent || '0') : ''),
+            }
+          });
+        }catch(e){ console.warn('lovable archive (action) failed', e); }
+
+        const { jsPDF } = window.jspdf;
+
+        const btn = e.currentTarget;
+        const old = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'جارٍ إنشاء PDF...';
+
+        try{
+          const sheet = document.getElementById('sheet');
+          await ensureAllImagesEmbedded(sheet);
+
+          const canvas = await html2canvas(sheet, {
+            scale: 2,
+            background: '#fff',
+            useCORS: true,
+            allowTaint: false,
+            imageTimeout: 0,
+            logging: false
+          });
+
+          const pdf = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
+          const w = 210;
+          const h = canvas.height * 210 / canvas.width;
+
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+          pdf.save(`إجراء - ${t.name}.pdf`);
+
+          if(confirm('تم حفظ ملف PDF. هل تريد الطباعة الآن؟')) {
+            setTimeout(()=>window.print(), 200);
+          }
+
+        }catch(err){
+          alert('تعذّر إنشاء PDF: ' + (err?.message || err));
+        }finally{
+          btn.disabled = false;
+          btn.textContent = old;
+        }
+      });
+
+      /* الإحصائيات */
+      { const _b=document.getElementById('btnStats'); if(_b) _b.onclick=openStats; }
+      document.getElementById('btnCloseStats').onclick=()=>{ statsDlg.style.display='none'; statsDlg.setAttribute('aria-hidden','true'); };
+      document.getElementById('btnResetStats').onclick=()=>{ if(confirm('تأكيد: هل تريد تصفير الأرشيف؟')){ clearARCH(); openStats(); } };
+      document.getElementById('btnStatsPDF').onclick=async()=>{
+        const dlg=document.getElementById('statsDlg');
+        const card=document.getElementById('statsCard');
+        await ensureAllImagesEmbedded(card);
+        dlg.setAttribute('aria-hidden','false');
+        document.body.setAttribute('data-print','stats');
+        window.print();
+        setTimeout(()=>document.body.removeAttribute('data-print'),300);
+      };
+      function shortDetails(r){
+        if(r.kind === 'late') return 'تنبيه تأخر';
+        if(r.kind === 'absent') return 'تنبيه عدم تواجد';
+        if(r.kind === 'gaib') return 'غياب';
+
+        if(r.kind === 'note'){
+          let extra='';
+
+          if(r.lessonMode === 'slot'){
+            extra = ` — الفصل: ${r.className || '—'} — الحصة: ${r.period ? en2ar(r.period) : '—'}`;
+          }else if(r.lessonMode){
+            const lbl = (r.lessonMode === 'enter') ? 'تأخر' : 'خروج مبكر';
+            extra = ` — الفصل: ${r.className || '—'} — الحصة: ${r.period ? en2ar(r.period) : '—'} — ${lbl}: ${en2ar(r.lessonMins || 0)} د`;
+          }
+
+          return `لفت نظر — ${r.noteReason || '—'}${extra}`;
+        }
+
+        return '—';
+      }
+
+      /* ✅ openStats محسّن بدون تغيير النتائج */
+      function openStats(){
+        const tb=document.querySelector('#tblStats tbody'); tb.innerHTML='';
+        const byTeacher=new Map();
+        ARCH.forEach(r=>{
+          const k=(r.civil||r.name);
+          if(!byTeacher.has(k)) byTeacher.set(k,{name:r.name,rows:[]});
+          byTeacher.get(k).rows.push(r);
+        });
+
+        for(const {name,rows} of byTeacher.values()){
+          rows.sort((a,b)=>a.ts-b.ts);
+
+          rows.forEach((r,idx)=>{
+            const tr=document.createElement('tr');
+
+            if(idx===0){
+              const td=document.createElement('td');
+              td.rowSpan=rows.length;
+              td.style.fontWeight='900';
+              td.textContent=name;
+              tr.appendChild(td);
+            }
+
+            const tdType=document.createElement('td');
+            tdType.textContent=({late:'تنبيه تأخر',absent:'تنبيه عدم تواجد',gaib:'مساءلة غياب',note:'لفت نظر',deduct:'قرار حسم ساعات تأخر'})[r.kind]||'—';
+
+            const tdDay=document.createElement('td'); tdDay.textContent=r.day||'—';
+            const tdHij=document.createElement('td'); tdHij.textContent=r.hijri||'—';
+            const tdExc=document.createElement('td'); tdExc.textContent=(r.excuse==='with'?'بعذر':'بدون عذر');
+            const tdF=document.createElement('td'); tdF.textContent=(r.kind==='gaib'?((r.faris==='raised')?'مرفوع':'لم يُرفع'):'');
+            const tdDet=document.createElement('td'); tdDet.textContent=shortDetails(r);
+
+            const tdAct=document.createElement('td');
+            tdAct.className='no-print';
+            tdAct.innerHTML=`<button class="btn ghost delRow" data-ts="${r.ts}" title="حذف">حذف</button>`;
+
+            tr.appendChild(tdType);
+            tr.appendChild(tdDay);
+            tr.appendChild(tdHij);
+            tr.appendChild(tdExc);
+            tr.appendChild(tdF);
+            tr.appendChild(tdDet);
+            tr.appendChild(tdAct);
+
+            tb.appendChild(tr);
+          });
+        }
+
+        statsDlg.style.display='flex';
+        statsDlg.setAttribute('aria-hidden','false');
+        document.getElementById('statsDay').textContent=document.getElementById('metaDay').textContent;
+        document.getElementById('statsHijri').textContent=document.getElementById('metaHijri').textContent;
+      }
+      document.getElementById('tblStats').addEventListener('click',(e)=>{
+        const btn=e.target.closest('.delRow'); if(!btn) return;
+        const ts=+btn.dataset.ts; if(!Number.isFinite(ts)) return;
+        if(confirm('تأكيد حذف هذا السجل؟')){
+          const idx=ARCH.findIndex(r=>r.ts===ts);
+          if(idx>-1){ ARCH.splice(idx,1); saveARCH(); openStats(); }
+        }
+      });
+
+      /* توقيع الغياب */
+      const PRINCIPAL_NAME='فهد حامد علي الزهراني';
+      function updatePrincipalAbs(){
+        const nameEl=document.getElementById('principalNameAbs');
+        const signEl=document.getElementById('principalSignAbs');
+        const dateEl=document.getElementById('principalDateAbs');
+        if(!nameEl||!dateEl||!signEl) return;
+        nameEl.textContent=PRINCIPAL_NAME;
+        signEl.textContent='____________________';
+        dateEl.textContent=document.getElementById('metaHijri').textContent||'—';
+      }
+
+      /* =========================
+         حضوري
+         ========================= */
+      const hadoryFiles = document.getElementById('hadoryFiles');
+      const hadoryManualDate = document.getElementById('hadoryManualDate');
+      const btnUseManualDate = document.getElementById('btnUseManualDate');
+      const hadoryDates = document.getElementById('hadoryDates');
+      const hadoryCases = document.getElementById('hadoryCases');
+      const hadoryStatus = document.getElementById('hadoryStatus');
+      const hadoryMiniTable = document.getElementById('hadoryMiniTable');
+      const cAbsent = document.getElementById('cAbsent');
+      const cLate = document.getElementById('cLate');
+      const cNoOut = document.getElementById('cNoOut');
+      const hadoryDateWarn = document.getElementById('hadoryDateWarn');
+      const hadoryDateOk = document.getElementById('hadoryDateOk');
+
+      /* أزرار الاستيراد القديمة (btnHadoryImport / btnHadoryDrive) أُزيلت — الاستيراد فقط من قسم «كشف حضوري شهري» */
+
+      document.getElementById('btnConfirmDateInline').onclick=()=>{
+        if(!HADORY_USED) return;
+        openDateGuard(DATE_GUARD_REASON || 'يرجى التأكد من تاريخ التقرير يدويًا ثم الإقرار بالمطابقة.');
+      };
+
+      let HADORY_LOGS=[];
+      let HADORY_DAILY=[];
+      let HADORY_CASES=[];
+      let HADORY_IMPORT_DATES=[];
+
+      function setHadoryStatus(txt){ hadoryStatus.textContent = txt; }
+
+      function showDateWarn(on, reason){
+        hadoryDateWarn.style.display=on?'block':'none';
+        warnReason.textContent=reason||'—';
+        if(on && HADORY_USED){
+          hadoryDateOk.style.display='none';
+          DATE_GUARD_ACTIVE=true;
+          DATE_GUARD_CONFIRMED=false;
+          DATE_GUARD_REASON=reason||'يلزم التأكد من تاريخ التقرير.';
+        }
+      }
+      function showDateOk(on){
+        hadoryDateOk.style.display=on?'block':'none';
+        if(on && HADORY_USED){
+          hadoryDateWarn.style.display='none';
+          DATE_GUARD_ACTIVE=false;
+          DATE_GUARD_CONFIRMED=true;
+          DATE_GUARD_REASON='';
+        }
+      }
+
+      function guessDateFromFileName(name){
+        const m = String(name||'').match(/(20\d{2})[^\d]?(\d{1,2})[^\d]?(\d{1,2})/);
+        if(!m) return '';
+        const y=m[1], mm=String(m[2]).padStart(2,'0'), dd=String(m[3]).padStart(2,'0');
+        return `${y}-${mm}-${dd}`;
+      }
+      function normalizeDate(raw){
+        if(raw===undefined || raw===null) return '';
+        let s=String(raw).trim(); if(!s) return '';
+        if(!isNaN(Number(s)) && !s.includes('-') && !s.includes('/')){
+          const n=Number(s);
+          const base=new Date(1899,11,30);
+          const d=new Date(base.getTime()+n*24*60*60*1000);
+          const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+          return `${y}-${m}-${dd}`;
+        }
+        s=s.replace(/\./g,'/').replace(/\\/g,'/');
+        let m=s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+        if(m){ return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`; }
+        m=s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{2})/);
+        if(m){ return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`; }
+        return '';
+      }
+
+      /* ✅ (تعديل مطلوب) normalizeTime: يدعم AM/PM بشكل صحيح + أرقام إكسل (serial) */
+      function normalizeTime(raw){
+        if(raw===undefined||raw===null) return '';
+
+        // رقم إكسل (وقت أو تاريخ+وقت): نأخذ الجزء الكسري كوقت
+        if(typeof raw === 'number' && !isNaN(raw)){
+          let v = raw % 1;
+          if(v < 0) v += 1;
+          const total = Math.round(v * 24 * 60);
+          const h = String(Math.floor(total/60)).padStart(2,'0');
+          const m = String(total%60).padStart(2,'0');
+          return `${h}:${m}`;
+        }
+
+        let s=String(raw).trim(); if(!s) return '';
+        s = ar2en(s);
+
+        // AM/PM أو ص/م
+        const mer = s.match(/(\d{1,2})\s*:\s*(\d{2})(?:\s*:\s*(\d{2}))?\s*(AM|PM|A\.M\.|P\.M\.|ص|م)\b/i);
+        if(mer){
+          let h=parseInt(mer[1],10), mm=parseInt(mer[2],10);
+          let ap=String(mer[4]||'').toUpperCase();
+          if(ap==='ص' || ap.startsWith('A')) ap='AM';
+          if(ap==='م' || ap.startsWith('P')) ap='PM';
+          if(ap==='PM' && h<12) h+=12;
+          if(ap==='AM' && h===12) h=0;
+          if(h>=0 && h<=23 && mm>=0 && mm<=59) return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+          return '';
+        }
+
+        // HH:MM (24h) أو تاريخ+وقت
+        const dt = s.match(/(\d{1,2})\s*:\s*(\d{2})(?::\d{2})?/);
+        if(dt){
+          const h=parseInt(dt[1],10), mm=parseInt(dt[2],10);
+          if(h>=0 && h<=23 && mm>=0 && mm<=59) return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+        }
+
+        // رقم كنص (وقت/تاريخ+وقت)
+        if(!isNaN(Number(s)) && !s.includes(':')){
+          const v=Number(s);
+          if(v>=0){
+            let f=v%1;
+            const total=Math.round(f*24*60);
+            const h=String(Math.floor(total/60)).padStart(2,'0');
+            const m=String(total%60).padStart(2,'0');
+            return `${h}:${m}`;
+          }
+        }
+
+        return '';
+      }
+
+      /* ✅ (تعديل مطلوب) قراءة "عدد الساعات" كمدة بالدقائق عند وجودها */
+      function normalizeDuration(raw){
+        if(raw===undefined||raw===null) return 0;
+
+        if(typeof raw === 'number' && !isNaN(raw)){
+          let v = raw % 1;
+          if(v < 0) v += 1;
+          return Math.round(v * 24 * 60);
+        }
+
+        let s=String(raw).trim(); if(!s) return 0;
+        s=ar2en(s);
+
+        // HH:MM
+        let m=s.match(/^(\d{1,2})\s*:\s*(\d{2})$/);
+        if(m){
+          const h=parseInt(m[1],10), mm=parseInt(m[2],10);
+          if(h>=0 && mm>=0 && mm<=59) return h*60+mm;
+          return 0;
+        }
+
+        // رقم ساعات (مثلاً 7.5)
+        if(!isNaN(Number(s))){
+          return Math.round(Number(s)*60);
+        }
+
+        return 0;
+      }
+
+      function diffMin(start,end){
+        const s=toMin(start), e=toMin(end);
+        if(s==null||e==null) return 0;
+        let d=e-s; if(d<0) d+=24*60;
+        return d;
+      }
+      function setGregFromISO(iso){
+        if(!iso) return;
+        const m=iso.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return;
+        gY.value=+m[1]; gM.value=+m[2]; gD.value=+m[3];
+        syncFromGregInputs();
+      }
+      function isAutoOutText(s){
+        const v=String(s||'').toLowerCase();
+        return /تلقائي|آلي|الي|auto|system|default/.test(v);
+      }
+
+      /* ✅ (تعديل مطلوب) normH: توحيد الإسم/الاسم والإنصراف/الانصراف لتحسين اكتشاف الأعمدة */
+      function normH(s){
+        return String(s||'')
+          .trim()
+          .toLowerCase()
+          .replace(/\u200f|\u200e/g,'')
+          .replace(/[إأآٱ]/g,'ا')      // ✅ توحيد الألف
+          .replace(/ؤ/g,'و').replace(/ئ/g,'ي') // ✅ تخفيف اختلافات الهمزات
+          .replace(/ى/g,'ي')           // ✅ توحيد الياء
+          .replace(/[^\p{L}\p{N}\s:\/\-]/gu,' ')
+          .replace(/\s+/g,' ')
+          .trim();
+      }
+      function findIdxByAny(headers, patterns){
+        for(let i=0;i<headers.length;i++){
+          const h=normH(headers[i]);
+          for(const p of patterns){ if(p.test(h)) return i; }
+        }
+        return -1;
+      }
+
+      /* ✅ (تعديل مطلوب) أنماط الأعمدة لتوافق ملفاتك المرفقة */
+      const ID_PATS = [
+        /السجل المدني/,
+        /رقم السجل المدني/,
+        /الهوية الوطنية/,
+        /رقم الهوية/,
+        /هوية/,
+        /رقم الموظف/,
+        /الرقم الوظيفي/,
+        /رقم المعلم/,
+        /\bid\b/,
+        /national id/,
+        /civil/
+      ];
+      const NAME_PATS = [
+        /اسم الموظف/,
+        /اسم المعلم/,
+        /الاسم/,
+        /employee name/,
+        /\bname\b/
+      ];
+      const IN_PATS = [
+        /توقيت الحضور/,
+        /وقت الحضور/,
+        /توقيت الدخول/,
+        /وقت الدخول/,
+        /الحضور/,
+        /check in/,
+        /clock in/,
+        /time in/,
+        /\bin\b/
+      ];
+      const OUT_PATS = [
+        /توقيت الانصراف/,
+        /وقت الانصراف/,
+        /توقيت الخروج/,
+        /وقت الخروج/,
+        /الانصراف/,
+        /check out/,
+        /clock out/,
+        /time out/,
+        /\bout\b/
+      ];
+      const DATE_PATS = [
+        /تاريخ/,
+        /\bdate\b/
+      ];
+      const DUR_PATS = [
+        /عدد الساعات/,
+        /مدة العمل/,
+        /ساعات العمل/,
+        /duration/,
+        /total hours/,
+        /work hours/
+      ];
+      const OUTTYPE_PATS = [
+        /نوع الانصراف/,
+        /طريقة الانصراف/,
+        /حالة الانصراف/,
+        /ملاحظة/,
+        /ملاحظات/,
+        /note/,
+        /status/
+      ];
+
+      function bestHeaderRow(rows){
+        let best={i:-1,score:-1,headers:[]};
+        const max=Math.min(25, rows.length);
+        for(let i=0;i<max;i++){
+          const r=rows[i]||[];
+          const headers=r.map(x=>String(x||''));
+          const idIdx=findIdxByAny(headers, ID_PATS);
+          const inIdx=findIdxByAny(headers, IN_PATS);
+          const outIdx=findIdxByAny(headers, OUT_PATS);
+          const nameIdx=findIdxByAny(headers, NAME_PATS);
+          const durIdx=findIdxByAny(headers, DUR_PATS);
+          const score=(idIdx>-1?6:0)+(inIdx>-1?3:0)+(outIdx>-1?2:0)+(nameIdx>-1?2:0)+(durIdx>-1?1:0);
+          if(score>best.score){ best={i,score,headers}; }
+        }
+        return best.i>-1?best.i:0;
+      }
+
+      hadoryFiles.addEventListener('change', async (e)=>{
+        const files=[...e.target.files||[]];
+        if(!files.length) return;
+
+        HADORY_USED=true;
+        DATE_GUARD_ACTIVE=true;
+        DATE_GUARD_CONFIRMED=false;
+
+        setHadoryStatus('جاري القراءة...');
+        HADORY_LOGS=[]; HADORY_DAILY=[]; HADORY_CASES=[]; HADORY_IMPORT_DATES=[];
+        renderHadoryEmpty();
+
+        showDateWarn(true,'بعد الاستيراد: أدخل تاريخ التقرير يدويًا ثم اضغط (تطبيق) ثم أكد المطابقة.');
+        setHadoryStatus('تم تفعيل حماية التاريخ — أدخل التاريخ يدويًا ثم طبّق.');
+
+        const datesFromCells=new Set();
+        const datesFromNames=new Set();
+
+        for(const f of files){
+          try{
+            const ab=await f.arrayBuffer();
+            const wb=XLSX.read(ab,{type:'array'});
+            const fnDate=guessDateFromFileName(f.name);
+            if(fnDate) datesFromNames.add(fnDate);
+
+            wb.SheetNames.forEach(sn=>{
+              const sh=wb.Sheets[sn];
+              const rows=XLSX.utils.sheet_to_json(sh,{header:1,defval:''});
+              if(!rows.length) return;
+
+              const headerRowIndex = bestHeaderRow(rows);
+              const headers=(rows[headerRowIndex]||[]).map(h=>String(h||'').trim());
+
+              const nameIdx=findIdxByAny(headers, NAME_PATS);
+              const idIdx=findIdxByAny(headers, ID_PATS);
+              const dateIdx=findIdxByAny(headers, DATE_PATS);
+
+              const inIdx=findIdxByAny(headers, IN_PATS);
+              const outIdx=findIdxByAny(headers, OUT_PATS);
+
+              const durIdx=findIdxByAny(headers, DUR_PATS);
+              const outTypeIdx=findIdxByAny(headers, OUTTYPE_PATS);
+
+              if(idIdx<0) return;
+
+              for(let r=headerRowIndex+1;r<rows.length;r++){
+                const row=rows[r];
+                if(!row || row.every(c=>String(c).trim()==='')) continue;
+
+                const civil = String(row[idIdx]||'').replace(/[^\d]/g,'');
+                if(!civil) continue;
+
+                let dateStr='';
+                if(dateIdx>=0) dateStr=normalizeDate(row[dateIdx]);
+                if(dateStr) datesFromCells.add(dateStr);
+
+                let attend= (inIdx>=0) ? normalizeTime(row[inIdx]) : '';
+                let leave = (outIdx>=0) ? normalizeTime(row[outIdx]) : '';
+
+                // ✅ أولوية "عدد الساعات" إن وجد وصالح، وإلا نحسب من الحضور/الانصراف
+                let workMinutes=0;
+                if(durIdx>=0){
+                  const durM = normalizeDuration(row[durIdx]);
+                  if(durM>0) workMinutes = durM;
+                }
+                if(!workMinutes && attend && leave) workMinutes = diffMin(attend,leave);
+
+                const outTypeRaw = (outTypeIdx>=0)? String(row[outTypeIdx]||'').trim() : '';
+                const autoOut = isAutoOutText(outTypeRaw);
+
+                const nameFromFile = (nameIdx>=0)? String(row[nameIdx]||'').trim() : '';
+                const t=TEACHER_BY_CIVIL[civil] || null;
+                const name = (t?.name) || nameFromFile || 'غير مسجل في القائمة';
+
+                HADORY_LOGS.push({
+                  date: dateStr, civil, name,
+                  attend, leave, workMinutes, outType: outTypeRaw, autoOut,
+                  _srcFile:f.name, _sheet:sn
+                });
+              }
+            });
+          }catch(err){ console.error(err); }
+        }
+
+        const allDates=[...new Set([...datesFromCells, ...datesFromNames].filter(Boolean))].sort();
+        HADORY_IMPORT_DATES=allDates;
+
+        hadoryDates.innerHTML = `<option value="">— (للمراجعة) —</option>` + allDates.map(d=>`<option value="${d}">${d}</option>`).join('');
+        setHadoryStatus(`تم الاستيراد (${HADORY_LOGS.length} سجل) — أدخل التاريخ يدويًا ثم طبّق`);
+
+        showDateWarn(true, allDates.length
+          ? `تواريخ ظهرت في الملف: ${allDates.join(' ، ')} — أدخل تاريخ التقرير الصحيح يدويًا ثم أكد المطابقة.`
+          : 'لم يظهر تاريخ واضح داخل الملف/الاسم — أدخل تاريخ التقرير الصحيح يدويًا ثم أكد المطابقة.'
+        );
+
+        hadoryFiles.value='';
+      });
+
+      btnUseManualDate.addEventListener('click', ()=>{
+        const iso=hadoryManualDate.value||'';
+        if(!iso){ alert('حدد التاريخ يدويًا أولاً'); return; }
+
+        setGregFromISO(iso);
+
+        // إذا لم تكن هناك بيانات محلية لهذا اليوم، نطلبها من الأرشيف الموحّد (كشف حضوري الشهري)
+        const hasLocalForDate = HADORY_LOGS.some(r=>!r.date || r.date===iso);
+        if(!HADORY_LOGS.length || (HADORY_IMPORT_DATES.length && !HADORY_IMPORT_DATES.includes(iso)) || !hasLocalForDate){
+          setHadoryStatus('جارٍ البحث في أرشيف كشف حضوري الشهري عن: '+iso+' ...');
+          try{
+            window.parent && window.parent.postMessage({ __lovable:true, type:'request_haduri_for_date', source:'admin_affairs', greg_date: iso }, '*');
+          }catch(e){}
+          // ننتظر الرد عبر مستمع الرسائل أدناه. نطبّق الآن مؤقتاً ما هو متاح محلياً.
+        }
+
+        if(HADORY_IMPORT_DATES.length && !HADORY_IMPORT_DATES.includes(iso) && hasLocalForDate){
+          showDateWarn(true,'🚨 التاريخ اليدوي لا يطابق أي تاريخ ظهر داخل الملفات المرفوعة محلياً — سيتم البحث في أرشيف الشهر.');
+        }else{
+          showDateWarn(true,'تم تطبيق التاريخ يدويًا — الآن اضغط (تأكيد مطابقة التاريخ) لإلغاء الحماية ثم تابع.');
+        }
+
+        applyHadoryForManualDate(iso);
+      });
+
+      // مستمع: استقبال بيانات اليوم من أرشيف كشف حضوري الشهري عبر الجسر
+      window.addEventListener('message', function(ev){
+        var d = ev && ev.data;
+        if(!d || d.__lovable!==true || d.type!=='haduri_for_date' || d.source!=='admin_affairs') return;
+        var iso = String(d.greg_date||'');
+        var rows = Array.isArray(d.rows) ? d.rows : [];
+        if(!iso) return;
+        if(!rows.length){
+          setHadoryStatus('لا توجد بيانات محفوظة في أرشيف الشهر لتاريخ '+iso+'. يمكنك استيراد ملف Excel يدوياً.');
+          return;
+        }
+        // ندمج الصفوف القادمة من الأرشيف داخل HADORY_LOGS مع علامة المصدر
+        HADORY_USED = true;
+        var added = 0;
+        rows.forEach(function(r){
+          var civil = String(r.teacher_civil_id||'').replace(/[^\d]/g,'');
+          if(!civil) return;
+          // تجنب التكرار: إذا وُجد سجل لنفس المعلم/اليوم محلياً نستبدله
+          HADORY_LOGS = HADORY_LOGS.filter(function(x){ return !(x.date===iso && x.civil===civil); });
+          var t = TEACHER_BY_CIVIL[civil] || null;
+          HADORY_LOGS.push({
+            date: iso,
+            civil: civil,
+            name: (t && t.name) || r.teacher_name || 'غير مسجل في القائمة',
+            attend: String(r.in_time||''),
+            leave: String(r.out_time||''),
+            workMinutes: Number(r.work_min||0),
+            outType: '',
+            autoOut: false,
+            _srcFile: '[أرشيف كشف حضوري - '+(r.month_label||r.month_key||'')+'] '+(r.source_file||''),
+            _sheet: 'archive'
+          });
+          added++;
+        });
+        if(HADORY_IMPORT_DATES.indexOf(iso)===-1){
+          HADORY_IMPORT_DATES.push(iso);
+          HADORY_IMPORT_DATES.sort();
+          try{
+            hadoryDates.innerHTML = '<option value="">— (للمراجعة) —</option>' + HADORY_IMPORT_DATES.map(function(d){return '<option value="'+d+'">'+d+'</option>';}).join('');
+          }catch(e){}
+        }
+        setHadoryStatus('تم جلب '+added+' سجل من أرشيف كشف حضوري الشهري لتاريخ '+iso+'.');
+        applyHadoryForManualDate(iso);
+      });
+
+      function renderHadoryEmpty(){
+        cAbsent.textContent='0'; cLate.textContent='0'; cNoOut.textContent='0';
+        hadoryCases.innerHTML=`<option value="">— اختر من القائمة —</option>`;
+        hadoryMiniTable.innerHTML=`<tr><td colspan="4" class="mini" style="text-align:center;padding:12px">لا توجد بيانات بعد.</td></tr>`;
+        HADORY_CASES=[];
+      }
+
+      function applyHadoryForManualDate(iso){
+        if(!iso){ renderHadoryEmpty(); return; }
+        if(!HADORY_LOGS.length){ renderHadoryEmpty(); return; }
+
+        const wsM=toMin(WORK_RANGE[SEASON].start);
+
+        const byCivil={};
+        HADORY_LOGS.forEach(r=>{
+          if(r.date && r.date!==iso) return;
+
+          const prev=byCivil[r.civil];
+          if(!prev){ byCivil[r.civil]=r; return; }
+          const prevScore = (prev.leave?100000:0) + (prev.workMinutes||0) + (prev.attend?500:0);
+          const curScore  = (r.leave?100000:0) + (r.workMinutes||0) + (r.attend?500:0);
+          if(curScore>prevScore) byCivil[r.civil]=r;
+        });
+
+        HADORY_DAILY = TEACHERS.map(t=>{
+          const rec=byCivil[t.civil];
+          if(rec) return {...rec, spec:t.spec, level:t.level, phone:t.phone};
+          return { date:iso, civil:t.civil, name:t.name, attend:'', leave:'', workMinutes:0, spec:t.spec, level:t.level, phone:t.phone, outType:'', autoOut:false };
+        });
+
+        const cases=[];
+        let nAbsent=0, nLate=0, nNoOut=0;
+
+        const addCase=(obj)=>cases.push(obj);
+
+        HADORY_DAILY.forEach(r=>{
+          const attendM = toMin(r.attend);
+
+          const isAbsent = !r.attend && !r.leave && (!r.workMinutes);
+          if(isAbsent){
+            nAbsent++;
+            addCase({type:'gaib', label:'غياب', order:1, civil:r.civil, name:r.name, attend:'', leave:'', badge:'red', sortA:0});
+            return;
+          }
+
+          if(attendM!=null && wsM!=null && attendM>wsM){
+            const lateMin = attendM-wsM;
+            nLate++;
+            addCase({type:'late', label:'تأخر', order:2, civil:r.civil, name:r.name, attend:r.attend, leave:r.leave||'', badge:'amber', sortA:lateMin});
+          }
+
+          const noOut = (r.attend && !r.leave) || (r.attend && r.leave && r.autoOut);
+          if(noOut){
+            nNoOut++;
+            const lbl = r.autoOut ? 'عدم تسجيل الانصراف (انصراف تلقائي)' : 'عدم تسجيل الانصراف في منصة حضوري';
+            addCase({type:'noout', label:lbl, order:3, civil:r.civil, name:r.name, attend:r.attend||'', leave:r.leave||'', badge:'amber', sortA:0});
+          }
+        });
+
+        cAbsent.textContent=String(nAbsent);
+        cLate.textContent=String(nLate);
+        cNoOut.textContent=String(nNoOut);
+
+        cases.sort((a,b)=>{
+          if(a.order!==b.order) return a.order-b.order;
+          if(a.order===2){
+            if((b.sortA||0)!==(a.sortA||0)) return (b.sortA||0)-(a.sortA||0);
+          }
+          return a.name.localeCompare(b.name,'ar');
+        });
+
+        HADORY_CASES = cases;
+
+        hadoryCases.innerHTML = `<option value="">— اختر من القائمة —</option>` + cases.map((c,i)=>{
+          let extra='';
+          if(c.type==='late') extra=` — ${en2ar(c.sortA)} د`;
+          const txt = `${c.label}${extra} — ${c.name} — ${c.attend||'--:--'} / ${c.leave||'--:--'}`;
+          return `<option value="${i}">${txt}</option>`;
+        }).join('');
+
+        if(!cases.length){
+          hadoryMiniTable.innerHTML=`<tr><td colspan="4" class="mini" style="text-align:center;padding:12px">لا توجد حالات تستوجب إجراء في التاريخ المحدد.</td></tr>`;
+        }else{
+          hadoryMiniTable.innerHTML = cases.slice(0,22).map(c=>{
+            const tagClass = c.badge==='red'?'tag red':'tag amber';
+            const kindLabel =
+              (c.type==='gaib')?'غياب':
+              (c.type==='late')?`تأخر (${en2ar(c.sortA)}د)`:
+              'لم يُغلق الدوام';
+            return `<tr>
+              <td><span class="${tagClass}">${kindLabel}</span></td>
+              <td style="text-align:right;font-weight:900">${c.name}</td>
+              <td>${c.attend||'--:--'}</td>
+              <td>${c.leave||'--:--'}</td>
+            </tr>`;
+          }).join('');
+        }
+
+        hadoryCases.onchange = ()=>{
+          if(!requireDateGuard('تطبيق حالة من حضوري')) return;
+
+          const idx = +hadoryCases.value;
+          if(!Number.isInteger(idx) || !HADORY_CASES[idx]) return;
+          const c=HADORY_CASES[idx];
+
+          const tIdx = TEACHERS.findIndex(x=>x.civil===c.civil);
+          if(tIdx>=0){
+            selTeacher.value=String(tIdx);
+            selTeacher.dispatchEvent(new Event('change'));
+          }
+
+          if(c.type==='gaib'){
+            setChipActive('kindChips','gaib'); setPack('gaib');
+          }else if(c.type==='late'){
+            setChipActive('kindChips','late'); setPack('late');
+            const el=document.getElementById('tLateIn');
+            el.textContent=en2ar(ar2en(c.attend||'--:--'));
+            el.classList.toggle('empty', !c.attend);
+            recalc();
+          }else{
+            setChipActive('kindChips','note'); setPack('note');
+            document.getElementById('noteReason').value='عدم تسجيل الانصراف في منصة حضوري.';
+            document.getElementById('noteReason').dispatchEvent(new Event('change'));
+          }
+
+          setHadoryStatus('تم تطبيق الحالة على النموذج');
+        };
+
+        setHadoryStatus('تم التحليل وفق التاريخ اليدوي — (قد تتكرر المخالفات للمعلم الواحد)');
+      }
+
+      function setChipActive(containerId, key){
+        const wrap=document.getElementById(containerId);
+        [...wrap.children].forEach(x=>x.classList.remove('active'));
+        const btn=wrap.querySelector(`[data-k="${key}"]`);
+        if(btn) btn.classList.add('active');
+      }
+
+      /* واتساب */
+      document.getElementById('btnWA').addEventListener('click', ()=>{
+        if(!requireDateGuard('إرسال واتساب')) return;
+
+        const i=+selTeacher.value; if(!Number.isInteger(i)) return alert('اختر معلماً أولاً');
+        const t=TEACHERS[i]; const kind=STATE.kind;
+
+        const kindLabel={late:'تنبيه تأخر',absent:'تنبيه عدم تواجد',gaib:'مساءلة غياب',note:'لفت نظر',deduct:'قرار حسم ساعات تأخر'}[kind];
+
+       let details='';
+      if(kind==='late'){
+        details=`تأخّر عن بداية الدوام الرسمي، ووقت الحضور: ${document.getElementById('tLateIn').textContent.trim()}؛ نأمل معالجة السبب والالتزام بمواعيد العمل.`;
+      } else if(kind==='absent'){
+        details=`عدم تواجد خلال ساعات الدوام؛ نأمل إيضاح السبب وإرفاق ما يؤيده.`;
+      } else if(kind==='gaib'){
+        details=`تم تسجيل مساءلة غياب لليوم الموضّح.`;
+      } else if(kind==='note'){
+        let extra='';
+
+        if(NOTE_LESSON_MODE==='slot'){
+          extra = ` — الفصل: ${className?.value.trim() || '—'} — الحصة: ${periodNo.value ? en2ar(periodNo.value) : '—'}`;
+        }else if(NOTE_LESSON_MODE){
+          const lbl = (NOTE_LESSON_MODE==='enter') ? 'تأخر' : 'خروج مبكر';
+          extra = ` — الفصل: ${className?.value.trim() || '—'} — الحصة: ${periodNo.value ? en2ar(periodNo.value) : '—'} — ${lbl}: ${lessonMins.textContent || '0'} دقيقة`;
+        }
+
+        details=`لفت نظر بسبب: ${document.getElementById('noteReasonText').textContent.trim()}${extra}`;
+      }
+
+        const msg=`السلام عليكم
+      ${kindLabel}
+      الاسم: ${t.name}
+      اليوم: ${metaDay.textContent}
+      التاريخ (هـ): ${metaHijri.textContent}
+      ${details}
+      *نظام الشؤون الإدارية والمتابعة*`;
+
+        window.open(`https://wa.me/${t.phone||'966500000000'}?text=${encodeURIComponent(msg)}`,'_blank');
+      });
+
+      /* 📩 إرسال SMS للمعلم — يمر عبر الجسر إلى التطبيق الرئيسي (edge function: send-sms) */
+      document.getElementById('btnSMS').addEventListener('click', ()=>{
+        if(!requireDateGuard('إرسال SMS')) return;
+        const i=+selTeacher.value; if(!Number.isInteger(i)) return alert('اختر معلماً أولاً');
+        const t=TEACHERS[i]; const kind=STATE.kind;
+        const phone = (t.phone||'').replace(/\D/g,'');
+        if(!phone){ alert('لا يوجد رقم جوال مسجل لهذا المعلم'); return; }
+
+        // الاسم الأول للمعلم
+        const firstName = String(t.name||'').trim().split(/\s+/)[0] || 'الأستاذ';
+        const dayTxt = (metaDay.textContent||'').trim();
+        const tmpl = {
+          late:   `الأستاذ ${firstName}: تنبيه تأخر ${dayTxt}. اليعقوبي`,
+          absent: `الأستاذ ${firstName}: تنبيه عدم تواجد ${dayTxt}. اليعقوبي`,
+          gaib:   `الأستاذ ${firstName}: مساءلة غياب ${dayTxt}. اليعقوبي`,
+          note:   `الأستاذ ${firstName}: لفت نظر ${dayTxt}. اليعقوبي`,
+        };
+        let body = tmpl[kind] || `الأستاذ ${firstName}: تذكير ${dayTxt}. اليعقوبي`;
+        if(body.length > 70) body = body.slice(0,70);
+
+        const btn = document.getElementById('btnSMS');
+        const old = btn.textContent;
+        btn.disabled = true; btn.textContent = 'جارٍ الإرسال...';
+
+        const reqId = 'sms_' + Date.now();
+        function onReply(ev){
+          const d = ev && ev.data;
+          if(!d || d.__lovable !== true || d.type !== 'sms_result' || d.reqId !== reqId) return;
+          window.removeEventListener('message', onReply);
+          btn.disabled = false; btn.textContent = old;
+          if(d.success){ alert('✅ تم إرسال الرسالة'); }
+          else { alert('تعذّر إرسال SMS: ' + (d.error || 'خطأ غير معروف')); }
+        }
+        window.addEventListener('message', onReply);
+        setTimeout(()=>{
+          window.removeEventListener('message', onReply);
+          if(btn.disabled){ btn.disabled=false; btn.textContent=old; }
+        }, 25000);
+
+        try{
+          window.parent.postMessage({
+            __lovable:true, type:'send_sms', source:'admin_affairs',
+            reqId, phone, message: body,
+            teacher_name: t.name, teacher_civil_id: t.civil||''
+          }, '*');
+        }catch(e){
+          btn.disabled=false; btn.textContent=old;
+          alert('فشل الاتصال بالتطبيق الرئيسي');
+        }
+      });
+
+      /* =========================
+         كشف حضوري (اليومي)
+         ========================= */
+      const hadoryReportDlg=document.getElementById('hadoryReportDlg');
+      const tblHadoryReport=document.querySelector('#tblHadoryReport tbody');
+
+      function openHadoryReport(){
+        if(!requireDateGuard('فتح كشف حضوري')) return;
+
+        const iso=hadoryManualDate.value||'';
+        if(!iso){ alert('حدد تاريخ التقرير يدويًا ثم اضغط (تطبيق) أولاً.'); return; }
+        if(!HADORY_DAILY.length){ alert('استورد ملف حضوري ثم اضغط (تطبيق) ليتم إنشاء الكشف.'); return; }
+
+        const present=[], absent=[];
+        HADORY_DAILY.forEach(r=>{
+          const isAbsent=!r.attend && !r.leave && (!r.workMinutes);
+          if(isAbsent) absent.push(r); else present.push(r);
+        });
+
+        present.sort((a,b)=>{
+          const am=toMin(a.attend)||99999;
+          const bm=toMin(b.attend)||99999;
+          if(am!==bm) return am-bm;
+          return (a.name||'').localeCompare(b.name||'','ar');
+        });
+        absent.sort((a,b)=> (a.name||'').localeCompare(b.name||'','ar'));
+
+        const rows=[...present, ...absent];
+        const wsM=toMin(WORK_RANGE[SEASON].start);
+
+        tblHadoryReport.innerHTML = rows.map((r,idx)=>{
+          const isAbsent=!r.attend && !r.leave && (!r.workMinutes);
+
+          let statusHTML = `<span class="tag green">حاضر</span>`;
+
+          const attendM=toMin(r.attend);
+          if(attendM!=null && wsM!=null && attendM>wsM && !isAbsent){
+            statusHTML = `<span class="tag amber">متأخر</span>`;
+          }
+
+          const noOut = (r.attend && !r.leave) || (r.attend && r.leave && r.autoOut);
+          if(noOut && !isAbsent){
+            statusHTML = `<span class="tag amber">لم يُغلق الدوام</span>`;
+          }
+
+          if(isAbsent) statusHTML = `<span class="tag red">غائب</span>`;
+
+          return `<tr>
+            <td style="font-weight:900">${en2ar(idx+1)}</td>
+            <td style="font-weight:900">${r.name||'—'}</td>
+            <td>${r.civil||'—'}</td>
+            <td>${r.attend||'--:--'}</td>
+            <td>${r.leave||'--:--'}</td>
+            <td>${statusHTML}</td>
+          </tr>`;
+        }).join('');
+
+        document.getElementById('repDay').textContent=metaDay.textContent;
+        document.getElementById('repHijri').textContent=metaHijri.textContent;
+
+        hadoryReportDlg.style.display='flex';
+        hadoryReportDlg.setAttribute('aria-hidden','false');
+      }
+      document.getElementById('btnHadoryReport').addEventListener('click', openHadoryReport);
+
+      document.getElementById('btnCloseReport').addEventListener('click', ()=>{
+        hadoryReportDlg.style.display='none';
+        hadoryReportDlg.setAttribute('aria-hidden','true');
+      });
+      hadoryReportDlg.addEventListener('click',(e)=>{
+        if(e.target===hadoryReportDlg){
+          hadoryReportDlg.style.display='none';
+          hadoryReportDlg.setAttribute('aria-hidden','true');
+        }
+      });
+
+      /* ✅ زر طباعة كشف حضوري */
+      document.getElementById('btnReportPrint').addEventListener('click', async ()=>{
+        const card=document.getElementById('reportCard');
+        await ensureAllImagesEmbedded(card);
+        hadoryReportDlg.setAttribute('aria-hidden','false');
+        document.body.setAttribute('data-print','hadory');
+        window.print();
+        setTimeout(()=>document.body.removeAttribute('data-print'),300);
+      });
+
+      /* تهيئة */
+      function init(){
+        // ✅ تفعيل نطاق الدوام + تحديث أزرار صيفي/شتوي/رمضان
+        rebuildWorkRange();
+        SEASON = 'summer';
+        refreshSeasonChipLabels();
+        refreshExtendUI();
+
+        // ✅ تهيئة التاريخ وباقة النموذج
+        buildHijriPicker();
+        setPack('late');
+        recalc();
+
+        // ✅ إغلاق النوافذ المنبثقة افتراضيًا
+        statsDlg.style.display = 'none';
+        statsDlg.setAttribute('aria-hidden','true');
+
+        hadoryReportDlg.style.display='none';
+        hadoryReportDlg.setAttribute('aria-hidden','true');
+
+        clockDlg.style.display='none';
+        clockDlg.setAttribute('aria-hidden','true');
+
+        closeDateGuard();
+        updatePrincipalAbs();
+
+        // ✅ حضوري
+        hadoryManualDate.value='';
+        hadoryDateWarn.style.display='none';
+        hadoryDateOk.style.display='none';
+        setHadoryStatus('جاهز');
+
+        // ✅ ربط زر "حصائيات الحضور والانصراف شهري" بالرابط
+        const btnMonthlyStats = document.getElementById('btnMonthlyStats');
+        if (btnMonthlyStats) {
+          btnMonthlyStats.addEventListener('click', (e) => {
+            e.preventDefault();
+            const url = 'https://fhz545-hub.github.io/teacher-eval-1447/2';
+            const w = window.open(url, '_blank');
+            if (!w) window.location.href = url;
+          });
+        }
+      }
+
+      // ✅ تأكد أن init تعمل بعد تحميل الصفحة
+      document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <!-- ====== LOVABLE BRIDGE: شعار الوزارة + جسر الأرشفة ====== -->
+    <style>
+      /* توحيد ظهور شعار الوزارة في جميع الأوراق الرسمية والطباعة */
+      .moe-official-logo{display:inline-block;height:64px;width:auto;object-fit:contain;vertical-align:middle}
+      @media print{
+        .moe-official-logo{height:70px !important}
+        body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      }
+      /* تصحيح اتجاه نوع الإجراء */
+      .action-type, .actionType, [data-field="action_type"], [data-field="actionType"]{
+        direction: rtl !important;
+        unicode-bidi: plaintext !important;
+        text-align: right !important;
+      }
+    </style>
+    <script>
+      (function(){
+        // إعلام الإطار الأب بأن الصفحة جاهزة
+        try{ window.parent && window.parent.postMessage({ __lovable:true, type:'ready', source:'admin_affairs' }, '*'); }catch(e){}
+
+        // 🔐 صلاحية الحذف لمدير المدرسة فقط
+        window.__LOVABLE_IS_PRINCIPAL = false;
+        // 🔐 صلاحية استيراد ملفات حضوري (المدير أو من يملك صلاحية إدارة شؤون المعلمين)
+        window.__LOVABLE_CAN_IMPORT = false;
+        window.addEventListener('message', function(ev){
+          var d = ev && ev.data;
+          if(!d || d.__lovable !== true) return;
+          if(d.type === 'auth' && d.source === 'admin_affairs'){
+            window.__LOVABLE_IS_PRINCIPAL = !!d.isPrincipal;
+            window.__LOVABLE_CAN_IMPORT = !!d.canImport || !!d.isPrincipal;
+            try{
+              var styleId = '__lov_role_style';
+              var prev = document.getElementById(styleId);
+              if(prev) prev.remove();
+              if(!window.__LOVABLE_IS_PRINCIPAL){
+                var st = document.createElement('style');
+                st.id = styleId;
+                // إخفاء أزرار الحذف وأزرار تصفير الأرشيف لغير المدير
+                st.textContent = '.delRow,#btnResetStats{ display:none !important; }';
+                document.head.appendChild(st);
+              }
+              // أزرار استيراد حضوري تمت إزالتها — الاستيراد يتم فقط من قسم «كشف حضوري شهري»
+            }catch(e){}
+          }
+        });
+        // اعتراض أي محاولة حذف من غير المدير
+        document.addEventListener('click', function(ev){
+          var t = ev.target && ev.target.closest && ev.target.closest('.delRow,#btnResetStats');
+          if(!t) return;
+          if(!window.__LOVABLE_IS_PRINCIPAL){
+            ev.preventDefault();
+            ev.stopImmediatePropagation();
+            try{ alert('صلاحية الحذف مخصّصة لمدير المدرسة فقط'); }catch(e){}
+          }
+        }, true);
+
+        // أزرار الاستيراد تمت إزالتها من هذا القسم
+
+        // جسر موحّد للأرشفة عبر postMessage
+        window.LovableArchive = function(payload){
+          try{
+            window.parent.postMessage({
+              __lovable: true,
+              type: 'archive',
+              source: 'admin_affairs',
+              payload: payload || {}
+            }, '*');
+          }catch(e){ console.warn('archive bridge failed', e); }
+        };
+
+        // التقاط النقر على أي زر تصدير/إرسال/طباعة وأرشفته تلقائياً
+        document.addEventListener('click', function(ev){
+          var t = ev.target && ev.target.closest && ev.target.closest('button,.btn,a');
+          if(!t) return;
+          // تجاهل الأزرار التي تُرسل أرشيفاً مهيكلاً بنفسها (لتجنّب التكرار)
+          if(t.id === 'btnPrintSave' || t.closest('#btnPrintSave')) return;
+          if(t.classList && t.classList.contains('delRow')) return;
+          var label = (t.textContent||'').trim().slice(0,80);
+          if(/طباعة|PDF|واتساب|إرسال|حفظ|تصدير|تنزيل|أرشف/.test(label)){
+            try{
+              window.LovableArchive({
+                action_type: label,
+                report_type: document.title || '',
+                summary: label,
+                captured_at: new Date().toISOString()
+              });
+            }catch(e){}
+          }
+        }, true);
+
+        // إدراج شعار الوزارة الرسمي تلقائياً في أي رأس طباعة لا يحتوي شعار
+        function ensureLogo(){
+          try{
+            var imgs = document.querySelectorAll('img');
+            var hasLogo = false;
+            imgs.forEach(function(i){
+              var s = (i.src||'').toLowerCase();
+              if(s.includes('moe') || s.includes('وزارة') || s.includes('education')) hasLogo = true;
+            });
+            if(!hasLogo){
+              var headers = document.querySelectorAll('.print-head, .doc-head, .official-head, header, .header, .print-header');
+              headers.forEach(function(h){
+                if(h.querySelector('.moe-official-logo')) return;
+                var img = document.createElement('img');
+                img.src = '/images/moe-logo-official.png';
+                img.alt = 'وزارة التعليم';
+                img.className = 'moe-official-logo';
+                h.insertBefore(img, h.firstChild);
+              });
+            }
+          }catch(e){}
+        }
+        if(document.readyState === 'complete' || document.readyState === 'interactive'){ setTimeout(ensureLogo, 300); }
+        else document.addEventListener('DOMContentLoaded', function(){ setTimeout(ensureLogo, 300); });
+
+        // ====== Prefill من معلمات الرابط (للقدوم من أرشيف الغياب والرفع في فارس) ======
+        function prefillFromQuery(){
+          try{
+            var qs = new URLSearchParams(window.location.search);
+            var civil = (qs.get('civil')||'').replace(/\D/g,'');
+            var name  = qs.get('name')||'';
+            var kind  = qs.get('kind')||'';
+            var date  = qs.get('date')||''; // YYYY-MM-DD
+            var faris = qs.get('faris')||''; // raised | not
+            if(!civil && !name && !kind) return;
+
+            // نوع الإجراء
+            if(kind && ['late','absent','gaib','note'].indexOf(kind) !== -1){
+              var chip = document.querySelector('#kindChips .chip[data-k="'+kind+'"]');
+              if(chip) chip.click();
+            }
+            // اختيار المعلم بحسب السجل المدني (أو الاسم)
+            var sel = document.getElementById('selTeacher');
+            if(sel && Array.isArray(window.TEACHERS || null) || (typeof TEACHERS !== 'undefined')){
+              var arr = (typeof TEACHERS !== 'undefined') ? TEACHERS : [];
+              var idx = -1;
+              if(civil) idx = arr.findIndex(function(t){ return (t.civil||'')===civil; });
+              if(idx<0 && name) idx = arr.findIndex(function(t){ return (t.name||'').trim()===name.trim(); });
+              if(idx>=0){ sel.value = String(idx); sel.dispatchEvent(new Event('change',{bubbles:true})); }
+            }
+            // ضبط التاريخ الميلادي ⇒ يحدّث الهجري واليوم تلقائياً
+            if(date && /^\d{4}-\d{2}-\d{2}$/.test(date)){
+              var p = date.split('-');
+              var gY = document.getElementById('gY'), gM = document.getElementById('gM'), gD = document.getElementById('gD');
+              if(gY && gM && gD){
+                gY.value = +p[0]; gM.value = +p[1]; gD.value = +p[2];
+                gY.dispatchEvent(new Event('input',{bubbles:true}));
+              }
+            }
+            // حالة فارس عند مساءلة الغياب
+            if(kind==='gaib' && (faris==='raised' || faris==='not')){
+              var fchip = document.querySelector('#frGroup .chip[data-fr="'+faris+'"]');
+              if(fchip) fchip.click();
+            }
+            // التمرير إلى منطقة الإجراء
+            setTimeout(function(){
+              var t = document.getElementById('mainTitle') || document.querySelector('#kindChips');
+              if(t && t.scrollIntoView) t.scrollIntoView({behavior:'smooth', block:'start'});
+            }, 300);
+          }catch(e){ console.warn('prefill failed', e); }
+        }
+        if(document.readyState === 'complete' || document.readyState === 'interactive'){ setTimeout(prefillFromQuery, 500); }
+        else document.addEventListener('DOMContentLoaded', function(){ setTimeout(prefillFromQuery, 500); });
+      })();
+    </script>
+    <!-- ====== END LOVABLE BRIDGE ====== -->
+  </body>
+</html>

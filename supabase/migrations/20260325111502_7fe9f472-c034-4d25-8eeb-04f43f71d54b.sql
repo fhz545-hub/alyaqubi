@@ -1,0 +1,2 @@
+ALTER TABLE public.student_actions DROP CONSTRAINT student_actions_type_check;
+ALTER TABLE public.student_actions ADD CONSTRAINT student_actions_type_check CHECK (type = ANY (ARRAY['late'::text, 'absent'::text, 'violation'::text, 'permission'::text, 'entry'::text, 'exit'::text, 'summon'::text, 'class_late'::text, 'class_escape'::text, 'class_chaos'::text, 'no_homework'::text, 'sleeping'::text, 'class_note'::text]));

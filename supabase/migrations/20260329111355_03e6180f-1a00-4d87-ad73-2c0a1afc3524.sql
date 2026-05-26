@@ -1,0 +1,1 @@
+CREATE POLICY "Principal can delete messages" ON public.messages FOR DELETE TO authenticated USING (is_principal(auth.uid()));

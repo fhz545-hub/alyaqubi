@@ -1,0 +1,1 @@
+ALTER TABLE public.school_settings ADD CONSTRAINT school_settings_key_unique UNIQUE (key);
